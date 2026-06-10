@@ -1,0 +1,334 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+target="."
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --target|-Target)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for $1" >&2
+        exit 2
+      fi
+      target="$2"
+      shift 2
+      ;;
+    -h|--help)
+      echo "Usage: agent-flow/scripts/init-project.sh [--target <project-root>]"
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+root="$(cd "$target" && pwd)"
+project_name="$(basename "$root")"
+
+has_file() {
+  [ -f "$root/$1" ]
+}
+
+existing_dirs() {
+  local found=()
+  for item in "$@"; do
+    if [ -d "$root/$item" ]; then
+      found+=("$item")
+    fi
+  done
+  if [ "${#found[@]}" -eq 0 ]; then
+    printf '%s\n' "$1"
+  else
+    printf '%s\n' "${found[@]}"
+  fi
+}
+
+build="unknown"
+backend_framework="unknown"
+backend_language="unknown"
+backend_compile="TODO_BACKEND_COMPILE_COMMAND"
+backend_test="TODO_BACKEND_TEST_COMMAND"
+module_compile="TODO_MODULE_COMPILE_COMMAND"
+module_test="TODO_MODULE_TEST_COMMAND"
+
+if has_file "pom.xml"; then
+  build="Maven"
+  backend_framework="Java"
+  backend_language="Java"
+  backend_compile="mvn compile -DskipTests -q"
+  backend_test="mvn test -q"
+  module_compile="mvn compile -pl {module} -am -DskipTests -q"
+  module_test="mvn test -pl {module} -am -q"
+elif has_file "build.gradle" || has_file "settings.gradle" || has_file "build.gradle.kts"; then
+  build="Gradle"
+  backend_framework="Gradle project"
+  backend_language="Java/Kotlin"
+  backend_compile="./gradlew build -x test"
+  backend_test="./gradlew test"
+  module_compile="./gradlew :{module}:build -x test"
+  module_test="./gradlew :{module}:test"
+elif has_file "pyproject.toml" || has_file "requirements.txt"; then
+  build="Python"
+  backend_framework="Python"
+  backend_language="Python"
+  backend_compile="python -m compileall ."
+  backend_test="pytest"
+elif has_file "go.mod"; then
+  build="Go"
+  backend_framework="Go"
+  backend_language="Go"
+  backend_compile="go test ./... -run TestNonExistent"
+  backend_test="go test ./..."
+elif has_file "Cargo.toml"; then
+  build="Cargo"
+  backend_framework="Rust"
+  backend_language="Rust"
+  backend_compile="cargo check"
+  backend_test="cargo test"
+fi
+
+frontend_framework="none"
+frontend_language="none"
+frontend_repo="none"
+frontend_typecheck="TODO_FRONTEND_TYPECHECK_COMMAND"
+frontend_test="TODO_FRONTEND_TEST_COMMAND"
+frontend_lint="TODO_FRONTEND_LINT_COMMAND"
+
+if has_file "package.json"; then
+  frontend_language="JavaScript/TypeScript"
+  frontend_repo="."
+  package_text="$(cat "$root/package.json")"
+  if grep -q '"vue"' <<<"$package_text"; then frontend_framework="Vue"
+  elif grep -q '"react"' <<<"$package_text"; then frontend_framework="React"
+  elif grep -q '"next"' <<<"$package_text"; then frontend_framework="Next.js"
+  else frontend_framework="Node/Web"
+  fi
+
+  if has_file "pnpm-lock.yaml"; then pm="pnpm"
+  elif has_file "yarn.lock"; then pm="yarn"
+  else pm="npm run"
+  fi
+
+  if grep -q '"type-check"' <<<"$package_text"; then frontend_typecheck="$pm type-check"
+  elif grep -q '"typecheck"' <<<"$package_text"; then frontend_typecheck="$pm typecheck"
+  fi
+  if grep -q '"test"' <<<"$package_text"; then frontend_test="$pm test"; fi
+  if grep -q '"lint"' <<<"$package_text"; then frontend_lint="$pm lint"; fi
+fi
+
+mapfile -t backend_entry < <(existing_dirs src app server backend cmd internal)
+mapfile -t common_paths < <(existing_dirs common shared lib libs utils core packages)
+mapfile -t business_modules < <(existing_dirs modules services features apps packages src)
+mapfile -t tests < <(existing_dirs test tests src/test __tests__)
+mapfile -t sql_paths < <(existing_dirs migrations schema sql db database prisma)
+
+build_files=()
+for file in package.json pom.xml build.gradle settings.gradle pyproject.toml requirements.txt go.mod Cargo.toml; do
+  if has_file "$file"; then build_files+=("$file"); fi
+done
+if [ "${#build_files[@]}" -eq 0 ]; then build_files=("TODO_BUILD_FILE"); fi
+
+yaml_list() {
+  local indent="$1"
+  shift
+  for item in "$@"; do
+    printf '%s- %s\n' "$indent" "$item"
+  done
+}
+
+cat > "$root/agent-flow/manifest.yaml" <<EOF
+project:
+  name: $project_name
+  kind: initialized
+  backend:
+    framework: $backend_framework
+    language: $backend_language
+    build: $build
+    root_module: $project_name
+  frontend:
+    framework: $frontend_framework
+    language: $frontend_language
+    repo: $frontend_repo
+  database:
+    engine: TODO_DATABASE_OR_NONE
+    sql_paths:
+$(yaml_list "      " "${sql_paths[@]}")
+  cache:
+    engine: TODO_CACHE_OR_NONE
+  auth:
+    engine: TODO_AUTH_OR_NONE
+
+code_map:
+  backend_entry:
+$(yaml_list "    " "${backend_entry[@]}")
+  common:
+$(yaml_list "    " "${common_paths[@]}")
+  business_modules:
+$(yaml_list "    " "${business_modules[@]}")
+  build_files:
+$(yaml_list "    " "${build_files[@]}")
+  tests:
+$(yaml_list "    " "${tests[@]}")
+
+change_storage:
+  root: agent-flow/changes
+  knowledge: agent-flow/knowledge
+  decisions: agent-flow/decisions
+  reports: agent-flow/reports
+
+risk_rules:
+  heavy_if:
+    - new_module_or_package
+    - schema_change
+    - auth_or_permission_change
+    - public_api_change
+    - state_machine_change
+    - cache_or_token_change
+    - websocket_or_realtime_change
+    - workflow_change
+    - cross_repo_frontend_backend
+    - deployment_or_production_config
+    - production_incident_risk
+  destructive_gate:
+    delete_lines_gte: 5
+    public_contract_change: true
+    build_file_change: true
+    schema_change: true
+
+verification:
+  backend_compile: $backend_compile
+  backend_test: $backend_test
+  module_compile: $module_compile
+  module_test: $module_test
+  frontend_typecheck: $frontend_typecheck
+  frontend_test: $frontend_test
+  frontend_lint: $frontend_lint
+
+gates:
+  - agent-flow/scripts/run-verify.ps1
+  - agent-flow/scripts/run-verify.sh
+  - agent-flow/scripts/verify-backend.ps1
+  - agent-flow/scripts/verify-backend.sh
+  - agent-flow/scripts/verify-module.ps1
+  - agent-flow/scripts/verify-module.sh
+  - agent-flow/scripts/ac-check.ps1
+  - agent-flow/scripts/ac-check.sh
+  - agent-flow/scripts/drift-check.ps1
+  - agent-flow/scripts/drift-check.sh
+  - agent-flow/scripts/scaffold-health.ps1
+  - agent-flow/scripts/scaffold-health.sh
+EOF
+
+{
+  echo "# Module Map"
+  echo
+  echo "## Current Modules"
+  echo
+  echo "| Module | Path | Responsibility | Notes |"
+  echo "|---|---|---|---|"
+  for item in "${business_modules[@]}"; do
+    echo "| $(basename "$item") | \`$item\` | TODO | initialized |"
+  done
+  echo
+  echo "## Entry Points"
+  echo
+  echo "| Entry | Path | Purpose |"
+  echo "|---|---|---|"
+  for item in "${backend_entry[@]}"; do
+    echo "| $(basename "$item") | \`$item\` | TODO |"
+  done
+  echo
+  echo "## New Module Registry"
+  echo
+  echo "| Module | Path | Responsibility | Registration Point | Change |"
+  echo "|---|---|---|---|---|"
+} > "$root/agent-flow/knowledge/module-map.md"
+
+cat > "$root/agent-flow/knowledge/reuse-map.md" <<EOF
+# Reuse Map
+
+> Before writing new code, check here, then check the codebase. Add new reusable discoveries after each change.
+
+| Capability | Existing Location | How To Reuse | Notes |
+|---|---|---|---|
+| Project common code | ${common_paths[*]} | Scan before adding new helpers | initialized |
+EOF
+
+cat > "$root/agent-flow/knowledge/verification.md" <<EOF
+# Verification Knowledge
+
+## Backend
+
+\`\`\`text
+$backend_compile
+$backend_test
+\`\`\`
+
+## Frontend
+
+\`\`\`text
+$frontend_typecheck
+$frontend_test
+$frontend_lint
+\`\`\`
+
+## Gates
+
+Windows:
+
+\`\`\`powershell
+agent-flow/scripts/scaffold-health.ps1
+agent-flow/scripts/run-verify.ps1 -All
+\`\`\`
+
+Linux/macOS:
+
+\`\`\`bash
+bash agent-flow/scripts/scaffold-health.sh
+bash agent-flow/scripts/run-verify.sh --all
+\`\`\`
+
+## Evidence Requirement
+
+\`VERIFY.md\` must record commands, results, failure summaries, skipped checks, and AC evidence.
+EOF
+
+agents_path="$root/AGENTS.md"
+if [ -f "$agents_path" ]; then
+  tmp_agents="$(mktemp)"
+  awk \
+    -v project="$project_name" \
+    -v backend="$backend_language / $backend_framework / $build" \
+    -v frontend="$frontend_language / $frontend_framework" \
+    -v backend_entries="${backend_entry[*]}" \
+    -v common="${common_paths[*]}" \
+    -v modules="${business_modules[*]}" \
+    -v builds="${build_files[*]}" \
+    -v tests_text="${tests[*]}" \
+    -v sql="${sql_paths[*]}" '
+    BEGIN {
+      context = "## Project Context\n\n" \
+        "- Project name: " project "\n" \
+        "- Backend: " backend "\n" \
+        "- Frontend: " frontend "\n" \
+        "- Backend entries: " backend_entries "\n" \
+        "- Common/shared paths: " common "\n" \
+        "- Business modules: " modules "\n" \
+        "- Build files: " builds "\n" \
+        "- Tests: " tests_text "\n" \
+        "- Database/schema paths: " sql "\n" \
+        "- Protected areas: schema, auth/permission, public API contracts, build/module registration, deployment, destructive data operations\n\n" \
+        "## Default Workflow"
+    }
+    /^## Project Context$/ { print context; skipping = 1; next }
+    /^## Default Workflow$/ { if (skipping) { skipping = 0; next } }
+    !skipping { print }
+  ' "$agents_path" > "$tmp_agents"
+  mv "$tmp_agents" "$agents_path"
+fi
+
+bash "$root/agent-flow/scripts/scaffold-health.sh"
+echo "agent-flow initialized for $project_name"
+

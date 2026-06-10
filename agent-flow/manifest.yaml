@@ -1,0 +1,82 @@
+project:
+  name: TODO_PROJECT_NAME
+  kind: TODO_PROJECT_KIND
+  backend:
+    framework: TODO_BACKEND_FRAMEWORK
+    language: TODO_BACKEND_LANGUAGE
+    build: TODO_BUILD_TOOL
+    root_module: TODO_ROOT_MODULE
+  frontend:
+    framework: TODO_FRONTEND_FRAMEWORK
+    language: TODO_FRONTEND_LANGUAGE
+    repo: TODO_FRONTEND_REPO_OR_NONE
+  database:
+    engine: TODO_DATABASE_OR_NONE
+    sql_paths:
+      - TODO_SQL_PATH
+  cache:
+    engine: TODO_CACHE_OR_NONE
+  auth:
+    engine: TODO_AUTH_OR_NONE
+
+code_map:
+  backend_entry:
+    - TODO_BACKEND_ENTRY
+  common:
+    - TODO_COMMON_CODE_PATH
+  business_modules:
+    - TODO_BUSINESS_MODULE_PATH
+  build_files:
+    - TODO_BUILD_FILE
+  tests:
+    - TODO_TEST_PATH
+
+change_storage:
+  root: agent-flow/changes
+  knowledge: agent-flow/knowledge
+  decisions: agent-flow/decisions
+  reports: agent-flow/reports
+
+risk_rules:
+  heavy_if:
+    - new_module_or_package
+    - schema_change
+    - auth_or_permission_change
+    - public_api_change
+    - state_machine_change
+    - cache_or_token_change
+    - websocket_or_realtime_change
+    - workflow_change
+    - cross_repo_frontend_backend
+    - deployment_or_production_config
+    - production_incident_risk
+  destructive_gate:
+    delete_lines_gte: 5
+    public_contract_change: true
+    build_file_change: true
+    schema_change: true
+
+verification:
+  backend_compile: TODO_BACKEND_COMPILE_COMMAND
+  backend_test: TODO_BACKEND_TEST_COMMAND
+  module_compile: TODO_MODULE_COMPILE_COMMAND
+  module_test: TODO_MODULE_TEST_COMMAND
+  frontend_typecheck: TODO_FRONTEND_TYPECHECK_COMMAND
+  frontend_test: TODO_FRONTEND_TEST_COMMAND
+  frontend_lint: TODO_FRONTEND_LINT_COMMAND
+
+gates:
+  - agent-flow/scripts/init-project.ps1
+  - agent-flow/scripts/init-project.sh
+  - agent-flow/scripts/run-verify.ps1
+  - agent-flow/scripts/run-verify.sh
+  - agent-flow/scripts/verify-backend.ps1
+  - agent-flow/scripts/verify-backend.sh
+  - agent-flow/scripts/verify-module.ps1
+  - agent-flow/scripts/verify-module.sh
+  - agent-flow/scripts/ac-check.ps1
+  - agent-flow/scripts/ac-check.sh
+  - agent-flow/scripts/drift-check.ps1
+  - agent-flow/scripts/drift-check.sh
+  - agent-flow/scripts/scaffold-health.ps1
+  - agent-flow/scripts/scaffold-health.sh
