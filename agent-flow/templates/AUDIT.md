@@ -36,6 +36,10 @@ Checklist:
 - [ ] AC coverage has evidence
 - [ ] Drift checks completed
 - [ ] No undeclared files modified
+- [ ] task-boundary-check completed
+- [ ] manifest-check completed
+- [ ] blocked-check completed
+- [ ] closure-check completed
 - [ ] Knowledge/decision/log/baseline updated
 
 Findings:

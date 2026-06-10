@@ -118,6 +118,18 @@ if has_file "package.json"; then
   if grep -q '"lint"' <<<"$package_text"; then frontend_lint="$pm lint"; fi
 fi
 
+frontend_candidates=()
+for candidate in apps/web apps/frontend web frontend client packages/web packages/frontend; do
+  if has_file "$candidate/package.json"; then
+    frontend_candidates+=("$candidate")
+  fi
+done
+if [ "${#frontend_candidates[@]}" -gt 0 ]; then
+  frontend_repo="${frontend_candidates[*]}"
+elif has_file "pnpm-workspace.yaml"; then
+  frontend_repo="workspace"
+fi
+
 mapfile -t backend_entry < <(existing_dirs src app server backend cmd internal)
 mapfile -t common_paths < <(existing_dirs common shared lib libs utils core packages)
 mapfile -t business_modules < <(existing_dirs modules services features apps packages src)
@@ -125,7 +137,7 @@ mapfile -t tests < <(existing_dirs test tests src/test __tests__)
 mapfile -t sql_paths < <(existing_dirs migrations schema sql db database prisma)
 
 build_files=()
-for file in package.json pom.xml build.gradle settings.gradle pyproject.toml requirements.txt go.mod Cargo.toml; do
+for file in package.json pnpm-workspace.yaml pnpm-lock.yaml package-lock.json yarn.lock tsconfig.json vite.config.ts next.config.js pom.xml build.gradle settings.gradle pyproject.toml requirements.txt go.mod Cargo.toml; do
   if has_file "$file"; then build_files+=("$file"); fi
 done
 if [ "${#build_files[@]}" -eq 0 ]; then build_files=("TODO_BUILD_FILE"); fi
@@ -221,10 +233,18 @@ gates:
   - agent-flow/scripts/new-change.sh
   - agent-flow/scripts/next-step.ps1
   - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/sync-state.ps1
+  - agent-flow/scripts/sync-state.sh
   - agent-flow/scripts/state-check.ps1
   - agent-flow/scripts/state-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/task-boundary-check.ps1
+  - agent-flow/scripts/task-boundary-check.sh
+  - agent-flow/scripts/manifest-check.ps1
+  - agent-flow/scripts/manifest-check.sh
+  - agent-flow/scripts/closure-check.ps1
+  - agent-flow/scripts/closure-check.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1
@@ -283,34 +303,36 @@ cat > "$root/agent-flow/knowledge/verification.md" <<EOF
 
 ## Backend
 
-\`\`\`text
+~~~text
 $backend_compile
 $backend_test
-\`\`\`
+~~~
 
 ## Frontend
 
-\`\`\`text
+~~~text
 $frontend_typecheck
 $frontend_test
 $frontend_lint
-\`\`\`
+~~~
 
 ## Gates
 
 Windows:
 
-\`\`\`powershell
+~~~powershell
 agent-flow/scripts/scaffold-health.ps1
+agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/run-verify.ps1 -All
-\`\`\`
+~~~
 
 Linux/macOS:
 
-\`\`\`bash
+~~~bash
 bash agent-flow/scripts/scaffold-health.sh
+bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/run-verify.sh --all
-\`\`\`
+~~~
 
 ## Evidence Requirement
 

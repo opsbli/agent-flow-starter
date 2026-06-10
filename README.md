@@ -76,6 +76,7 @@ agent-flow-starter/
 AGENTS.md
 agent-flow/
 ├── GO.md
+├── READING.md
 ├── manifest.yaml
 ├── core/
 ├── flows/
@@ -358,7 +359,9 @@ Windows：
 ```powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/run-verify.ps1 -All
 agent-flow/scripts/run-verify.ps1 -Name backend_test
@@ -366,6 +369,8 @@ agent-flow/scripts/run-verify.ps1 -Name module_test -Module <module>
 agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/closure-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
@@ -373,7 +378,9 @@ Linux/macOS：
 ```bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/run-verify.sh --all
 bash agent-flow/scripts/run-verify.sh --name backend_test
@@ -381,6 +388,8 @@ bash agent-flow/scripts/run-verify.sh --name module_test --module <module>
 bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/closure-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 `run-verify` 会读取：

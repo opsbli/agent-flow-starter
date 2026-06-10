@@ -50,6 +50,24 @@
       }
     },
     {
+      "name": "Node Workspace",
+      "indicators": { "files": ["package.json", "pnpm-workspace.yaml"], "match_mode": "all" },
+      "backend": {
+        "framework": "Node.js workspace", "language": "JavaScript/TypeScript",
+        "compile": "pnpm -r build --if-present",
+        "test": "pnpm -r test --if-present"
+      }
+    },
+    {
+      "name": "Next.js",
+      "indicators": { "files": ["package.json", "next.config.js"], "match_mode": "all" },
+      "backend": {
+        "framework": "Next.js", "language": "JavaScript/TypeScript",
+        "compile": "npm run build",
+        "test": "npm test 2>/dev/null || echo ok"
+      }
+    },
+    {
       "name": "Node",
       "indicators": { "files": ["package.json"], "match_mode": "any" },
       "backend": {
@@ -69,11 +87,12 @@
     }
   ],
   "file_patterns": {
-    "backend_entry_dirs": ["src", "app", "server", "backend", "cmd", "internal"],
-    "common_dirs": ["common", "shared", "lib", "libs", "utils", "core", "packages"],
+    "backend_entry_dirs": ["src", "app", "server", "backend", "cmd", "internal", "apps/api", "services/api"],
+    "frontend_entry_dirs": ["apps/web", "apps/frontend", "web", "frontend", "client", "packages/web", "packages/frontend"],
+    "common_dirs": ["common", "shared", "lib", "libs", "utils", "core", "packages", "shared-ui"],
     "business_dirs": ["modules", "services", "features", "apps", "packages", "src"],
-    "test_dirs": ["test", "tests", "src/test", "__tests__"],
+    "test_dirs": ["test", "tests", "src/test", "__tests__", "e2e"],
     "sql_dirs": ["migrations", "schema", "sql", "db", "database", "prisma"],
-    "build_files": ["package.json", "pom.xml", "build.gradle", "settings.gradle", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml"]
+    "build_files": ["package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "package-lock.json", "yarn.lock", "tsconfig.json", "vite.config.ts", "next.config.js", "pom.xml", "build.gradle", "settings.gradle", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml"]
   }
 }

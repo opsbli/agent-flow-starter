@@ -144,6 +144,21 @@ if (HasFile "package.json") {
     }
 }
 
+$frontendCandidates = @(
+    "apps/web",
+    "apps/frontend",
+    "web",
+    "frontend",
+    "client",
+    "packages/web",
+    "packages/frontend"
+) | Where-Object { HasFile (Join-Path $_ "package.json") }
+if ($frontendCandidates.Count -gt 0) {
+    $frontendRepo = $frontendCandidates -join ", "
+} elseif (HasFile "pnpm-workspace.yaml") {
+    $frontendRepo = "workspace"
+}
+
 $backendEntry = ExistingDirs @("src", "app", "server", "backend", "cmd", "internal")
 $common = ExistingDirs @("common", "shared", "lib", "libs", "utils", "core", "packages")
 $business = ExistingDirs @("modules", "services", "features", "apps", "packages", "src")
@@ -156,7 +171,7 @@ if ($business.Count -eq 0) { $business = @("TODO_BUSINESS_MODULE_PATH") }
 if ($tests.Count -eq 0) { $tests = @("TODO_TEST_PATH") }
 if ($sqlPaths.Count -eq 0) { $sqlPaths = @("TODO_SQL_PATH") }
 
-$buildFiles = @("package.json", "pom.xml", "build.gradle", "settings.gradle", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml") |
+$buildFiles = @("package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "package-lock.json", "yarn.lock", "tsconfig.json", "vite.config.ts", "next.config.js", "pom.xml", "build.gradle", "settings.gradle", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml") |
     Where-Object { HasFile $_ }
 if ($buildFiles.Count -eq 0) { $buildFiles = @("TODO_BUILD_FILE") }
 
@@ -247,10 +262,18 @@ gates:
   - agent-flow/scripts/new-change.sh
   - agent-flow/scripts/next-step.ps1
   - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/sync-state.ps1
+  - agent-flow/scripts/sync-state.sh
   - agent-flow/scripts/state-check.ps1
   - agent-flow/scripts/state-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/task-boundary-check.ps1
+  - agent-flow/scripts/task-boundary-check.sh
+  - agent-flow/scripts/manifest-check.ps1
+  - agent-flow/scripts/manifest-check.sh
+  - agent-flow/scripts/closure-check.ps1
+  - agent-flow/scripts/closure-check.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1
@@ -308,34 +331,36 @@ Set-Content -Encoding utf8 -LiteralPath (Join-Path $root "agent-flow/knowledge/v
 
 ## Backend
 
-```text
+~~~text
 $backendCompile
 $backendTest
-```
+~~~
 
 ## Frontend
 
-```text
+~~~text
 $frontendTypecheck
 $frontendTest
 $frontendLint
-```
+~~~
 
 ## Gates
 
 Windows:
 
-```powershell
+~~~powershell
 agent-flow/scripts/scaffold-health.ps1
+agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/run-verify.ps1 -All
-```
+~~~
 
 Linux/macOS:
 
-```bash
+~~~bash
 bash agent-flow/scripts/scaffold-health.sh
+bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/run-verify.sh --all
-```
+~~~
 
 ## Evidence Requirement
 

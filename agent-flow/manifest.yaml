@@ -80,10 +80,18 @@ gates:
   - agent-flow/scripts/new-change.sh
   - agent-flow/scripts/next-step.ps1
   - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/sync-state.ps1
+  - agent-flow/scripts/sync-state.sh
   - agent-flow/scripts/state-check.ps1
   - agent-flow/scripts/state-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/task-boundary-check.ps1
+  - agent-flow/scripts/task-boundary-check.sh
+  - agent-flow/scripts/manifest-check.ps1
+  - agent-flow/scripts/manifest-check.sh
+  - agent-flow/scripts/closure-check.ps1
+  - agent-flow/scripts/closure-check.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1

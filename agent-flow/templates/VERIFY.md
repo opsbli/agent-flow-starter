@@ -28,6 +28,10 @@
 | route | | |
 | permission | | |
 | pom | | |
+| task-boundary-check | | |
+| manifest-check | | |
+| blocked-check | | |
+| closure-check | | |
 
 ## 跳过项
 

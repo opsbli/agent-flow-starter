@@ -110,6 +110,7 @@ AUDIT.md
 
 - 不确认事实源优先级，不处理冲突。
 - `STATE.md` 与工件冲突时，以工件和 `next-step` 推断结果为准，并更新 `STATE.md`。
+- `STATE.md` 滞后时，运行 `sync-state` 后再继续。
 - 没有 `CODE_SCAN.md`，不写 `DESIGN.md`。
 - Standard / Heavy change 没有完成 `Design Alignment / Grill`，不写 `PLAN.md`、`TASKS.md` 或实现代码。
 - Standard / Heavy change 的 `alignment-check` 未通过，不写 `PLAN.md`、`TASKS.md` 或实现代码。
@@ -120,6 +121,9 @@ AUDIT.md
 - Heavy change 必须运行 `code-drift-check`（设计声明 vs 实际代码的漂移检查），通过后才能收口。
 - `drift-check` 已废弃，请使用 `code-drift-check` 代替。
 - Heavy change 必须运行 `blocked-check`（检查是否触碰 manifest.yaml 中 `blocked_if` 规则）。
+- Standard / Heavy change 收口前必须运行 `task-boundary-check`，确认实际改动没有超出 `TASKS.md write_files`。
+- 收口前必须运行 `manifest-check`，确认脚手架清单、gate 文件和 blocked_if 规则完整。
+- Heavy change 标记完成前必须运行 `closure-check`。
 - 发现术语、规则、坑点，立即写入 `agent-flow/knowledge/`。
 - 发现不可逆取舍，写入 `agent-flow/decisions/`。
 - 验证通过后，如形成新的健康状态，更新 `agent-flow/knowledge/known-good-baselines.md`。

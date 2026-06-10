@@ -32,6 +32,7 @@ agent-flow/GO.md
 ```text
 agent-flow/
 ├── GO.md                         # AI 默认入口
+├── READING.md                    # 终端乱码时的 ASCII 读取兜底
 ├── manifest.yaml                 # 项目画像、验证命令、风险规则
 ├── VERSION                       # agent-flow starter 版本
 ├── UPGRADE.md                    # 升级说明
@@ -298,7 +299,9 @@ Windows：
 ```powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
@@ -307,7 +310,9 @@ Linux/macOS：
 ```bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
@@ -369,6 +374,8 @@ Windows：
 ```powershell
 agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/closure-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
@@ -376,6 +383,8 @@ Linux/macOS：
 ```bash
 bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/closure-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 它会检查设计中常见的 schema、API、权限决策漂移。
@@ -539,7 +548,7 @@ agent-flow/UPGRADE.md
 - `REPORT.md` 已写交付摘要。
 - `VERIFY.md` 已写验证证据。
 - 所有 AC 有 Evidence 或明确 residual risk。
-- `ac-check`、`code-drift-check`、`blocked-check`、`scaffold-health` 已执行或说明跳过原因。
+- `ac-check`、`code-drift-check`、`blocked-check`、`task-boundary-check`、`manifest-check`、`closure-check`、`scaffold-health` 已执行或说明跳过原因。
 - Heavy change 有 Closure Audit。
 - 新知识、坑点、决策已沉淀。
 - `EVOLUTION.md` 已写。

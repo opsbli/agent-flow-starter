@@ -69,7 +69,7 @@ Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is al
 ```text
 Check agent-flow change: <change-id>.
 First run next-step and read stage, state_current_stage, state_next_action, missing, blocked, and next_prompt.
-If STATE.md conflicts with inferred stage, follow the artifacts and update STATE.md.
+If STATE.md conflicts with inferred stage, run sync-state, then run state-check.
 Then continue according to next_prompt.
 If blocked is not empty, explain the blocker and give me the available options before editing files.
 ```
@@ -78,11 +78,13 @@ Commands:
 
 ```powershell
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 ```bash
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
@@ -100,7 +102,8 @@ Update TASKS.md after each task.
 ```text
 Continue agent-flow change: <change-id>.
 Complete VERIFY, REVIEW, REPORT, EVOLUTION, and Closure Audit.
-Run ac-check, code-drift-check, blocked-check, scaffold-health, and relevant run-verify commands.
+Run ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, scaffold-health, and relevant run-verify commands.
+For Heavy changes, also run closure-check before saying the change is complete.
 If closure is conditional, list residual risks clearly.
 ```
 

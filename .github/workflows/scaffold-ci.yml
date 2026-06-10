@@ -26,6 +26,9 @@ jobs:
       - name: Run scaffold-health.sh
         run: bash agent-flow/scripts/scaffold-health.sh
 
+      - name: Run manifest-check.sh
+        run: bash agent-flow/scripts/manifest-check.sh
+
   smoke-test-ps1:
     name: Smoke Test (PowerShell)
     runs-on: windows-latest

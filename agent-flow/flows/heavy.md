@@ -154,6 +154,8 @@ Verdict: accept
 - code-drift-check（首选：设计声明 vs 实际代码的漂移检查）
 - drift-check（可选补充：DESIGN.md 内部一致性）
 - blocked-check（检查 blocked_if 规则违规）
+- task-boundary-check（检查实际 git 改动是否超出 TASKS.md write_files）
+- manifest-check（检查 manifest/gates/blocked_if 完整性）
 - frontend typecheck/test/lint（如涉及前端）
 
 必须填写 `AC Evidence` 表，把每个 `AC-01` 等验收项绑定到测试、命令、代码位置、人工验证或明确跳过原因。
@@ -179,6 +181,10 @@ Verdict: accept
 - AC 覆盖有证据。
 - code-drift-check 已通过或有明确裁决。
 - drift-check（如执行）已通过或有明确裁决。
+- blocked-check 已通过或有明确裁决。
+- task-boundary-check 已通过或有明确裁决。
+- manifest-check 已通过或有明确裁决。
+- closure-check 已通过。
 - knowledge / decisions / logs / baseline 已更新。
 
 ## 阶段 8：Evolve

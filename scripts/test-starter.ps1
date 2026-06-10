@@ -43,7 +43,7 @@ Relevant code was scanned for the demo change.
 
 change_id: demo-next-step
 flow: Standard
-current_stage: requirement
+current_stage: intake
 blocked: false
 next_action: Complete REQUIREMENT.md with AC-01 style acceptance criteria.
 "@
@@ -59,6 +59,7 @@ next_action: Complete REQUIREMENT.md with AC-01 style acceptance criteria.
     if ($null -eq $result.PSObject.Properties["state_current_stage"]) {
         throw "next-step did not return state_current_stage."
     }
+    & (Join-Path $TargetRoot "agent-flow/scripts/sync-state.ps1") -ChangeDir $changeDir
     & (Join-Path $TargetRoot "agent-flow/scripts/state-check.ps1") -ChangeDir $changeDir -ExpectedStage $ExpectedStage
 }
 
@@ -148,6 +149,60 @@ function Assert-GateScripts {
     }
 }
 
+function Assert-TaskBoundary {
+    param([string]$TargetRoot)
+
+    Push-Location $TargetRoot
+    try {
+        git init *> $null
+        git config user.email "agent-flow@example.invalid"
+        git config user.name "agent-flow test"
+        git config core.autocrlf false
+        git add -A *> $null
+        git commit -m "baseline" *> $null
+    } finally {
+        Pop-Location
+    }
+
+    $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-boundary"
+    New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
+    Add-Content -Encoding utf8 -LiteralPath (Join-Path $TargetRoot "README.md") -Value "`nDeclared change."
+    & (Join-Path $TargetRoot "agent-flow/scripts/task-boundary-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
+    if (-not $?) {
+        throw "task-boundary-check did not pass declared README.md change."
+    }
+
+    Add-Content -Encoding utf8 -LiteralPath (Join-Path $TargetRoot "package.json") -Value "`n"
+    $boundaryOutput = & (Join-Path $TargetRoot "agent-flow/scripts/task-boundary-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot *>&1
+    if ($LASTEXITCODE -eq 0) {
+        throw "task-boundary-check did not reject undeclared package.json change. Output: $boundaryOutput"
+    }
+}
+
+function Assert-ClosureCheck {
+    param([string]$TargetRoot)
+
+    $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-closure"
+    New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [ ] Standard`n- [x] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value "# Code Scan`n`nScanned."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n- AC-01: Demo."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`nAlignment Verdict: aligned"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "PLAN.md") -Value "# Plan`n`nPlan."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value "# Verify`n`n## AC Evidence`n`n| AC | Evidence |`n|---|---|`n| AC-01 | pass |`n`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REVIEW.md") -Value "# Review`n`nReviewed."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REPORT.md") -Value "# Report`n`nDone."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value "# Evolution`n`nNo change."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value "# Audit`n`n## Closure Audit`n`nVerdict: acceptable`n`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass"
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/closure-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
+    if (-not $?) {
+        throw "closure-check smoke test failed."
+    }
+}
+
 try {
     Write-Host "== scaffold health =="
     & (Join-Path $starterRoot "agent-flow/scripts/scaffold-health.ps1")
@@ -177,18 +232,29 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/GO.md")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/sync-state.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/sync-state.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/state-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/state-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-boundary-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-boundary-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/closure-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/closure-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.sh")
     & (Join-Path $emptyTarget "agent-flow/scripts/init-project.ps1") -Target $emptyTarget
+    & (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1") -ProjectRoot $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/run-verify.ps1") -All
     Assert-NextStage -TargetRoot $emptyTarget -ExpectedStage "requirement"
     Assert-DesignAlignmentStage -TargetRoot $emptyTarget
     Assert-NewChangeAndAlignment -TargetRoot $emptyTarget
     Assert-GateScripts -TargetRoot $emptyTarget
+    Assert-TaskBoundary -TargetRoot $emptyTarget
+    Assert-ClosureCheck -TargetRoot $emptyTarget
 
     Write-Host "== update existing AGENTS.md =="
     New-Item -ItemType Directory -Force -Path $updateTarget | Out-Null
