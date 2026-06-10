@@ -31,6 +31,25 @@ Complete REQUIREMENT, CODE_SCAN, DESIGN, PLAN, TASKS, then run Plan Audit.
 If Plan Audit is not accept, stop and list required fixes.
 ```
 
+## Ask What To Do Next
+
+```text
+Check agent-flow change: <change-id>.
+First run next-step and read stage, missing, blocked, and next_prompt.
+Then continue according to next_prompt.
+If blocked is not empty, explain the blocker and give me the available options before editing files.
+```
+
+Commands:
+
+```powershell
+agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+```
+
+```bash
+bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+```
+
 ## Implementation
 
 ```text
@@ -56,4 +75,3 @@ Based on EVOLUTION.md, evaluate whether the starter should change.
 Prefer template, knowledge, and script improvements before root AGENTS.md changes.
 Do not modify files until I approve the proposed upgrade list.
 ```
-

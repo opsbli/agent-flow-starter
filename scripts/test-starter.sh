@@ -28,6 +28,34 @@ assert_path() {
   fi
 }
 
+assert_next_stage() {
+  local target_root="$1"
+  local expected_stage="$2"
+  local change_dir="$target_root/agent-flow/changes/demo-next-step"
+  mkdir -p "$change_dir"
+  cat > "$change_dir/CHANGE.md" <<'EOF'
+# Change
+
+- [ ] Light
+- [x] Standard
+- [ ] Heavy
+
+## Summary
+
+Demo change for next-step self-test.
+EOF
+  cat > "$change_dir/CODE_SCAN.md" <<'EOF'
+# Code Scan
+
+Relevant code was scanned for the demo change.
+EOF
+
+  local output
+  output="$(bash "$target_root/agent-flow/scripts/next-step.sh" --change-dir "$change_dir")"
+  printf '%s\n' "$output" | grep -q "\"stage\": \"$expected_stage\""
+  printf '%s\n' "$output" | grep -q "\"next_prompt\":"
+}
+
 echo "== scaffold health =="
 bash "$starter_root/agent-flow/scripts/scaffold-health.sh"
 if command -v pwsh >/dev/null 2>&1; then
@@ -42,8 +70,11 @@ mkdir -p "$empty_target"
 bash "$starter_root/scripts/install-agent-flow.sh" --target "$empty_target"
 assert_path "$empty_target/AGENTS.md"
 assert_path "$empty_target/agent-flow/GO.md"
+assert_path "$empty_target/agent-flow/scripts/next-step.ps1"
+assert_path "$empty_target/agent-flow/scripts/next-step.sh"
 bash "$empty_target/agent-flow/scripts/init-project.sh" --target "$empty_target"
 bash "$empty_target/agent-flow/scripts/run-verify.sh" --all
+assert_next_stage "$empty_target" "requirement"
 
 echo "== update existing AGENTS.md =="
 mkdir -p "$update_target"

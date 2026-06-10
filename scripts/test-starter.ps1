@@ -14,6 +14,41 @@ function Assert-Path {
     }
 }
 
+function Assert-NextStage {
+    param(
+        [string]$TargetRoot,
+        [string]$ExpectedStage
+    )
+
+    $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-next-step"
+    New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md") -Value @"
+# Change
+
+- [ ] Light
+- [x] Standard
+- [ ] Heavy
+
+## Summary
+
+Demo change for next-step self-test.
+"@
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value @"
+# Code Scan
+
+Relevant code was scanned for the demo change.
+"@
+
+    $json = & (Join-Path $TargetRoot "agent-flow/scripts/next-step.ps1") -ChangeDir $changeDir
+    $result = $json | ConvertFrom-Json
+    if ($result.stage -ne $ExpectedStage) {
+        throw "Expected next-step stage '$ExpectedStage', got '$($result.stage)'. Output: $json"
+    }
+    if ([string]::IsNullOrWhiteSpace($result.next_prompt)) {
+        throw "next-step did not return a next_prompt."
+    }
+}
+
 try {
     Write-Host "== scaffold health =="
     & (Join-Path $starterRoot "agent-flow/scripts/scaffold-health.ps1")
@@ -41,8 +76,11 @@ try {
     & (Join-Path $starterRoot "scripts/install-agent-flow.ps1") -Target $emptyTarget
     Assert-Path (Join-Path $emptyTarget "AGENTS.md")
     Assert-Path (Join-Path $emptyTarget "agent-flow/GO.md")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.sh")
     & (Join-Path $emptyTarget "agent-flow/scripts/init-project.ps1") -Target $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/run-verify.ps1") -All
+    Assert-NextStage -TargetRoot $emptyTarget -ExpectedStage "requirement"
 
     Write-Host "== update existing AGENTS.md =="
     New-Item -ItemType Directory -Force -Path $updateTarget | Out-Null

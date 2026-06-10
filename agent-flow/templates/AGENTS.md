@@ -1,18 +1,18 @@
-# {project-name} Agent Rules
+# {project-name} Agent 规则
 
 <!-- agent-flow:start -->
-> This repository uses `agent-flow` as the default AI development workflow.
-> The repo is the source of truth. Chat is only a temporary working surface.
+> 本仓库默认使用 `agent-flow` 作为 AI 开发流程。
+> 代码仓库是事实来源，聊天内容只是临时工作界面。
 
-## Default Entry
+## 默认入口
 
-For any non-trivial request, agents must start from:
+任何非平凡需求，必须先读：
 
 ```text
 agent-flow/GO.md
 ```
 
-Read in order:
+按顺序读取：
 
 1. `agent-flow/GO.md`
 2. `agent-flow/manifest.yaml`
@@ -26,49 +26,49 @@ Read in order:
 10. `agent-flow/core/logging.md`
 11. `agent-flow/core/evolution.md`
 
-If a task touches frontend work, also read:
+如果任务涉及前端，还必须读：
 
 ```text
 agent-flow/core/frontend-fit.md
 ```
 
-## Project Context
+## 项目上下文
 
-This section must be initialized for the target project:
+安装后必须为目标项目初始化本节：
 
-- Project name:
-- Main stack:
-- Backend directories:
-- Frontend directories:
-- Database or persistence:
-- Test commands:
-- Protected areas:
+- 项目名称：
+- 主要技术栈：
+- 后端目录：
+- 前端目录：
+- 数据库或持久化：
+- 测试命令：
+- 受保护区域：
 
-## Default Workflow
+## 默认流程
 
-Classify each request as `Light`, `Standard`, or `Heavy` using `agent-flow/core/router.md`.
+每个需求都必须按 `agent-flow/core/router.md` 判断为 `Light`、`Standard` 或 `Heavy`。
 
-Heavy is required for schema, auth, public API contracts, workflow/state machines, cross-repo frontend/backend work, deployment, production-risk changes, or large module boundaries.
+涉及数据库 schema、认证鉴权、公开 API 契约、workflow/state machine、跨仓前后端、部署、生产风险、大模块边界时，必须走 `Heavy`。
 
-## Code-First Rule
+## Code-First 规则
 
-Before design or implementation:
+设计或实现前必须：
 
-- scan relevant source code
-- find similar implementation
-- record `read_files`
-- record `write_files`
-- do not modify files outside the approved `write_files`
+- 扫描相关源码。
+- 查找相似实现。
+- 记录 `read_files`。
+- 记录 `write_files`。
+- 不修改未获批准的 `write_files` 之外的文件。
 
-## Protected Areas
+## 受保护区域
 
-Follow `agent-flow/core/autonomy-policy.md`.
+遵守 `agent-flow/core/autonomy-policy.md`。
 
-Stop and ask before touching protected areas such as database schema, auth/permission, public API contracts, token/session, deployment, production config, billing/license, destructive operations, or root build files.
+触碰数据库 schema、认证/权限、公开 API 契约、token/session、部署、生产配置、计费/授权、破坏性操作、根构建文件前，必须先停下来请求确认。
 
-## Verification
+## 验证
 
-Windows:
+Windows：
 
 ```text
 agent-flow/scripts/scaffold-health.ps1
@@ -76,7 +76,7 @@ agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
-Linux/macOS:
+Linux/macOS：
 
 ```text
 bash agent-flow/scripts/scaffold-health.sh
@@ -84,23 +84,22 @@ bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/drift-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
-No change is complete without `VERIFY.md`.
+没有 `VERIFY.md`，不得声明完成。
 
-## Knowledge And Decisions
+## 知识和决策
 
-- Reusable facts go to `agent-flow/knowledge/`.
-- Irreversible architectural decisions go to `agent-flow/decisions/`.
-- Each completed change writes `EVOLUTION.md`.
+- 可复用事实写入 `agent-flow/knowledge/`。
+- 不可逆架构决策写入 `agent-flow/decisions/`。
+- 每个完成的 change 必须写 `EVOLUTION.md`。
 
-## Hard Prohibitions
+## 禁止事项
 
-- No direct-to-code for non-trivial changes.
-- No design before `CODE_SCAN.md`.
-- No Heavy implementation before Plan Audit.
-- No Heavy completion before Closure Audit.
-- No protected-area change without approval.
-- No duplicate abstraction before search.
-- No completion claim without verification evidence.
-- No chat-only durable memory.
+- 非平凡需求禁止直接写代码。
+- 没有 `CODE_SCAN.md` 禁止先做设计。
+- Heavy change 没有通过 `Plan Audit` 禁止实现。
+- Heavy change 没有通过 `Closure Audit` 禁止收口。
+- 未获批准禁止修改受保护区域。
+- 查找前禁止新增重复抽象。
+- 没有验证证据禁止声明完成。
+- 禁止只在聊天里保存长期知识。
 <!-- agent-flow:end -->
-

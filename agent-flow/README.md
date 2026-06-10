@@ -1,167 +1,513 @@
-﻿# agent-flow 脚手架
+# agent-flow 项目内使用手册
 
-> 面向任意软件项目的 AI 开发脚手架。它定义一套可复制、可审计、可演进的工作流。
+这个目录是目标项目里的 AI 开发工作流运行区。安装 `agent-flow-starter` 后，AI 和开发者主要围绕这里工作。
 
-## 定位
+`agent-flow` 的目标不是增加文档负担，而是让 AI 在老项目和复杂项目里更可控：先查代码，再写方案；先明确边界，再实现；先验证，再宣布完成；最后把经验沉淀回来。
 
-`agent-flow` 不是另一套厚重文档体系，而是一套可执行的协作协议：
+## 每次需求的默认流程
 
-- 代码优先：每次需求先查项目代码、模块边界、既有抽象，再写方案。
-- 轻重分流：小改动走轻流程，高风险变更走完整流程。
-- 知识沉淀：每次对话中确认的术语、规则、坑点都写入可复用文件。
-- 决策沉淀：难以逆转、有取舍、有未来解释成本的选择写成 ADR。
-- 验证收口：没有外部验证证据，不允许声明完成。
-- 自我演进：每次交付后反推脚手架、规则、模板和验证闸门是否需要升级。
+```text
+需求进入
+-> 读取 agent-flow/GO.md
+-> 创建 agent-flow/changes/<change-id>
+-> 完成 CODE_SCAN.md
+-> 判断 Light / Standard / Heavy
+-> 写对应工件
+-> 实现
+-> 验证
+-> 报告
+-> 复盘和沉淀
+```
 
-## 从几篇文章里保留的经验
+所有非平凡需求都应该从：
 
-### 来自 Spec 驱动系列
+```text
+agent-flow/GO.md
+```
 
-- Spec 不是代码真相，而是意图契约。
-- 真正长期有价值的是测试、知识库、验证闸门和项目约束。
-- 模型越强，Spec 越应该薄；验证越应该硬。
-- 小需求不该被重流程拖慢，大需求不该靠直觉硬冲。
+开始。
 
-### 来自 flow-kit
-
-- 每个 change 应该有独立档案，方便审计、交接和复盘。
-- 老项目必须先入场扫描，先找既有抽象，再写新代码。
-- 每个任务需要声明 `read_files` 和 `write_files`，防止越界修改。
-- 破坏性变更需要人工卡点。
-- 前端新模块必须对齐既有视觉语汇。
-
-### 来自 grill-with-docs
-
-- 需求中的术语要和代码、领域文档互相校验。
-- 模糊词要被追问成精确概念。
-- 只有真正难以逆转且有取舍的选择才写 ADR。
-- 术语和决策不要停留在聊天里，要及时写回文件。
-
-### 来自 Semble 式代码优先上下文
-
-这里不绑定具体工具，只吸收其思想：先检索项目事实，再生成回答。
-
-每次 AI 开发前必须先回答：
-
-1. 这次需求和哪些现有模块、表、接口、权限、抽象有关？
-2. 项目里是否已有类似实现？
-3. 哪些文件只允许读，哪些文件允许写？
-4. 哪些代码事实会约束本次设计？
-
-## 目录
+## 目录说明
 
 ```text
 agent-flow/
-├── GO.md                         # AI 入口
-├── manifest.yaml                 # 项目画像和闸门声明
-├── core/                         # 宪法、路由、记忆、自演进规则
-├── flows/                        # 分阶段工作流
-├── templates/                    # change/requirement/design/task/report 模板
-├── changes/                      # 每次需求的 change 档案
-├── knowledge/                    # 项目知识沉淀
-├── decisions/                    # ADR 决策沉淀
-└── reports/                      # 交付和自演进报告
-
-agent-flow/scripts/
-├── run-verify.ps1                # Windows manifest-driven verification runner
-├── run-verify.sh                 # Linux/macOS manifest-driven verification runner
-├── init-project.ps1              # Windows project initialization
-├── init-project.sh               # Linux/macOS project initialization
-├── verify-backend.ps1            # Windows 后端基线验证
-├── verify-backend.sh             # Linux/macOS 后端基线验证
-├── verify-module.ps1             # Windows Maven 模块验证
-├── verify-module.sh              # Linux/macOS Maven 模块验证
-├── ac-check.ps1                  # Windows AC 编号覆盖检查
-├── ac-check.sh                   # Linux/macOS AC 编号覆盖检查
-├── drift-check.ps1               # Windows schema/路由/权限漂移检查
-├── drift-check.sh                # Linux/macOS schema/路由/权限漂移检查
-├── scaffold-health.ps1           # Windows 脚手架健康检查
-└── scaffold-health.sh            # Linux/macOS 脚手架健康检查
+├── GO.md                         # AI 默认入口
+├── manifest.yaml                 # 项目画像、验证命令、风险规则
+├── VERSION                       # agent-flow starter 版本
+├── UPGRADE.md                    # 升级说明
+├── core/                         # 核心规则
+├── flows/                        # Light / Standard / Heavy 流程
+├── templates/                    # change 工件模板
+├── changes/                      # 每个需求的工作目录
+├── knowledge/                    # 长期知识沉淀
+├── decisions/                    # ADR 决策记录
+├── logs/                         # 日级过程日志
+├── reports/                      # 交付报告
+└── scripts/                      # 验证、初始化、自检脚本
 ```
 
-Windows:
+## 安装后第一步
 
-```powershell
-agent-flow/scripts/scaffold-health.ps1
-agent-flow/scripts/init-project.ps1
-agent-flow/scripts/run-verify.ps1 -All
-agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/verify-backend.ps1 -SkipTests
-agent-flow/scripts/verify-module.ps1 -Module <module-path-or-name> -SkipTests
-```
+第一次安装到项目后，先初始化。
 
-Linux/macOS:
-
-```bash
-bash agent-flow/scripts/scaffold-health.sh
-bash agent-flow/scripts/init-project.sh
-bash agent-flow/scripts/run-verify.sh --all
-bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/drift-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/verify-backend.sh --skip-tests
-bash agent-flow/scripts/verify-module.sh --module <module-path-or-name> --skip-tests
-```
-
-## 从 AGE-workflow 加入的治理层
-
-- `source-of-truth.md`：定义代码、需求、设计、任务、报告、聊天冲突时谁优先。
-- `autonomy-policy.md`：定义 AI 自治等级和 protected areas。
-- `plan-guide.md`：定义 Heavy change 的计划状态、阶段和关闭门槛。
-- `audit.md`：定义 Plan Audit 和 Closure Audit。
-- `logging.md`：定义日级短日志。
-- `known-good-baselines.md`：记录项目健康状态。
-
-## 初始化
-
-Windows:
+Windows：
 
 ```powershell
 agent-flow/scripts/init-project.ps1
 agent-flow/scripts/scaffold-health.ps1
 ```
 
-Linux/macOS:
+Linux/macOS：
 
 ```bash
 bash agent-flow/scripts/init-project.sh
 bash agent-flow/scripts/scaffold-health.sh
 ```
 
-初始化后检查：
+初始化会更新：
+
+```text
+AGENTS.md
+agent-flow/manifest.yaml
+agent-flow/knowledge/module-map.md
+agent-flow/knowledge/reuse-map.md
+agent-flow/knowledge/verification.md
+```
+
+然后用这段 prompt 让 AI 复核：
+
+```text
+我已经安装并初始化 agent-flow。
+先不要写业务代码。
+
+请审查初始化结果：
+1. 检查 AGENTS.md Project Context。
+2. 检查 agent-flow/manifest.yaml。
+3. 检查 module-map、reuse-map、verification、pitfalls。
+4. 填补或指出仍然存在的 TODO。
+5. 运行 scaffold-health。
+6. 输出本项目如何使用 agent-flow。
+```
+
+检查清单：
 
 ```text
 agent-flow/templates/INIT_CHECKLIST.md
 ```
 
-## 推荐用法
+## 三种流程
 
-在任意 AI IDE 中输入：
+### Light
+
+用于低风险小改动。
+
+典型场景：
+
+- 文案。
+- 注释。
+- 单文件小修复。
+- 局部样式。
+- 已有测试覆盖的小 bug。
+
+最小工件：
 
 ```text
-@agent-flow/GO.md
-我要在老项目里新增一个 xxx 模块，用于 ...
+CHANGE.md
+CODE_SCAN.md
+VERIFY.md
+REPORT.md
 ```
 
-AI 必须先执行路由和代码扫描，不允许直接写实现。
+### Standard
 
-## 三档流程
+用于边界明确的单模块需求。
 
-| 档位 | 场景 | 流程 |
-|---|---|---|
-| Light | 小 bug、文案、单文件低风险修改 | intake -> code-scan -> dev -> verify -> memory |
-| Standard | 单模块功能、标准 CRUD、明确需求 | intake -> requirement -> code-scan -> design -> task -> dev -> verify -> report |
-| Heavy | 老项目新模块、跨模块、schema、权限、状态机、WebSocket、生产风险 | intake -> grill -> requirement -> code-scan -> design -> task -> dev -> verify -> review -> evolve |
+典型场景：
 
-老项目新模块、跨模块、schema、权限、状态机、前后端联动、生产风险默认走 Heavy。
+- 单模块功能。
+- 标准 CRUD。
+- 小型页面或接口改动。
+- 不涉及 schema/auth/public API 破坏性变化的需求。
+
+常用工件：
+
+```text
+CHANGE.md
+REQUIREMENT.md
+CODE_SCAN.md
+DESIGN.md
+TASKS.md
+VERIFY.md
+REPORT.md
+EVOLUTION.md
+```
+
+### Heavy
+
+用于高风险或跨边界需求。
+
+典型场景：
+
+- 老项目新模块。
+- 数据库 schema。
+- 权限、登录、Token、匿名接口。
+- 公共 API 契约。
+- 工作流、状态机、WebSocket、实时事件。
+- 前后端联动。
+- 部署、生产配置、生产风险。
+
+必须额外有：
+
+```text
+PLAN.md
+AUDIT.md
+```
+
+实现前必须完成：
+
+```text
+Plan Audit
+Verdict: accept
+```
+
+完成前必须完成：
+
+```text
+Closure Audit
+VERIFY.md
+REVIEW.md
+REPORT.md
+EVOLUTION.md
+```
+
+## 常用 prompt
+
+### 开始需求
+
+```text
+按 agent-flow 流程处理这个需求：<需求内容>。
+先做 code-first 扫描，判断 Light/Standard/Heavy，然后给我 CHANGE 和执行计划。
+```
+
+### 只做规划，不实现
+
+```text
+继续 agent-flow change：<change-id>。
+先不要写业务代码。
+请补全 REQUIREMENT、CODE_SCAN、DESIGN、TASKS。
+如果是 Heavy，请补 PLAN 并执行 Plan Audit。
+```
+
+### 开始实现
+
+```text
+我接受 Plan Audit。
+继续 agent-flow change：<change-id>。
+严格按 TASKS.md 的 write_files 修改。
+每完成一个任务更新 TASKS.md。
+```
+
+### 收口
+
+```text
+继续 agent-flow change：<change-id>。
+补全 VERIFY、REVIEW、REPORT、EVOLUTION、AUDIT。
+运行 ac-check、drift-check、scaffold-health 和相关 run-verify 命令。
+如果 Closure Audit 是 conditional，请列出残余风险。
+```
+
+### 推荐下一步
+
+当你不知道一个 change 下一步该做什么时，先让脚手架读工件状态：
+
+Windows：
+
+```powershell
+agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+```
+
+输出会包含：
+
+- `stage`：当前所处阶段。
+- `missing`：缺失或仍是占位内容的工件。
+- `blocked`：需要人工决策的阻塞。
+- `next`：下一步摘要。
+- `next_prompt`：可直接复制给 AI 的下一轮 prompt。
+
+常用 prompt：
+
+```text
+按 agent-flow 流程检查 change：<change-id>。
+先运行 next-step，读取输出里的 stage、missing、blocked 和 next_prompt。
+然后按 next_prompt 继续处理；如果 blocked 不为空，先解释阻塞和可选方案。
+```
+
+### 自我演进
+
+```text
+基于本次 EVOLUTION.md，评估是否需要升级 agent-flow。
+只评估，不直接修改。
+优先级：templates > scripts > knowledge > flows > AGENTS.md。
+```
+
+更多 prompt：
+
+```text
+docs/PROMPTS.md
+```
+
+## 验证命令
+
+### 脚手架健康检查
+
+Windows：
+
+```powershell
+agent-flow/scripts/scaffold-health.ps1
+agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/scaffold-health.sh
+bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+```
+
+### 运行项目验证
+
+验证命令来自：
+
+```text
+agent-flow/manifest.yaml
+```
+
+Windows：
+
+```powershell
+agent-flow/scripts/run-verify.ps1 -All
+agent-flow/scripts/run-verify.ps1 -Name backend_compile
+agent-flow/scripts/run-verify.ps1 -Name backend_test
+agent-flow/scripts/run-verify.ps1 -Name frontend_typecheck
+agent-flow/scripts/run-verify.ps1 -Name module_test -Module <module>
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/run-verify.sh --all
+bash agent-flow/scripts/run-verify.sh --name backend_compile
+bash agent-flow/scripts/run-verify.sh --name backend_test
+bash agent-flow/scripts/run-verify.sh --name frontend_typecheck
+bash agent-flow/scripts/run-verify.sh --name module_test --module <module>
+```
+
+如果 manifest 里是 `TODO_...`，脚本会跳过并提示。
+
+### AC 证据检查
+
+Windows：
+
+```powershell
+agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
+```
+
+要求 `REQUIREMENT.md` 中使用：
+
+```text
+AC-01
+AC-02
+```
+
+### Drift 检查
+
+Windows：
+
+```powershell
+agent-flow/scripts/drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/drift-check.sh --change-dir agent-flow/changes/<change-id>
+```
+
+它会检查设计中常见的 schema、API、权限决策漂移。
+
+## 工件怎么写
+
+### REQUIREMENT.md
+
+必须包含可验证 AC：
+
+```text
+AC-01
+AC-02
+AC-03
+```
+
+每条 AC 要能在 `VERIFY.md` 找到证据。
+
+### CODE_SCAN.md
+
+必须说明：
+
+- 读了哪些文件。
+- 找到哪些相似实现。
+- 复用了哪些抽象。
+- 哪些文件只读。
+- 哪些文件允许写。
+- 哪些问题未决。
+
+### DESIGN.md
+
+涉及接口、权限或认证时，必须写：
+
+```text
+API / Permission / Auth 决策
+```
+
+涉及 workflow/status/state machine 时，必须写：
+
+```text
+Status Vocabulary
+Status Mapping
+Legacy Compatibility
+```
+
+普通 CRUD 可以明确写“不涉及状态机”。
+
+### TASKS.md
+
+每个任务都要有：
+
+- 目标。
+- AC 映射。
+- `read_files`。
+- `write_files`。
+- 验证命令。
+- 是否允许并行。
+
+### VERIFY.md
+
+必须包含：
+
+```text
+AC Evidence
+```
+
+证据可以是测试、命令、代码位置、手工验证或明确跳过原因。
+
+### EVOLUTION.md
+
+回答：
+
+- 这次流程哪里有效？
+- 哪里像形式主义？
+- 哪些知识要沉淀？
+- 哪些模板要升级？
+- 是否要新增验证脚本？
+
+## 知识库
+
+长期事实写入：
+
+```text
+agent-flow/knowledge/glossary.md
+agent-flow/knowledge/module-map.md
+agent-flow/knowledge/reuse-map.md
+agent-flow/knowledge/pitfalls.md
+agent-flow/knowledge/verification.md
+agent-flow/knowledge/known-good-baselines.md
+```
+
+建议：
+
+- 新术语写 glossary。
+- 模块边界写 module-map。
+- 可复用能力写 reuse-map。
+- 踩坑写 pitfalls。
+- 验证方式写 verification。
+- 已确认可工作的健康状态写 known-good-baselines。
+
+## 决策记录
+
+写入：
+
+```text
+agent-flow/decisions/
+```
+
+适合写 ADR 的情况：
+
+- 架构边界变化。
+- 不可逆或难回滚的选择。
+- 影响多个模块。
+- 有明显取舍，未来需要解释。
+
+不适合写 ADR 的情况：
+
+- 普通实现细节。
+- 临时 bugfix。
+- 没有长期解释成本的小改动。
+
+## 升级 agent-flow
+
+目标项目升级时，从 `agent-flow-starter` 重新运行安装脚本。
+
+安装器默认保留：
+
+```text
+agent-flow/changes
+agent-flow/logs
+agent-flow/reports
+agent-flow/knowledge
+agent-flow/decisions
+```
+
+升级后看：
+
+```text
+agent-flow/UPGRADE.md
+```
 
 ## 完成定义
 
-一次 change 只有同时满足以下条件，才能标记完成：
+一个 change 只有满足以下条件，才能说完成：
 
-- `agent-flow/changes/<change-id>/REPORT.md` 已写入验证证据。
-- 相关 AC 有测试或手工验证记录。
-- 项目相关编译、测试或替代验证已执行。
-- schema、路由、权限等漂移检查已执行或明确记录跳过原因。
-- 新术语、坑点、决策已沉淀到 `knowledge/` 或 `decisions/`。
-- `EVOLUTION.md` 已判断脚手架是否需要更新。
+- `REPORT.md` 已写交付摘要。
+- `VERIFY.md` 已写验证证据。
+- 所有 AC 有 Evidence 或明确 residual risk。
+- `ac-check`、`drift-check`、`scaffold-health` 已执行或说明跳过原因。
+- Heavy change 有 Closure Audit。
+- 新知识、坑点、决策已沉淀。
+- `EVOLUTION.md` 已写。
+
+## 示例
+
+教学示例：
+
+```text
+examples/sample-change/
+```
+
+它展示：
+
+- Light change 怎么组织。
+- `AC-01` 怎么写。
+- `CODE_SCAN.md` 怎么写边界。
+- `DESIGN.md` 怎么写 API/Auth 决策。
+- `VERIFY.md` 怎么绑定 AC Evidence。

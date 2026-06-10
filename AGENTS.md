@@ -1,17 +1,17 @@
-# agent-flow-starter Agent Rules
+# agent-flow-starter Agent 规则
 
-> This repository is the reusable starter for the `agent-flow` AI development workflow.
-> Keep this repo generic. Do not add project-specific business history to the starter.
+> 本仓库是 `agent-flow` AI 开发流程的通用 starter。
+> 保持通用，不要写入具体业务项目的历史、需求或领域规则。
 
-## Default Entry
+## 默认入口
 
-For work inside this starter repo, start from:
+在本 starter 仓库内工作时，先读：
 
 ```text
 agent-flow/README.md
 ```
 
-When updating the workflow itself, also read:
+修改流程本身时，还必须读：
 
 ```text
 agent-flow/GO.md
@@ -20,20 +20,19 @@ agent-flow/core/source-of-truth.md
 agent-flow/core/evolution.md
 ```
 
-## Editing Rules
+## 编辑规则
 
-- Keep `AGENTS.md` short and operational.
-- Put detailed usage in `README.md` or `agent-flow/README.md`.
-- Keep templates generic.
-- Do not add real project `changes/`, `logs/`, `reports/`, or `known-good-baselines` to this starter.
-- When changing scripts, update both Windows `.ps1` and Linux/macOS `.sh` versions when applicable.
-- Run both scaffold health scripts after changing scaffold structure.
+- `AGENTS.md` 只保留短规则和硬约束。
+- 详细用法写入 `README.md` 或 `agent-flow/README.md`。
+- 模板必须保持通用，不写具体项目名称、模块名、业务状态或历史结论。
+- 不要把真实项目的 `changes/`、`logs/`、`reports/`、`known-good-baselines/` 放进 starter。
+- 修改脚本时，凡是适用的能力必须同时更新 Windows `.ps1` 和 Linux/macOS `.sh`。
+- 修改脚手架结构后，必须运行两套 `scaffold-health`。
 
-## Install Contract
+## 安装契约
 
-The starter must support:
+starter 必须支持：
 
-- Creating or updating `agent-flow/` in a target project.
-- Creating or updating an `AGENTS.md` agent-flow block in a target project.
-- Preserving target project history under `agent-flow/changes`, `agent-flow/logs`, and `agent-flow/reports` unless explicitly forced.
-
+- 在目标项目创建或更新 `agent-flow/`。
+- 在目标项目创建或更新 `AGENTS.md` 中的 `agent-flow` 区块。
+- 除非显式强制覆盖，否则保留目标项目的 `agent-flow/changes`、`agent-flow/logs`、`agent-flow/reports`。
