@@ -29,7 +29,7 @@
 - `CHANGE.md`
 - `REQUIREMENT.md`
 - `CODE_SCAN.md`
-- `DESIGN.md`
+- `DESIGN.md`，其中 `Design Alignment / Grill` 的 `Alignment Verdict` 必须为 `aligned` 或用户明确接受 `skipped`
 - `TASKS.md`
 - `VERIFY.md`
 - `REPORT.md`
@@ -51,7 +51,7 @@
 - `CHANGE.md`
 - `REQUIREMENT.md`
 - `CODE_SCAN.md`
-- `DESIGN.md`
+- `DESIGN.md`，其中 `Design Alignment / Grill` 的 `Alignment Verdict` 必须为 `aligned` 或用户明确接受 `skipped`
 - `TASKS.md`
 - `VERIFY.md`
 - `REVIEW.md`

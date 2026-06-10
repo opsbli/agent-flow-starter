@@ -69,7 +69,23 @@
 
 普通 CRUD 不强制填写 workflow/status 条件小节，可明确写“不涉及状态机”。
 
-## 阶段 3.5：Plan
+## 阶段 3.5：Design Alignment / Grill
+
+产物：更新 `DESIGN.md` 的 `Design Alignment / Grill` 小节。
+
+目的：把用户自然语言、AI 理解、现有代码事实对齐，避免带着误解进入计划和实现。
+
+必须执行：
+
+- 一次只问一个关键问题。
+- 如果问题能通过读代码回答，先读代码，不要问用户。
+- 每个问题给出 AI 推荐答案。
+- 用户确认后，把结论写回 `DESIGN.md`。
+- `Alignment Verdict` 必须是 `aligned`，或用户明确接受 `skipped` 且填写 `Skip Reason`。
+
+如果 `Alignment Verdict: pending` 或 `blocked`，不得进入 `PLAN.md`、`TASKS.md` 或实现。
+
+## 阶段 3.6：Plan
 
 产物：`PLAN.md`
 
@@ -81,10 +97,11 @@
 - Closure Gates。
 - Protected Area Review。
 - Deferred But Adjudicated。
+- `alignment-check` 已通过或用户明确接受 `skipped` 风险。
 
 如果涉及 protected areas，必须记录用户批准或停止。
 
-## 阶段 3.6：Plan Audit
+## 阶段 3.7：Plan Audit
 
 产物：`AUDIT.md` 的 Plan Audit 部分。
 

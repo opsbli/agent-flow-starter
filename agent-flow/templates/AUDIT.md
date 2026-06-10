@@ -13,6 +13,7 @@ Checklist:
 - [ ] Current baseline checked against live code
 - [ ] Goals and Non-Goals clear
 - [ ] Code scan complete
+- [ ] Design Alignment completed (`Alignment Verdict: aligned` or explicitly accepted `skipped`)
 - [ ] Protected areas identified
 - [ ] read_files/write_files bounded
 - [ ] Exit criteria verifiable

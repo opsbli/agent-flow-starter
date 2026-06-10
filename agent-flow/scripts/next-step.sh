@@ -92,6 +92,21 @@ audit_verdict() {
   ' "$file"
 }
 
+design_alignment_verdict() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  awk '
+    BEGIN { IGNORECASE = 1 }
+    /^[[:space:]]*Alignment Verdict:[[:space:]]*/ {
+      value = $0
+      sub(/^.*Alignment Verdict:[[:space:]]*/, "", value)
+      sub(/[[:space:]].*$/, "", value)
+      print tolower(value)
+      exit
+    }
+  ' "$file"
+}
+
 contains_item() {
   local needle="$1"
   shift || true
@@ -126,7 +141,7 @@ analyze_change() {
   local dir="$1"
   [ -d "$dir" ] || { echo "ChangeDir not found: $dir" >&2; exit 1; }
 
-  local change_id flow stage next prompt plan_verdict closure_verdict
+  local change_id flow stage next prompt plan_verdict closure_verdict alignment_verdict
   change_id="$(basename "$dir")"
   flow="$(flow_level "$dir")"
   stage="unknown"
@@ -184,6 +199,7 @@ analyze_change() {
 
     plan_verdict="$(audit_verdict "$dir/AUDIT.md" "Plan Audit")"
     closure_verdict="$(audit_verdict "$dir/AUDIT.md" "Closure Audit")"
+    alignment_verdict="$(design_alignment_verdict "$dir/DESIGN.md")"
 
     if contains_item "REQUIREMENT.md" "${missing[@]}"; then
       stage="requirement"
@@ -193,6 +209,13 @@ analyze_change() {
       stage="design"
       next="Complete DESIGN.md with API / Permission / Auth decisions."
       prompt="Continue agent-flow change: $change_id. Based on REQUIREMENT and CODE_SCAN, complete DESIGN.md with module boundaries, reusable abstractions, API/Permission/Auth decisions, test strategy, and risks. Do not implement code yet."
+    elif [ "$alignment_verdict" != "aligned" ] && [ "$alignment_verdict" != "skipped" ]; then
+      stage="design-alignment"
+      if [ "$alignment_verdict" = "blocked" ]; then
+        blocked+=("Design Alignment is blocked; resolve open questions before planning or implementation.")
+      fi
+      next="Run Design Alignment / Grill before PLAN.md, TASKS.md, or implementation."
+      prompt="Continue agent-flow change: $change_id. Run Design Alignment / Grill before planning or implementation. Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md. Interview me one question at a time until user intent, code facts, and the design are aligned. If a question can be answered by reading the codebase, read the codebase instead of asking me. For every question, provide your recommended answer. After each confirmed answer, update DESIGN.md. Run alignment-check after updating DESIGN.md. Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason."
     elif [ "$flow" = "Heavy" ] && contains_item "PLAN.md" "${missing[@]}"; then
       stage="plan"
       next="Complete PLAN.md."

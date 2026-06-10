@@ -22,13 +22,46 @@ Use the agent-flow process for this request: <requirement>.
 Start with code-first scan, classify Light/Standard/Heavy, then give me CHANGE and the execution plan.
 ```
 
+## Create Change Folder
+
+```text
+Create an agent-flow change for: <requirement>.
+Use new-change with the selected Light / Standard / Heavy flow.
+Then run next-step and continue from the returned next_prompt.
+```
+
+Commands:
+
+```powershell
+agent-flow/scripts/new-change.ps1 -Name <change-id> -Flow Standard
+```
+
+```bash
+bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
+```
+
 ## Heavy Planning
 
 ```text
 Continue agent-flow change: <change-id>.
 Do not implement yet.
-Complete REQUIREMENT, CODE_SCAN, DESIGN, PLAN, TASKS, then run Plan Audit.
+Complete REQUIREMENT, CODE_SCAN, DESIGN, Design Alignment / Grill, PLAN, TASKS, then run Plan Audit.
 If Plan Audit is not accept, stop and list required fixes.
+```
+
+## Design Alignment / Grill
+
+```text
+Continue agent-flow change: <change-id>.
+Run Design Alignment / Grill before planning or implementation.
+
+Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md.
+Interview me one question at a time until user intent, code facts, and the design are aligned.
+If a question can be answered by reading the codebase, read the codebase instead of asking me.
+For every question, provide your recommended answer.
+After each confirmed answer, update DESIGN.md.
+Run alignment-check after updating DESIGN.md.
+Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason.
 ```
 
 ## Ask What To Do Next

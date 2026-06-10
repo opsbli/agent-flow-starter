@@ -42,6 +42,7 @@
 - 代码事实优先于聊天描述。
 - 聊天不是长期记忆，仓库文件才是。
 - 非平凡需求不能直接写代码。
+- Standard / Heavy 需求必须先完成 `Design Alignment / Grill`，再进入计划或实现。
 - Heavy 需求必须先 Plan Audit，再实现。
 - 没有验证证据，就不能说完成。
 - 经验要反哺到 `knowledge/`、`templates/`、`scripts/`。
@@ -185,6 +186,20 @@ agent-flow/core/*
 agent-flow/changes/<change-id>/
 ```
 
+也可以用脚本创建：
+
+Windows：
+
+```powershell
+agent-flow/scripts/new-change.ps1 -Name <change-id> -Flow Standard
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
+```
+
 ### 1.1 让流程推荐下一步
 
 如果你不确定某个 change 现在该继续写需求、补设计、执行 Plan Audit、实现、验证，还是收口，可以先跑：
@@ -262,7 +277,9 @@ EVOLUTION.md
 
 ```text
 继续 agent-flow change：<change-id>。
-按 Standard 流程补全 REQUIREMENT、CODE_SCAN、DESIGN、TASKS。
+按 Standard 流程补全 REQUIREMENT、CODE_SCAN、DESIGN。
+DESIGN 完成后执行 Design Alignment / Grill：一次只问一个关键问题；如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
+Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 TASKS。
 每个任务必须声明 read_files 和 write_files。
 先不要实现，等我确认设计。
 ```
@@ -289,6 +306,7 @@ AUDIT.md
 实现前必须有：
 
 ```text
+Design Alignment / Grill -> Alignment Verdict: aligned
 Plan Audit -> Verdict: accept
 ```
 
@@ -298,7 +316,9 @@ Plan Audit -> Verdict: accept
 继续 agent-flow change：<change-id>。
 这个需求按 Heavy 处理。
 不要实现代码。
-请补全 REQUIREMENT、CODE_SCAN、DESIGN、PLAN、TASKS，并执行 Plan Audit。
+请补全 REQUIREMENT、CODE_SCAN、DESIGN。
+DESIGN 完成后执行 Design Alignment / Grill：一次只问一个关键问题；如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
+Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TASKS，并执行 Plan Audit。
 如果 Plan Audit 不是 accept，停止并列出必须修正项。
 ```
 
@@ -330,6 +350,7 @@ Windows：
 ```powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/run-verify.ps1 -All
 agent-flow/scripts/run-verify.ps1 -Name backend_test
 agent-flow/scripts/run-verify.ps1 -Name module_test -Module <module>
@@ -342,6 +363,7 @@ Linux/macOS：
 ```bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/run-verify.sh --all
 bash agent-flow/scripts/run-verify.sh --name backend_test
 bash agent-flow/scripts/run-verify.sh --name module_test --module <module>

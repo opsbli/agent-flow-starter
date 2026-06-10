@@ -97,6 +97,8 @@ AUDIT.md
 
 - 不确认事实源优先级，不处理冲突。
 - 没有 `CODE_SCAN.md`，不写 `DESIGN.md`。
+- Standard / Heavy change 没有完成 `Design Alignment / Grill`，不写 `PLAN.md`、`TASKS.md` 或实现代码。
+- Standard / Heavy change 的 `alignment-check` 未通过，不写 `PLAN.md`、`TASKS.md` 或实现代码。
 - 没有 `DESIGN.md`，不写实现代码。
 - Heavy change 没有 Plan Audit，不写实现代码。
 - 没有 `VERIFY.md`，不说完成。

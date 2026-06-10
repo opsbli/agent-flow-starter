@@ -189,13 +189,31 @@ EVOLUTION.md
 先做 code-first 扫描，判断 Light/Standard/Heavy，然后给我 CHANGE 和执行计划。
 ```
 
+也可以先创建 change 目录：
+
+Windows：
+
+```powershell
+agent-flow/scripts/new-change.ps1 -Name <change-id> -Flow Standard
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
+```
+
 ### 只做规划，不实现
 
 ```text
 继续 agent-flow change：<change-id>。
 先不要写业务代码。
-请补全 REQUIREMENT、CODE_SCAN、DESIGN、TASKS。
-如果是 Heavy，请补 PLAN 并执行 Plan Audit。
+请补全 REQUIREMENT、CODE_SCAN、DESIGN。
+DESIGN 完成后执行 Design Alignment / Grill：一次只问一个关键问题。
+如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
+运行 alignment-check。
+Alignment Verdict 是 aligned，或我明确接受 skipped 且写明 Skip Reason 后，再补 TASKS。
+如果是 Heavy，再补 PLAN 并执行 Plan Audit。
 ```
 
 ### 开始实现
@@ -271,6 +289,7 @@ Windows：
 ```powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
@@ -278,6 +297,7 @@ Linux/macOS：
 ```bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 ### 运行项目验证
@@ -389,6 +409,21 @@ Legacy Compatibility
 ```
 
 普通 CRUD 可以明确写“不涉及状态机”。
+
+所有 Standard / Heavy change 进入 `PLAN.md` 或 `TASKS.md` 前，必须完成：
+
+```text
+Design Alignment / Grill
+Alignment Verdict: aligned
+```
+
+如果用户明确接受跳过，可以写：
+
+```text
+Alignment Verdict: skipped
+```
+
+但必须在 `DESIGN.md` 里写明跳过原因。
 
 ### TASKS.md
 

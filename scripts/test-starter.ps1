@@ -49,6 +49,60 @@ Relevant code was scanned for the demo change.
     }
 }
 
+function Assert-DesignAlignmentStage {
+    param([string]$TargetRoot)
+
+    $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-design-alignment"
+    New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md") -Value @"
+# Change
+
+- [ ] Light
+- [x] Standard
+- [ ] Heavy
+
+## Summary
+
+Demo change for design alignment self-test.
+"@
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value "# Code Scan`n`nRelevant code was scanned."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n## Acceptance Criteria`n`n- AC-01: Demo criterion."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`n## Design Alignment / Grill`n`nAlignment Verdict: pending"
+
+    $json = & (Join-Path $TargetRoot "agent-flow/scripts/next-step.ps1") -ChangeDir $changeDir
+    $result = $json | ConvertFrom-Json
+    if ($result.stage -ne "design-alignment") {
+        throw "Expected next-step stage 'design-alignment', got '$($result.stage)'. Output: $json"
+    }
+    if ($result.next_prompt -notmatch "Design Alignment") {
+        throw "next-step did not recommend Design Alignment. Output: $json"
+    }
+}
+
+function Assert-NewChangeAndAlignment {
+    param([string]$TargetRoot)
+
+    $changeRoot = Join-Path $TargetRoot "agent-flow/changes"
+    & (Join-Path $TargetRoot "agent-flow/scripts/new-change.ps1") -Name "Demo Heavy Change" -Flow Heavy -ChangesRoot $changeRoot -TemplateRoot (Join-Path $TargetRoot "agent-flow/templates")
+
+    $changeDir = Join-Path $changeRoot "demo-heavy-change"
+    Assert-Path (Join-Path $changeDir "CHANGE.md")
+    Assert-Path (Join-Path $changeDir "REVIEW.md")
+    Assert-Path (Join-Path $changeDir "AUDIT.md")
+
+    $change = Get-Content -Raw -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md")
+    if ($change -notmatch "\[x\]\s+Heavy") {
+        throw "new-change did not mark Heavy in CHANGE.md"
+    }
+
+    $designPath = Join-Path $changeDir "DESIGN.md"
+    $design = Get-Content -Raw -Encoding utf8 -LiteralPath $designPath
+    $design = $design -replace "Alignment Verdict: pending", "Alignment Verdict: aligned"
+    Set-Content -Encoding utf8 -LiteralPath $designPath -Value $design
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $changeDir
+}
+
 try {
     Write-Host "== scaffold health =="
     & (Join-Path $starterRoot "agent-flow/scripts/scaffold-health.ps1")
@@ -78,9 +132,15 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/GO.md")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.sh")
     & (Join-Path $emptyTarget "agent-flow/scripts/init-project.ps1") -Target $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/run-verify.ps1") -All
     Assert-NextStage -TargetRoot $emptyTarget -ExpectedStage "requirement"
+    Assert-DesignAlignmentStage -TargetRoot $emptyTarget
+    Assert-NewChangeAndAlignment -TargetRoot $emptyTarget
 
     Write-Host "== update existing AGENTS.md =="
     New-Item -ItemType Directory -Force -Path $updateTarget | Out-Null

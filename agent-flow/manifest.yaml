@@ -68,10 +68,14 @@ verification:
 gates:
   - agent-flow/scripts/init-project.ps1
   - agent-flow/scripts/init-project.sh
+  - agent-flow/scripts/new-change.ps1
+  - agent-flow/scripts/new-change.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/next-step.ps1
   - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/alignment-check.ps1
+  - agent-flow/scripts/alignment-check.sh
   - agent-flow/scripts/verify-backend.ps1
   - agent-flow/scripts/verify-backend.sh
   - agent-flow/scripts/verify-module.ps1

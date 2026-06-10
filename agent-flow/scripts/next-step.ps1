@@ -64,6 +64,21 @@ function Get-AuditVerdict {
     return ""
 }
 
+function Get-DesignAlignmentVerdict {
+    param([string]$DesignPath)
+
+    if (-not (Test-Path -LiteralPath $DesignPath)) {
+        return ""
+    }
+
+    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $DesignPath
+    $match = [regex]::Match($text, "(?im)^\s*Alignment Verdict:\s*([A-Za-z-]+)\s*$")
+    if ($match.Success) {
+        return $match.Groups[1].Value.ToLowerInvariant()
+    }
+    return ""
+}
+
 function Test-ListContains {
     param(
         [System.Collections.Generic.List[string]]$List,
@@ -136,6 +151,7 @@ function Analyze-Change {
         $audit = Join-Path $Dir "AUDIT.md"
         $planVerdict = Get-AuditVerdict -AuditPath $audit -Section "Plan Audit"
         $closureVerdict = Get-AuditVerdict -AuditPath $audit -Section "Closure Audit"
+        $alignmentVerdict = Get-DesignAlignmentVerdict -DesignPath (Join-Path $Dir "DESIGN.md")
 
         if (Test-ListContains -List $missing -Value "REQUIREMENT.md") {
             $stage = "requirement"
@@ -145,6 +161,13 @@ function Analyze-Change {
             $stage = "design"
             $next = "Complete DESIGN.md with API / Permission / Auth decisions."
             $prompt = "Continue agent-flow change: $changeId. Based on REQUIREMENT and CODE_SCAN, complete DESIGN.md with module boundaries, reusable abstractions, API/Permission/Auth decisions, test strategy, and risks. Do not implement code yet."
+        } elseif ($alignmentVerdict -ne "aligned" -and $alignmentVerdict -ne "skipped") {
+            $stage = "design-alignment"
+            if ($alignmentVerdict -eq "blocked") {
+                $blocked.Add("Design Alignment is blocked; resolve open questions before planning or implementation.")
+            }
+            $next = "Run Design Alignment / Grill before PLAN.md, TASKS.md, or implementation."
+            $prompt = "Continue agent-flow change: $changeId. Run Design Alignment / Grill before planning or implementation. Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md. Interview me one question at a time until user intent, code facts, and the design are aligned. If a question can be answered by reading the codebase, read the codebase instead of asking me. For every question, provide your recommended answer. After each confirmed answer, update DESIGN.md. Run alignment-check after updating DESIGN.md. Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason."
         } elseif ($flow -eq "Heavy" -and (Test-ListContains -List $missing -Value "PLAN.md")) {
             $stage = "plan"
             $next = "Complete PLAN.md."
