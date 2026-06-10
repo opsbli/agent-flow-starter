@@ -1,15 +1,15 @@
 project:
-  name: TODO_PROJECT_NAME
-  kind: TODO_PROJECT_KIND
+  name: agent-flow-starter
+  kind: initialized
   backend:
-    framework: TODO_BACKEND_FRAMEWORK
-    language: TODO_BACKEND_LANGUAGE
-    build: TODO_BUILD_TOOL
-    root_module: TODO_ROOT_MODULE
+    framework: unknown
+    language: unknown
+    build: unknown
+    root_module: agent-flow-starter
   frontend:
-    framework: TODO_FRONTEND_FRAMEWORK
-    language: TODO_FRONTEND_LANGUAGE
-    repo: TODO_FRONTEND_REPO_OR_NONE
+    framework: none
+    language: none
+    repo: none
   database:
     engine: TODO_DATABASE_OR_NONE
     sql_paths:
@@ -29,7 +29,7 @@ code_map:
   build_files:
     - TODO_BUILD_FILE
   tests:
-    - TODO_TEST_PATH
+    - tests
 
 change_storage:
   root: agent-flow/changes
@@ -55,6 +55,12 @@ risk_rules:
     public_contract_change: true
     build_file_change: true
     schema_change: true
+  blocked_if:
+    - hard_delete_without_approval
+    - disable_security_filter
+    - bypass_auth_for_production
+    - direct_production_data_mutation
+    - payment_bypass
 
 verification:
   backend_compile: TODO_BACKEND_COMPILE_COMMAND
@@ -68,20 +74,28 @@ verification:
 gates:
   - agent-flow/scripts/init-project.ps1
   - agent-flow/scripts/init-project.sh
+  - agent-flow/scripts/install-agent-flow.ps1
+  - agent-flow/scripts/install-agent-flow.sh
   - agent-flow/scripts/new-change.ps1
   - agent-flow/scripts/new-change.sh
-  - agent-flow/scripts/run-verify.ps1
-  - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/next-step.ps1
   - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/state-check.ps1
+  - agent-flow/scripts/state-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/run-verify.ps1
+  - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1
   - agent-flow/scripts/verify-backend.sh
   - agent-flow/scripts/verify-module.ps1
   - agent-flow/scripts/verify-module.sh
   - agent-flow/scripts/ac-check.ps1
   - agent-flow/scripts/ac-check.sh
+  - agent-flow/scripts/code-drift-check.ps1
+  - agent-flow/scripts/code-drift-check.sh
+  - agent-flow/scripts/blocked-check.ps1
+  - agent-flow/scripts/blocked-check.sh
   - agent-flow/scripts/drift-check.ps1
   - agent-flow/scripts/drift-check.sh
   - agent-flow/scripts/scaffold-health.ps1

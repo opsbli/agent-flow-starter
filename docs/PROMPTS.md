@@ -68,7 +68,8 @@ Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is al
 
 ```text
 Check agent-flow change: <change-id>.
-First run next-step and read stage, missing, blocked, and next_prompt.
+First run next-step and read stage, state_current_stage, state_next_action, missing, blocked, and next_prompt.
+If STATE.md conflicts with inferred stage, follow the artifacts and update STATE.md.
 Then continue according to next_prompt.
 If blocked is not empty, explain the blocker and give me the available options before editing files.
 ```
@@ -77,10 +78,12 @@ Commands:
 
 ```powershell
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 ```bash
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 ## Implementation
@@ -97,7 +100,7 @@ Update TASKS.md after each task.
 ```text
 Continue agent-flow change: <change-id>.
 Complete VERIFY, REVIEW, REPORT, EVOLUTION, and Closure Audit.
-Run ac-check, drift-check, scaffold-health, and relevant run-verify commands.
+Run ac-check, code-drift-check, blocked-check, scaffold-health, and relevant run-verify commands.
 If closure is conditional, list residual risks clearly.
 ```
 

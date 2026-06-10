@@ -196,6 +196,12 @@ risk_rules:
     public_contract_change: true
     build_file_change: true
     schema_change: true
+  blocked_if:
+    - hard_delete_without_approval
+    - disable_security_filter
+    - bypass_auth_for_production
+    - direct_production_data_mutation
+    - payment_bypass
 
 verification:
   backend_compile: $backend_compile
@@ -207,6 +213,18 @@ verification:
   frontend_lint: $frontend_lint
 
 gates:
+  - agent-flow/scripts/init-project.ps1
+  - agent-flow/scripts/init-project.sh
+  - agent-flow/scripts/install-agent-flow.ps1
+  - agent-flow/scripts/install-agent-flow.sh
+  - agent-flow/scripts/new-change.ps1
+  - agent-flow/scripts/new-change.sh
+  - agent-flow/scripts/next-step.ps1
+  - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/state-check.ps1
+  - agent-flow/scripts/state-check.sh
+  - agent-flow/scripts/alignment-check.ps1
+  - agent-flow/scripts/alignment-check.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1
@@ -215,6 +233,10 @@ gates:
   - agent-flow/scripts/verify-module.sh
   - agent-flow/scripts/ac-check.ps1
   - agent-flow/scripts/ac-check.sh
+  - agent-flow/scripts/code-drift-check.ps1
+  - agent-flow/scripts/code-drift-check.sh
+  - agent-flow/scripts/blocked-check.ps1
+  - agent-flow/scripts/blocked-check.sh
   - agent-flow/scripts/drift-check.ps1
   - agent-flow/scripts/drift-check.sh
   - agent-flow/scripts/scaffold-health.ps1
@@ -331,4 +353,3 @@ fi
 
 bash "$root/agent-flow/scripts/scaffold-health.sh"
 echo "agent-flow initialized for $project_name"
-

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
+# DEPRECATED: Use code-drift-check.sh instead, which compares DESIGN.md against actual code.
 set -euo pipefail
+
+echo "[DEPRECATED] Use code-drift-check.sh instead" >&2
 
 change_dir=""
 

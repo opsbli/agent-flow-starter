@@ -9,6 +9,7 @@
 - [ ] Light
 - [ ] Standard
 - [ ] Heavy
+- [ ] Emergency（仅限 P0/P1 生产事故）
 
 ## 分级理由
 
@@ -27,8 +28,17 @@
 
 ## 需要用户确认的问题
 
+## Emergency（仅 Emergency 流程填写）
+
+- Level: P0 / P1
+- Approved by:
+- Bypass reason:
+- Backfill deadline:
+- Backfill status: pending / done / waived
+
 ## 工件索引
 
+- State:
 - Requirement:
 - Code Scan:
 - Design:

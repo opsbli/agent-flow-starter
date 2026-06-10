@@ -4,4 +4,4 @@
 
 | Capability | Existing Location | How To Reuse | Notes |
 |---|---|---|---|
-| TODO | `TODO_PATH` | TODO | TODO |
+| Project common code | TODO_COMMON_CODE_PATH | Scan before adding new helpers | initialized |

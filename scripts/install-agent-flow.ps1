@@ -34,6 +34,13 @@ if (Test-Path -LiteralPath $targetFlow) {
 
 Copy-Item -LiteralPath $sourceFlow -Destination $targetFlow -Recurse -Force
 
+$sourceCi = Join-Path $starterRoot ".github/workflows/scaffold-ci.yml"
+if (Test-Path -LiteralPath $sourceCi) {
+    $targetCiDir = Join-Path $targetRoot ".github/workflows"
+    New-Item -ItemType Directory -Force -Path $targetCiDir | Out-Null
+    Copy-Item -LiteralPath $sourceCi -Destination (Join-Path $targetCiDir "scaffold-ci.yml") -Force
+}
+
 if (Test-Path -LiteralPath $backupRoot) {
     foreach ($dir in $preserveDirs) {
         $from = Join-Path $backupRoot $dir

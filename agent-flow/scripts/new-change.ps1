@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Name,
-    [ValidateSet("Light", "Standard", "Heavy")]
+    [ValidateSet("Light", "Standard", "Heavy", "Emergency")]
     [string]$Flow = "Standard",
     [string]$ChangesRoot = "agent-flow/changes",
     [string]$TemplateRoot = "agent-flow/templates",
@@ -32,9 +32,10 @@ if ((Test-Path -LiteralPath $changeDir) -and -not $Force) {
 New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
 
 $filesByFlow = @{
-    Light = @("CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")
-    Standard = @("CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
-    Heavy = @("CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "PLAN.md", "TASKS.md", "VERIFY.md", "REVIEW.md", "REPORT.md", "AUDIT.md", "EVOLUTION.md")
+    Light = @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")
+    Standard = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
+    Heavy = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "PLAN.md", "TASKS.md", "VERIFY.md", "REVIEW.md", "REPORT.md", "AUDIT.md", "EVOLUTION.md")
+    Emergency = @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
 }
 
 foreach ($file in $filesByFlow[$Flow]) {
@@ -50,11 +51,13 @@ foreach ($file in $filesByFlow[$Flow]) {
 
     $text = Get-Content -Raw -Encoding utf8 -LiteralPath $source
     $text = $text.Replace("{change-id}", $changeId)
+    $text = $text.Replace("{flow}", $Flow)
     $text = $text.Replace("{frontend-path}", "TODO_FRONTEND_PATH_OR_NONE")
     if ($file -eq "CHANGE.md") {
         $text = $text -replace "- \[ \] Light", ("- [{0}] Light" -f ($(if ($Flow -eq "Light") { "x" } else { " " })))
         $text = $text -replace "- \[ \] Standard", ("- [{0}] Standard" -f ($(if ($Flow -eq "Standard") { "x" } else { " " })))
         $text = $text -replace "- \[ \] Heavy", ("- [{0}] Heavy" -f ($(if ($Flow -eq "Heavy") { "x" } else { " " })))
+        $text = $text -replace "- \[ \] Emergency", ("- [{0}] Emergency" -f ($(if ($Flow -eq "Emergency") { "x" } else { " " })))
     }
     Set-Content -Encoding utf8 -LiteralPath $target -Value $text
 }

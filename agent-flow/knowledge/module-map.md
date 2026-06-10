@@ -1,18 +1,16 @@
 # Module Map
 
-> Initialize this file after installing agent-flow into a target project.
-
 ## Current Modules
 
 | Module | Path | Responsibility | Notes |
 |---|---|---|---|
-| TODO | `TODO_PATH` | TODO | TODO |
+| TODO_BUSINESS_MODULE_PATH | `TODO_BUSINESS_MODULE_PATH` | TODO | initialized |
 
 ## Entry Points
 
 | Entry | Path | Purpose |
 |---|---|---|
-| TODO | `TODO_PATH` | TODO |
+| TODO_BACKEND_ENTRY | `TODO_BACKEND_ENTRY` | TODO |
 
 ## New Module Registry
 

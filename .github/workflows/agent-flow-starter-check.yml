@@ -1,0 +1,30 @@
+name: agent-flow starter check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  starter-check-linux:
+    name: Starter self-test (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run starter self-test
+        run: bash scripts/test-starter.sh
+
+  starter-check-windows:
+    name: Starter self-test (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run starter self-test
+        shell: pwsh
+        run: .\scripts\test-starter.ps1

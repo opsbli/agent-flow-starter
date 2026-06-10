@@ -1,0 +1,79 @@
+{
+  "profiles": [
+    {
+      "name": "Maven",
+      "indicators": { "files": ["pom.xml"], "match_mode": "any" },
+      "backend": {
+        "framework": "Java", "language": "Java",
+        "compile": "mvn compile -DskipTests -q",
+        "test": "mvn test -q",
+        "module_compile": "mvn compile -pl {module} -am -DskipTests -q",
+        "module_test": "mvn test -pl {module} -am -q"
+      }
+    },
+    {
+      "name": "Gradle",
+      "indicators": { "files": ["build.gradle", "settings.gradle", "build.gradle.kts"], "match_mode": "any" },
+      "backend": {
+        "framework": "Gradle project", "language": "Java/Kotlin",
+        "compile": "./gradlew build -x test",
+        "test": "./gradlew test",
+        "module_compile": "./gradlew :{module}:build -x test",
+        "module_test": "./gradlew :{module}:test"
+      }
+    },
+    {
+      "name": "Python",
+      "indicators": { "files": ["pyproject.toml", "requirements.txt"], "match_mode": "any" },
+      "backend": {
+        "framework": "Python", "language": "Python",
+        "compile": "python -m compileall .",
+        "test": "pytest"
+      }
+    },
+    {
+      "name": "Go",
+      "indicators": { "files": ["go.mod"], "match_mode": "any" },
+      "backend": {
+        "framework": "Go", "language": "Go",
+        "compile": "go vet ./...",
+        "test": "go test ./..."
+      }
+    },
+    {
+      "name": "Rust",
+      "indicators": { "files": ["Cargo.toml"], "match_mode": "any" },
+      "backend": {
+        "framework": "Rust", "language": "Rust",
+        "compile": "cargo check",
+        "test": "cargo test"
+      }
+    },
+    {
+      "name": "Node",
+      "indicators": { "files": ["package.json"], "match_mode": "any" },
+      "backend": {
+        "framework": "Node.js", "language": "JavaScript/TypeScript",
+        "compile": "npm run build --if-present 2>/dev/null || echo ok",
+        "test": "npm test 2>/dev/null || echo ok"
+      }
+    },
+    {
+      "name": ".NET",
+      "indicators": { "files": ["*.csproj"], "match_mode": "any" },
+      "backend": {
+        "framework": ".NET", "language": "C#",
+        "compile": "dotnet build --no-restore",
+        "test": "dotnet test"
+      }
+    }
+  ],
+  "file_patterns": {
+    "backend_entry_dirs": ["src", "app", "server", "backend", "cmd", "internal"],
+    "common_dirs": ["common", "shared", "lib", "libs", "utils", "core", "packages"],
+    "business_dirs": ["modules", "services", "features", "apps", "packages", "src"],
+    "test_dirs": ["test", "tests", "src/test", "__tests__"],
+    "sql_dirs": ["migrations", "schema", "sql", "db", "database", "prisma"],
+    "build_files": ["package.json", "pom.xml", "build.gradle", "settings.gradle", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml"]
+  }
+}

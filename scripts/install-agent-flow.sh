@@ -69,6 +69,11 @@ fi
 rm -rf "$target_flow"
 cp -R "$source_flow" "$target_flow"
 
+if [ -f "$starter_root/.github/workflows/scaffold-ci.yml" ]; then
+  mkdir -p "$target_root/.github/workflows"
+  cp "$starter_root/.github/workflows/scaffold-ci.yml" "$target_root/.github/workflows/scaffold-ci.yml"
+fi
+
 for dir in changes logs reports knowledge decisions; do
   if [ -d "$backup_root/$dir" ]; then
     rm -rf "$target_flow/$dir"

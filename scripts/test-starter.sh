@@ -49,11 +49,22 @@ EOF
 
 Relevant code was scanned for the demo change.
 EOF
+  cat > "$change_dir/STATE.md" <<'EOF'
+# State
+
+change_id: demo-next-step
+flow: Standard
+current_stage: requirement
+blocked: false
+next_action: Complete REQUIREMENT.md with AC-01 style acceptance criteria.
+EOF
 
   local output
   output="$(bash "$target_root/agent-flow/scripts/next-step.sh" --change-dir "$change_dir")"
   printf '%s\n' "$output" | grep -q "\"stage\": \"$expected_stage\""
+  printf '%s\n' "$output" | grep -q '"state_current_stage":'
   printf '%s\n' "$output" | grep -q "\"next_prompt\":"
+  bash "$target_root/agent-flow/scripts/state-check.sh" --change-dir "$change_dir" --expected-stage "$expected_stage"
 }
 
 assert_design_alignment_stage() {
@@ -91,13 +102,34 @@ assert_new_change_and_alignment() {
     --template-root "$target_root/agent-flow/templates"
 
   local change_dir="$change_root/demo-heavy-change"
+  assert_path "$change_dir/STATE.md"
   assert_path "$change_dir/CHANGE.md"
   assert_path "$change_dir/REVIEW.md"
   assert_path "$change_dir/AUDIT.md"
   grep -Eq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"
 
-  sed -i -E 's/Alignment Verdict: pending/Alignment Verdict: aligned/' "$change_dir/DESIGN.md"
+  sed -E 's/Alignment Verdict: pending/Alignment Verdict: aligned/' "$change_dir/DESIGN.md" > "$change_dir/DESIGN.md.tmp"
+  mv "$change_dir/DESIGN.md.tmp" "$change_dir/DESIGN.md"
   bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$change_dir"
+}
+
+assert_gate_scripts() {
+  local target_root="$1"
+  local change_dir="$target_root/agent-flow/changes/demo-gates"
+  mkdir -p "$change_dir"
+  printf '# Requirement\n\n- AC-01: Demo criterion.\n' > "$change_dir/REQUIREMENT.md"
+  printf '# Design\n\nNo schema, permission, auth, workflow, or status change.\n' > "$change_dir/DESIGN.md"
+  printf '# Tasks\n\nwrite_files:\n  - README.md\n' > "$change_dir/TASKS.md"
+
+  if bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"; then
+    echo "ac-check passed using REQUIREMENT.md as self-evidence." >&2
+    exit 1
+  fi
+
+  printf '# Verify\n\nAC-01 evidence: checked.\n' > "$change_dir/VERIFY.md"
+  bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"
+  bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$change_dir" --project-root "$target_root"
+  bash "$target_root/agent-flow/scripts/code-drift-check.sh" --change-dir "$change_dir" --project-root "$target_root"
 }
 
 echo "== scaffold health =="
@@ -116,6 +148,8 @@ assert_path "$empty_target/AGENTS.md"
 assert_path "$empty_target/agent-flow/GO.md"
 assert_path "$empty_target/agent-flow/scripts/next-step.ps1"
 assert_path "$empty_target/agent-flow/scripts/next-step.sh"
+assert_path "$empty_target/agent-flow/scripts/state-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/state-check.sh"
 assert_path "$empty_target/agent-flow/scripts/new-change.ps1"
 assert_path "$empty_target/agent-flow/scripts/new-change.sh"
 assert_path "$empty_target/agent-flow/scripts/alignment-check.ps1"
@@ -125,6 +159,7 @@ bash "$empty_target/agent-flow/scripts/run-verify.sh" --all
 assert_next_stage "$empty_target" "requirement"
 assert_design_alignment_stage "$empty_target"
 assert_new_change_and_alignment "$empty_target"
+assert_gate_scripts "$empty_target"
 
 echo "== update existing AGENTS.md =="
 mkdir -p "$update_target"
@@ -155,5 +190,7 @@ echo "== docs/examples =="
 assert_path "$starter_root/docs/ADOPTION.md"
 assert_path "$starter_root/docs/PROMPTS.md"
 assert_path "$starter_root/examples/sample-change/VERIFY.md"
+assert_path "$starter_root/.github/workflows/scaffold-ci.yml"
+assert_path "$starter_root/.github/workflows/agent-flow-starter-check.yml"
 
 echo "agent-flow starter self-test passed."

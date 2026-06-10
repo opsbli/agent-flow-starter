@@ -47,7 +47,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     -h|--help)
       cat <<'EOF'
-Usage: agent-flow/scripts/new-change.sh --name <change-name> [--flow Light|Standard|Heavy]
+Usage: agent-flow/scripts/new-change.sh --name <change-name> [--flow Light|Standard|Heavy|Emergency]
 
 Creates a change folder from templates and marks the selected flow in CHANGE.md.
 EOF
@@ -66,9 +66,9 @@ if [ -z "$name" ]; then
 fi
 
 case "$flow" in
-  Light|Standard|Heavy) ;;
+  Light|Standard|Heavy|Emergency) ;;
   *)
-    echo "Flow must be Light, Standard, or Heavy." >&2
+    echo "Flow must be Light, Standard, Heavy, or Emergency." >&2
     exit 2
     ;;
 esac
@@ -92,13 +92,16 @@ mkdir -p "$change_dir"
 
 case "$flow" in
   Light)
-    files=(CHANGE.md CODE_SCAN.md VERIFY.md REPORT.md)
+    files=(STATE.md CHANGE.md CODE_SCAN.md VERIFY.md REPORT.md)
     ;;
   Standard)
-    files=(CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md)
+    files=(STATE.md CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md)
     ;;
   Heavy)
-    files=(CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md PLAN.md TASKS.md VERIFY.md REVIEW.md REPORT.md AUDIT.md EVOLUTION.md)
+    files=(STATE.md CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md PLAN.md TASKS.md VERIFY.md REVIEW.md REPORT.md AUDIT.md EVOLUTION.md)
+    ;;
+  Emergency)
+    files=(STATE.md CHANGE.md CODE_SCAN.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md)
     ;;
 esac
 
@@ -112,19 +115,24 @@ for file in "${files[@]}"; do
   if [ -e "$target" ] && [ "$force" = false ]; then
     continue
   fi
-  sed -e "s/{change-id}/$slug/g" -e 's/{frontend-path}/TODO_FRONTEND_PATH_OR_NONE/g' "$source" > "$target"
+  sed -e "s/{change-id}/$slug/g" -e "s/{flow}/$flow/g" -e 's/{frontend-path}/TODO_FRONTEND_PATH_OR_NONE/g' "$source" > "$target"
   if [ "$file" = "CHANGE.md" ]; then
+    tmp_target="$target.tmp"
     case "$flow" in
       Light)
-        sed -i -E 's/- \[ \] Light/- [x] Light/' "$target"
+        sed -E 's/- \[ \] Light/- [x] Light/' "$target" > "$tmp_target"
         ;;
       Standard)
-        sed -i -E 's/- \[ \] Standard/- [x] Standard/' "$target"
+        sed -E 's/- \[ \] Standard/- [x] Standard/' "$target" > "$tmp_target"
         ;;
       Heavy)
-        sed -i -E 's/- \[ \] Heavy/- [x] Heavy/' "$target"
+        sed -E 's/- \[ \] Heavy/- [x] Heavy/' "$target" > "$tmp_target"
+        ;;
+      Emergency)
+        sed -E 's/- \[ \] Emergency/- [x] Emergency/' "$target" > "$tmp_target"
         ;;
     esac
+    mv "$tmp_target" "$target"
   fi
 done
 

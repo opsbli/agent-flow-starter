@@ -18,6 +18,16 @@
 
 如果任务涉及前端，还要读取 `agent-flow/core/frontend-fit.md`。
 
+## 第零步：紧急判断
+
+是否**生产事故 / 安全漏洞 / 数据丢失**且满足 `agent-flow/flows/emergency.md` 的全部条件？
+
+- **是** → 走 `agent-flow/flows/emergency.md`，事后 24 小时内回填完整工件
+- **否** → 继续第一步
+
+> Emergency 通道绕开了 Plan Audit、Closure Audit、REVIEW.md 等安全门。
+> 只有 P0/P1 事故且有人批准才能使用。
+
 ## 第一步：建立 change
 
 为需求生成短横线命名的 `change-id`，例如：
@@ -31,6 +41,7 @@ monitor-alert-rule-refactor
 在 `agent-flow/changes/<change-id>/` 下创建本次工件：
 
 ```text
+STATE.md
 CHANGE.md
 REQUIREMENT.md
 CODE_SCAN.md
@@ -42,7 +53,9 @@ REPORT.md
 EVOLUTION.md
 ```
 
-轻量任务可以只创建 `CHANGE.md`、`CODE_SCAN.md`、`VERIFY.md`、`REPORT.md`。
+轻量任务可以只创建 `STATE.md`、`CHANGE.md`、`CODE_SCAN.md`、`VERIFY.md`、`REPORT.md`。
+
+`STATE.md` 只用于导航和交接，真正事实以各工件内容为准。
 
 Heavy 任务必须额外创建：
 
@@ -96,6 +109,7 @@ AUDIT.md
 ## 硬规则
 
 - 不确认事实源优先级，不处理冲突。
+- `STATE.md` 与工件冲突时，以工件和 `next-step` 推断结果为准，并更新 `STATE.md`。
 - 没有 `CODE_SCAN.md`，不写 `DESIGN.md`。
 - Standard / Heavy change 没有完成 `Design Alignment / Grill`，不写 `PLAN.md`、`TASKS.md` 或实现代码。
 - Standard / Heavy change 的 `alignment-check` 未通过，不写 `PLAN.md`、`TASKS.md` 或实现代码。
@@ -103,6 +117,9 @@ AUDIT.md
 - Heavy change 没有 Plan Audit，不写实现代码。
 - 没有 `VERIFY.md`，不说完成。
 - Heavy change 没有 Closure Audit，不标记完成。
+- Heavy change 必须运行 `code-drift-check`（设计声明 vs 实际代码的漂移检查），通过后才能收口。
+- `drift-check` 已废弃，请使用 `code-drift-check` 代替。
+- Heavy change 必须运行 `blocked-check`（检查是否触碰 manifest.yaml 中 `blocked_if` 规则）。
 - 发现术语、规则、坑点，立即写入 `agent-flow/knowledge/`。
 - 发现不可逆取舍，写入 `agent-flow/decisions/`。
 - 验证通过后，如形成新的健康状态，更新 `agent-flow/knowledge/known-good-baselines.md`。

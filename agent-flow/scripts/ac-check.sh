@@ -69,8 +69,20 @@ fi
 missing=()
 for ac in "${acs[@]}"; do
   compact="${ac//-/}"
-  if ! grep -R -I -q -F --include='*.java' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.md' "$ac" "$test_root" \
-    && ! grep -R -I -q -F --include='*.java' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.md' "$compact" "$test_root"; then
+  found=false
+  requirement_abs="$(cd "$(dirname "$requirement")" && pwd)/$(basename "$requirement")"
+  while IFS= read -r -d '' file; do
+    file_abs="$(cd "$(dirname "$file")" && pwd)/$(basename "$file")"
+    if [ "$file_abs" = "$requirement_abs" ]; then
+      continue
+    fi
+    if grep -I -q -F "$ac" "$file" || grep -I -q -F "$compact" "$file"; then
+      found=true
+      break
+    fi
+  done < <(find "$test_root" -type f \( -name '*.java' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.md' \) -print0)
+
+  if [ "$found" = false ]; then
     missing+=("$ac")
   fi
 done

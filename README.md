@@ -51,6 +51,9 @@
 
 ```text
 agent-flow-starter/
+├── .github/workflows/
+│   ├── scaffold-ci.yml              # scaffold 健康检查 CI
+│   └── agent-flow-starter-check.yml # starter 自测 CI
 ├── AGENTS.md                     # starter 仓库自己的规则
 ├── README.md                     # 当前文件
 ├── CHANGELOG.md                  # starter 版本变化
@@ -186,6 +189,8 @@ agent-flow/core/*
 agent-flow/changes/<change-id>/
 ```
 
+其中 `STATE.md` 是当前 change 的导航和交接文件；如果它和实际工件冲突，以 `next-step` 推断和各工件内容为准，然后回写 `STATE.md`。
+
 也可以用脚本创建：
 
 Windows：
@@ -208,15 +213,18 @@ Windows：
 
 ```powershell
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
 
 ```bash
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 它会输出当前 `stage`、缺失工件、阻塞项，以及一段可直接复制给 AI 的 `next_prompt`。
+如果 change 中有 `STATE.md`，输出也会包含 `state_current_stage` 和 `state_next_action`，用于检查人工记录是否落后于实际工件。
 
 也可以让 AI 代跑：
 
@@ -337,7 +345,7 @@ Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TAS
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION 和 Closure Audit。
-运行 ac-check、drift-check、scaffold-health，以及 manifest 中相关 run-verify 命令。
+运行 ac-check、code-drift-check、blocked-check、scaffold-health，以及 manifest 中相关 run-verify 命令。
 如果 Closure Audit 是 conditional，请明确残余风险和后续处理建议。
 ```
 
@@ -350,12 +358,14 @@ Windows：
 ```powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/run-verify.ps1 -All
 agent-flow/scripts/run-verify.ps1 -Name backend_test
 agent-flow/scripts/run-verify.ps1 -Name module_test -Module <module>
 agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
@@ -363,12 +373,14 @@ Linux/macOS：
 ```bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/run-verify.sh --all
 bash agent-flow/scripts/run-verify.sh --name backend_test
 bash agent-flow/scripts/run-verify.sh --name module_test --module <module>
 bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/drift-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 `run-verify` 会读取：
@@ -523,6 +535,13 @@ Linux/macOS：
 
 ```bash
 bash scripts/test-starter.sh
+```
+
+GitHub Actions 也会在 push / pull request 时运行同一套 bash 自测：
+
+```text
+.github/workflows/agent-flow-starter-check.yml
+.github/workflows/scaffold-ci.yml
 ```
 
 自测覆盖：

@@ -17,13 +17,67 @@ function ExistingDirs([string[]]$Candidates) {
     $Candidates | Where-Object { Test-Path -LiteralPath (Join-Path $root $_) }
 }
 
-$build = "unknown"
-$backendFramework = "unknown"
-$backendLanguage = "unknown"
-$backendCompile = "TODO_BACKEND_COMPILE_COMMAND"
-$backendTest = "TODO_BACKEND_TEST_COMMAND"
-$moduleCompile = "TODO_MODULE_COMPILE_COMMAND"
-$moduleTest = "TODO_MODULE_TEST_COMMAND"
+# --- External profile detection ---
+# Try project-profiles.json first for extensibility.
+# Fall back to hardcoded patterns if file not found or no profile matches.
+$profileMatched = $false
+$profilePath = Join-Path $PSScriptRoot "..\project-profiles.json"
+$profilePath = [System.IO.Path]::GetFullPath($profilePath)
+
+if (Test-Path -LiteralPath $profilePath) {
+    try {
+        $profilesJson = Get-Content -Raw -Encoding utf8 -LiteralPath $profilePath | ConvertFrom-Json
+        foreach ($p in $profilesJson.profiles) {
+            $profileFiles = $p.indicators.files
+            $matchMode = $p.indicators.match_mode
+            if (-not $matchMode) { $matchMode = "any" }
+
+            $allMatch = $true
+            $anyMatch = $false
+            foreach ($f in $profileFiles) {
+                if ($f -match '\*') {
+                    # Wildcard pattern like *.csproj
+                    $dir = Split-Path -Parent $f
+                    if ([string]::IsNullOrWhiteSpace($dir)) { $dir = "." }
+                    $pattern = Split-Path -Leaf $f
+                    $found = Get-ChildItem -LiteralPath $root -Filter $pattern -File -ErrorAction SilentlyContinue
+                    if ($found) { $anyMatch = $true }
+                    else { $allMatch = $false }
+                } elseif (HasFile $f) {
+                    $anyMatch = $true
+                } else {
+                    $allMatch = $false
+                }
+            }
+
+            $matched = if ($matchMode -eq 'all') { $allMatch } else { $anyMatch }
+            if ($matched) {
+                Write-Host "  Detected profile: $($p.name) (via project-profiles.json)"
+                $profileMatched = $true
+                $build = $p.name
+                if ($p.backend.framework) { $backendFramework = $p.backend.framework }
+                if ($p.backend.language) { $backendLanguage = $p.backend.language }
+                if ($p.backend.compile) { $backendCompile = $p.backend.compile }
+                if ($p.backend.test) { $backendTest = $p.backend.test }
+                if ($p.backend.module_compile) { $moduleCompile = $p.backend.module_compile }
+                if ($p.backend.module_test) { $moduleTest = $p.backend.module_test }
+                break  # First match wins
+            }
+        }
+    } catch {
+        Write-Host "  Warning: Failed to parse $profilePath, falling back to built-in detection. Error: $_"
+    }
+}
+
+# --- Fallback: hardcoded detection (only if no external profile matched) ---
+if (-not $profileMatched) {
+    $build = "unknown"
+    $backendFramework = "unknown"
+    $backendLanguage = "unknown"
+    $backendCompile = "TODO_BACKEND_COMPILE_COMMAND"
+    $backendTest = "TODO_BACKEND_TEST_COMMAND"
+    $moduleCompile = "TODO_MODULE_COMPILE_COMMAND"
+    $moduleTest = "TODO_MODULE_TEST_COMMAND"
 
 if (HasFile "pom.xml") {
     $build = "Maven"
@@ -60,6 +114,7 @@ if (HasFile "pom.xml") {
     $backendCompile = "cargo check"
     $backendTest = "cargo test"
 }
+}  # end of if (-not $profileMatched) fallback block
 
 $frontendFramework = "none"
 $frontendLanguage = "none"
@@ -167,6 +222,12 @@ risk_rules:
     public_contract_change: true
     build_file_change: true
     schema_change: true
+  blocked_if:
+    - hard_delete_without_approval
+    - disable_security_filter
+    - bypass_auth_for_production
+    - direct_production_data_mutation
+    - payment_bypass
 
 verification:
   backend_compile: $backendCompile
@@ -178,6 +239,18 @@ verification:
   frontend_lint: $frontendLint
 
 gates:
+  - agent-flow/scripts/init-project.ps1
+  - agent-flow/scripts/init-project.sh
+  - agent-flow/scripts/install-agent-flow.ps1
+  - agent-flow/scripts/install-agent-flow.sh
+  - agent-flow/scripts/new-change.ps1
+  - agent-flow/scripts/new-change.sh
+  - agent-flow/scripts/next-step.ps1
+  - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/state-check.ps1
+  - agent-flow/scripts/state-check.sh
+  - agent-flow/scripts/alignment-check.ps1
+  - agent-flow/scripts/alignment-check.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1
@@ -186,6 +259,10 @@ gates:
   - agent-flow/scripts/verify-module.sh
   - agent-flow/scripts/ac-check.ps1
   - agent-flow/scripts/ac-check.sh
+  - agent-flow/scripts/code-drift-check.ps1
+  - agent-flow/scripts/code-drift-check.sh
+  - agent-flow/scripts/blocked-check.ps1
+  - agent-flow/scripts/blocked-check.sh
   - agent-flow/scripts/drift-check.ps1
   - agent-flow/scripts/drift-check.sh
   - agent-flow/scripts/scaffold-health.ps1

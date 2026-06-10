@@ -22,9 +22,15 @@ if ($acs.Count -eq 0) {
     throw "No AC ids found in $requirement"
 }
 
+$requirementFullPath = (Resolve-Path -LiteralPath $requirement).Path
+$evidenceExtensions = @(".java", ".ts", ".tsx", ".js", ".md")
 $allText = ""
-Get-ChildItem -Path $TestRoot -Recurse -File -Include *.java,*.ts,*.tsx,*.js,*.md |
-    ForEach-Object { $allText += "`n" + (Get-Content -Raw -Encoding utf8 $_.FullName) }
+Get-ChildItem -LiteralPath $TestRoot -Recurse -File |
+    Where-Object {
+        $evidenceExtensions -contains $_.Extension.ToLowerInvariant() -and
+        (Resolve-Path -LiteralPath $_.FullName).Path -ne $requirementFullPath
+    } |
+    ForEach-Object { $allText += "`n" + (Get-Content -Raw -Encoding utf8 -LiteralPath $_.FullName) }
 
 $missing = @()
 foreach ($ac in $acs) {

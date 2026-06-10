@@ -1,0 +1,10 @@
+{
+  "name": "minimal-project",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "type-check": "echo ok",
+    "test": "echo ok",
+    "lint": "echo ok"
+  }
+}

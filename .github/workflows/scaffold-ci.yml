@@ -1,0 +1,157 @@
+name: agent-flow scaffold checks
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "agent-flow/**"
+      - "scripts/**"
+      - "docs/**"
+      - ".github/workflows/scaffold-ci.yml"
+  pull_request:
+    paths:
+      - "agent-flow/**"
+      - "scripts/**"
+      - "docs/**"
+      - ".github/workflows/scaffold-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  scaffold-health:
+    name: Scaffold Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run scaffold-health.sh
+        run: bash agent-flow/scripts/scaffold-health.sh
+
+  smoke-test-ps1:
+    name: Smoke Test (PowerShell)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run new-change smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          & "agent-flow/test/test-scripts/test-new-change.ps1"
+
+      - name: Run next-step unit tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          & "agent-flow/test/test-scripts/test-next-step.ps1"
+
+  smoke-test-sh:
+    name: Smoke Test (Bash)
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y sed grep coreutils
+
+      - name: Run new-change smoke test
+        run: bash agent-flow/test/test-scripts/test-new-change.sh
+
+      - name: Run next-step unit tests
+        run: bash agent-flow/test/test-scripts/test-next-step.sh
+
+  drift-check:
+    name: Syntax Check All Scripts
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check bash syntax for all .sh scripts
+        run: |
+          failed=0
+          for script in agent-flow/scripts/*.sh agent-flow/test/test-scripts/*.sh; do
+            if ! bash -n "$script"; then
+              echo "SYNTAX ERROR: $script"
+              failed=1
+            fi
+          done
+          if [ $failed -ne 0 ]; then
+            exit 1
+          fi
+          echo "All .sh scripts syntax OK"
+
+      - name: Check PowerShell syntax for all .ps1 scripts
+        shell: pwsh
+        run: |
+          $failed = 0
+          Get-ChildItem -Path agent-flow/scripts -Filter *.ps1 | ForEach-Object {
+              try {
+                  $null = [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$null)
+              } catch {
+                  Write-Host "SYNTAX ERROR: $_"
+                  $failed = 1
+              }
+          }
+          Get-ChildItem -Path agent-flow/test/test-scripts -Filter *.ps1 | ForEach-Object {
+              try {
+                  $null = [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$null)
+              } catch {
+                  Write-Host "SYNTAX ERROR: $_"
+                  $failed = 1
+              }
+          }
+          if ($failed -ne 0) { exit 1 }
+          Write-Host "All .ps1 scripts syntax OK"
+
+  file-consistency:
+    name: Cross-Platform File Consistency
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check ps1/sh parity
+        run: |
+          failed=0
+          for ps1 in agent-flow/scripts/*.ps1; do
+            base=$(basename "$ps1" .ps1)
+            sh="agent-flow/scripts/${base}.sh"
+            if [ ! -f "$sh" ]; then
+              echo "MISSING .sh counterpart for: $ps1"
+              failed=1
+            fi
+          done
+          for sh in agent-flow/scripts/*.sh; do
+            base=$(basename "$sh" .sh)
+            ps1="agent-flow/scripts/${base}.ps1"
+            if [ ! -f "$ps1" ]; then
+              echo "MISSING .ps1 counterpart for: $sh"
+              failed=1
+            fi
+          done
+          if [ $failed -ne 0 ]; then
+            exit 1
+          fi
+          echo "All script pairs have both .ps1 and .sh"
+
+  starter-self-test-linux:
+    name: Starter Self-Test (Linux)
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run starter self-test
+        run: bash scripts/test-starter.sh
+
+  starter-self-test-windows:
+    name: Starter Self-Test (Windows)
+    runs-on: windows-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run starter self-test
+        shell: pwsh
+        run: .\scripts\test-starter.ps1

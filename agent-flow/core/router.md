@@ -1,15 +1,18 @@
 # 路由
 
+> **紧急通道**：P0/P1 生产事故、安全漏洞、数据丢失走 `agent-flow/flows/emergency.md`。Emergency 不是流程级别，而是 bypass 通道，事后 24h 内必须回填。
+
 ## Light
 
 适用：
 
 - 单文件低风险修复。
-- 文案、注释、局部样式。
+- 文档、注释、局部样式。
 - 已有测试覆盖下的小行为修正。
 
 最低产物：
 
+- `STATE.md`
 - `CHANGE.md`
 - `CODE_SCAN.md`
 - `VERIFY.md`
@@ -26,13 +29,15 @@
 
 最低产物：
 
+- `STATE.md`
 - `CHANGE.md`
 - `REQUIREMENT.md`
 - `CODE_SCAN.md`
-- `DESIGN.md`，其中 `Design Alignment / Grill` 的 `Alignment Verdict` 必须为 `aligned` 或用户明确接受 `skipped`
+- `DESIGN.md`，其中 `Design Alignment / Grill` 的 `Alignment Verdict` 必须为 `aligned`，或为用户明确接受的 `skipped` 且带 `Skip Reason`
 - `TASKS.md`
 - `VERIFY.md`
 - `REPORT.md`
+- `EVOLUTION.md`
 
 ## Heavy
 
@@ -48,14 +53,17 @@
 
 最低产物：
 
+- `STATE.md`
 - `CHANGE.md`
 - `REQUIREMENT.md`
 - `CODE_SCAN.md`
-- `DESIGN.md`，其中 `Design Alignment / Grill` 的 `Alignment Verdict` 必须为 `aligned` 或用户明确接受 `skipped`
+- `DESIGN.md`，其中 `Design Alignment / Grill` 的 `Alignment Verdict` 必须为 `aligned`，或为用户明确接受的 `skipped` 且带 `Skip Reason`
+- `PLAN.md`
 - `TASKS.md`
 - `VERIFY.md`
 - `REVIEW.md`
 - `REPORT.md`
+- `AUDIT.md`
 - `EVOLUTION.md`
 - 必要 ADR
 

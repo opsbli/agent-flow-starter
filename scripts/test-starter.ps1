@@ -38,6 +38,15 @@ Demo change for next-step self-test.
 
 Relevant code was scanned for the demo change.
 "@
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "STATE.md") -Value @"
+# State
+
+change_id: demo-next-step
+flow: Standard
+current_stage: requirement
+blocked: false
+next_action: Complete REQUIREMENT.md with AC-01 style acceptance criteria.
+"@
 
     $json = & (Join-Path $TargetRoot "agent-flow/scripts/next-step.ps1") -ChangeDir $changeDir
     $result = $json | ConvertFrom-Json
@@ -47,6 +56,10 @@ Relevant code was scanned for the demo change.
     if ([string]::IsNullOrWhiteSpace($result.next_prompt)) {
         throw "next-step did not return a next_prompt."
     }
+    if ($null -eq $result.PSObject.Properties["state_current_stage"]) {
+        throw "next-step did not return state_current_stage."
+    }
+    & (Join-Path $TargetRoot "agent-flow/scripts/state-check.ps1") -ChangeDir $changeDir -ExpectedStage $ExpectedStage
 }
 
 function Assert-DesignAlignmentStage {
@@ -86,6 +99,7 @@ function Assert-NewChangeAndAlignment {
     & (Join-Path $TargetRoot "agent-flow/scripts/new-change.ps1") -Name "Demo Heavy Change" -Flow Heavy -ChangesRoot $changeRoot -TemplateRoot (Join-Path $TargetRoot "agent-flow/templates")
 
     $changeDir = Join-Path $changeRoot "demo-heavy-change"
+    Assert-Path (Join-Path $changeDir "STATE.md")
     Assert-Path (Join-Path $changeDir "CHANGE.md")
     Assert-Path (Join-Path $changeDir "REVIEW.md")
     Assert-Path (Join-Path $changeDir "AUDIT.md")
@@ -101,6 +115,37 @@ function Assert-NewChangeAndAlignment {
     Set-Content -Encoding utf8 -LiteralPath $designPath -Value $design
 
     & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $changeDir
+}
+
+function Assert-GateScripts {
+    param([string]$TargetRoot)
+
+    $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-gates"
+    New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n- AC-01: Demo criterion."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`nNo schema, permission, auth, workflow, or status change."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $changeDir
+    if ($LASTEXITCODE -eq 0) {
+        throw "ac-check passed using REQUIREMENT.md as self-evidence."
+    }
+
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value "# Verify`n`nAC-01 evidence: checked."
+    & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $changeDir
+    if (-not $?) {
+        throw "ac-check did not pass after VERIFY.md evidence was added."
+    }
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/blocked-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
+    if (-not $?) {
+        throw "blocked-check smoke test failed."
+    }
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/code-drift-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
+    if (-not $?) {
+        throw "code-drift-check smoke test failed."
+    }
 }
 
 try {
@@ -132,6 +177,8 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/GO.md")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/next-step.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/state-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/state-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.ps1")
@@ -141,6 +188,7 @@ try {
     Assert-NextStage -TargetRoot $emptyTarget -ExpectedStage "requirement"
     Assert-DesignAlignmentStage -TargetRoot $emptyTarget
     Assert-NewChangeAndAlignment -TargetRoot $emptyTarget
+    Assert-GateScripts -TargetRoot $emptyTarget
 
     Write-Host "== update existing AGENTS.md =="
     New-Item -ItemType Directory -Force -Path $updateTarget | Out-Null
@@ -172,6 +220,8 @@ old block
     Assert-Path (Join-Path $starterRoot "docs/ADOPTION.md")
     Assert-Path (Join-Path $starterRoot "docs/PROMPTS.md")
     Assert-Path (Join-Path $starterRoot "examples/sample-change/VERIFY.md")
+    Assert-Path (Join-Path $starterRoot ".github/workflows/scaffold-ci.yml")
+    Assert-Path (Join-Path $starterRoot ".github/workflows/agent-flow-starter-check.yml")
 
     Write-Host "agent-flow starter self-test passed."
 } finally {

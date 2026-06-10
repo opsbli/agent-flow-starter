@@ -4,7 +4,10 @@
 
 ## 阶段 0：Intake
 
-产物：`CHANGE.md`
+> **紧急出口**：如果这是 P0/P1 生产事故，考虑走 `agent-flow/flows/emergency.md`。
+> Emergency 通道可绕过 Heavy 流程的大多数安全门，但需 24 小时内回填。
+
+产物：`STATE.md`、`CHANGE.md`
 
 必须明确：
 
@@ -16,6 +19,7 @@
 - 是否涉及前端仓库
 - 本次 AI 自治等级
 - 是否触碰 protected areas
+- 当前阶段和下一步，写入 `STATE.md`
 
 ## 阶段 1：Grill
 
@@ -147,7 +151,9 @@ Verdict: accept
 - module compile
 - module test
 - ac-check
-- drift-check
+- code-drift-check（首选：设计声明 vs 实际代码的漂移检查）
+- drift-check（可选补充：DESIGN.md 内部一致性）
+- blocked-check（检查 blocked_if 规则违规）
 - frontend typecheck/test/lint（如涉及前端）
 
 必须填写 `AC Evidence` 表，把每个 `AC-01` 等验收项绑定到测试、命令、代码位置、人工验证或明确跳过原因。
@@ -171,7 +177,8 @@ Verdict: accept
 - Closure Gates 全部通过。
 - `VERIFY.md` 有证据。
 - AC 覆盖有证据。
-- drift-check 已执行或有明确裁决。
+- code-drift-check 已通过或有明确裁决。
+- drift-check（如执行）已通过或有明确裁决。
 - knowledge / decisions / logs / baseline 已更新。
 
 ## 阶段 8：Evolve
@@ -198,3 +205,4 @@ Verdict: accept
 - 关键决策。
 - 验证命令和结果。
 - 下一个可执行工作。
+- `STATE.md` 的最终状态。

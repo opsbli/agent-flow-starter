@@ -1,9 +1,20 @@
+<#
+.DEPRECATED
+Use code-drift-check.ps1 instead, which compares DESIGN.md declarations against
+actual code (schema files, route files, permission refs).
+
+This script only checks DESIGN.md for internal consistency (e.g., mentions schema
+but no migration file reference).
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
 )
 
 $ErrorActionPreference = "Stop"
+
+Write-Warning "[DEPRECATED] Use code-drift-check.ps1 instead"
 
 if (-not (Test-Path $ChangeDir)) {
     throw "ChangeDir not found: $ChangeDir"
