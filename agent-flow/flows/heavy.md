@@ -48,6 +48,8 @@
 - 测试样例。
 - 前端语汇。
 
+完成后必须运行 `scan-check`。未通过时，不进入 `DESIGN.md`。
+
 ## 阶段 3：Design
 
 产物：`DESIGN.md`
@@ -124,11 +126,14 @@ Verdict: accept
 每个任务必须有：
 
 - 目标。
+- 状态：`pending`、`in_progress`、`completed`、`blocked` 或 `skipped`。
 - AC 映射。
 - `read_files`。
 - `write_files`。
 - 验证命令。
 - 是否允许并行。
+
+完成 `TASKS.md` 后必须运行 `task-check`。未通过时，不进入实现。
 
 ## 阶段 5：Dev
 
@@ -150,12 +155,15 @@ Verdict: accept
 - backend compile
 - module compile
 - module test
+- scan-check
+- task-check
 - ac-check
 - code-drift-check（首选：设计声明 vs 实际代码的漂移检查）
 - drift-check（可选补充：DESIGN.md 内部一致性）
 - blocked-check（检查 blocked_if 规则违规）
 - task-boundary-check（检查实际 git 改动是否超出 TASKS.md write_files）
 - manifest-check（检查 manifest/gates/blocked_if 完整性）
+- evolution-check（确认经验沉淀或不升级理由完整）
 - frontend typecheck/test/lint（如涉及前端）
 
 必须填写 `AC Evidence` 表，把每个 `AC-01` 等验收项绑定到测试、命令、代码位置、人工验证或明确跳过原因。
@@ -179,11 +187,14 @@ Verdict: accept
 - Closure Gates 全部通过。
 - `VERIFY.md` 有证据。
 - AC 覆盖有证据。
+- scan-check 已通过或有明确裁决。
+- task-check 已通过或有明确裁决。
 - code-drift-check 已通过或有明确裁决。
 - drift-check（如执行）已通过或有明确裁决。
 - blocked-check 已通过或有明确裁决。
 - task-boundary-check 已通过或有明确裁决。
 - manifest-check 已通过或有明确裁决。
+- evolution-check 已通过或有明确裁决。
 - closure-check 已通过。
 - knowledge / decisions / logs / baseline 已更新。
 

@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run starter self-test
+      - name: Run starter self-test with machine gates
         run: bash scripts/test-starter.sh
 
   starter-check-windows:
@@ -25,6 +25,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run starter self-test
+      - name: Run starter self-test with machine gates
         shell: pwsh
         run: .\scripts\test-starter.ps1

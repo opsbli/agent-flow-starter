@@ -28,6 +28,27 @@
 | route | | |
 | permission | | |
 | pom | | |
+| scan-check | | |
+| task-check | | |
+| task-boundary-check | | |
+| manifest-check | | |
+| blocked-check | | |
+| evolution-check | | |
+| closure-check | | |
+
+## Machine Gate Summary
+
+| Gate | Required For | Result | Evidence |
+|---|---|---|---|
+| scan-check | Light / Standard / Heavy | pass / fail / skipped | |
+| task-check | Standard / Heavy / Emergency with TASKS.md | pass / fail / skipped | |
+| ac-check | Standard / Heavy | pass / fail / skipped | |
+| code-drift-check | Heavy | pass / fail / skipped | |
+| blocked-check | Heavy | pass / fail / skipped | |
+| task-boundary-check | Standard / Heavy | pass / fail / skipped | |
+| manifest-check | all closure | pass / fail / skipped | |
+| evolution-check | Standard / Heavy | pass / fail / skipped | |
+| closure-check | Heavy closure | pass / fail / skipped | |
 
 ## 跳过项
 

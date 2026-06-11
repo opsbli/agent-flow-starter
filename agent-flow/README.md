@@ -238,7 +238,7 @@ Alignment Verdict 是 aligned，或我明确接受 skipped 且写明 Skip Reason
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION、AUDIT。
-运行 ac-check、code-drift-check、blocked-check、scaffold-health 和相关 run-verify 命令。
+运行 scan-check、task-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、evolution-check、scaffold-health 和相关 run-verify 命令。
 如果 Closure Audit 是 conditional，请列出残余风险。
 ```
 
@@ -302,6 +302,10 @@ agent-flow/scripts/next-step.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/manifest-check.ps1
+agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
@@ -313,6 +317,10 @@ bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/manifest-check.sh
+bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
@@ -376,6 +384,7 @@ agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id
 agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/closure-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure
 ```
 
 Linux/macOS：
@@ -385,6 +394,7 @@ bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<cha
 bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/closure-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure
 ```
 
 它会检查设计中常见的 schema、API、权限决策漂移。
@@ -451,12 +461,15 @@ Alignment Verdict: skipped
 
 每个任务都要有：
 
+- 状态。
 - 目标。
 - AC 映射。
 - `read_files`。
 - `write_files`。
 - 验证命令。
 - 是否允许并行。
+
+写完或更新任务后运行 `task-check`。
 
 ### VERIFY.md
 
@@ -549,6 +562,7 @@ agent-flow/UPGRADE.md
 - `VERIFY.md` 已写验证证据。
 - 所有 AC 有 Evidence 或明确 residual risk。
 - `ac-check`、`code-drift-check`、`blocked-check`、`task-boundary-check`、`manifest-check`、`closure-check`、`scaffold-health` 已执行或说明跳过原因。
+- `scan-check`、`task-check`、`evolution-check`、`check-change` 已执行或说明跳过原因。
 - Heavy change 有 Closure Audit。
 - 新知识、坑点、决策已沉淀。
 - `EVOLUTION.md` 已写。

@@ -34,8 +34,15 @@ Checklist:
 - [ ] Closure gates passed
 - [ ] Verification evidence recorded
 - [ ] AC coverage has evidence
+- [ ] scan-check completed
+- [ ] task-check completed
 - [ ] Drift checks completed
 - [ ] No undeclared files modified
+- [ ] task-boundary-check completed
+- [ ] manifest-check completed
+- [ ] blocked-check completed
+- [ ] evolution-check completed
+- [ ] closure-check completed
 - [ ] Knowledge/decision/log/baseline updated
 
 Findings:

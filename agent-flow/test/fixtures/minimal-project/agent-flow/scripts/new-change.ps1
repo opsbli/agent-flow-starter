@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Name,
-    [ValidateSet("Light", "Standard", "Heavy")]
+    [ValidateSet("Light", "Standard", "Heavy", "Emergency")]
     [string]$Flow = "Standard",
     [string]$ChangesRoot = "agent-flow/changes",
     [string]$TemplateRoot = "agent-flow/templates",
@@ -35,6 +35,7 @@ $filesByFlow = @{
     Light = @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")
     Standard = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
     Heavy = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "PLAN.md", "TASKS.md", "VERIFY.md", "REVIEW.md", "REPORT.md", "AUDIT.md", "EVOLUTION.md")
+    Emergency = @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
 }
 
 foreach ($file in $filesByFlow[$Flow]) {
@@ -56,6 +57,7 @@ foreach ($file in $filesByFlow[$Flow]) {
         $text = $text -replace "- \[ \] Light", ("- [{0}] Light" -f ($(if ($Flow -eq "Light") { "x" } else { " " })))
         $text = $text -replace "- \[ \] Standard", ("- [{0}] Standard" -f ($(if ($Flow -eq "Standard") { "x" } else { " " })))
         $text = $text -replace "- \[ \] Heavy", ("- [{0}] Heavy" -f ($(if ($Flow -eq "Heavy") { "x" } else { " " })))
+        $text = $text -replace "- \[ \] Emergency", ("- [{0}] Emergency" -f ($(if ($Flow -eq "Emergency") { "x" } else { " " })))
     }
     Set-Content -Encoding utf8 -LiteralPath $target -Value $text
 }

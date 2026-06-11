@@ -238,8 +238,8 @@ analyze_change() {
       prompt="Continue agent-flow change: $change_id. Based on REQUIREMENT, CODE_SCAN, and DESIGN, complete PLAN.md with Current Baseline, Execution Phases, Closure Gates, and Protected Area Review."
     elif contains_item "TASKS.md" "${missing[@]}"; then
       stage="tasks"
-      next="Complete TASKS.md with read_files and write_files."
-      prompt="Continue agent-flow change: $change_id. Based on DESIGN, complete TASKS.md. Each task must include goal, AC mapping, read_files, write_files, verification command, and parallelization status."
+      next="Complete TASKS.md with Task Matrix, status, read_files, and write_files."
+      prompt="Continue agent-flow change: $change_id. Based on DESIGN, complete TASKS.md. Include a Task Matrix. Each task must include status, goal, AC mapping, read_files, write_files, verification command, and parallelization status. Then run task-check."
     elif [ "$flow" = "Heavy" ] && [ "$plan_verdict" != "accept" ] && [ "$plan_verdict" != "conditional" ]; then
       stage="plan-audit"
       next="Run Plan Audit."
@@ -247,7 +247,7 @@ analyze_change() {
     elif contains_item "VERIFY.md" "${missing[@]}"; then
       stage="verify"
       next="Run verification and complete VERIFY.md."
-      prompt="Continue agent-flow change: $change_id. Run the relevant verification commands and complete VERIFY.md with command log, AC evidence, drift checks, skipped checks, and conclusion."
+      prompt="Continue agent-flow change: $change_id. Run the relevant verification commands and complete VERIFY.md with command log, AC evidence, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, skipped checks, and conclusion."
     elif [ "$flow" = "Heavy" ] && contains_item "REVIEW.md" "${missing[@]}"; then
       stage="review"
       next="Complete REVIEW.md."
@@ -259,7 +259,7 @@ analyze_change() {
     elif [ "$flow" = "Heavy" ] && [ "$closure_verdict" != "acceptable" ] && [ "$closure_verdict" != "accept" ] && [ "$closure_verdict" != "conditional" ]; then
       stage="closure-audit"
       next="Run Closure Audit."
-      prompt="Continue agent-flow change: $change_id. Run Closure Audit. Check Closure Gates, VERIFY evidence, AC coverage, drift-check, undeclared file changes, and knowledge/decision/log/baseline updates."
+      prompt="Continue agent-flow change: $change_id. Run Closure Audit. Check Closure Gates, VERIFY evidence, AC coverage, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, evolution-check, closure-check, and knowledge/decision/log/baseline updates."
     elif contains_item "EVOLUTION.md" "${missing[@]}"; then
       stage="evolution"
       next="Complete EVOLUTION.md and evaluate whether agent-flow should be upgraded."

@@ -4,92 +4,90 @@ param(
     [string]$ProjectRoot = "."
 )
 
-<#
-.SYNOPSIS
-Check code drift against DESIGN.md declarations for Standard/Heavy changes.
-
-.DESCRIPTION
-Reads DESIGN.md from a change directory and checks whether the actual code
-matches what was declared. Covers schema, API routes, and permission codes.
-
-.PARAMETER ChangeDir
-Path to the change directory (e.g., agent-flow/changes/my-change).
-
-.PARAMETER ProjectRoot
-Path to the project root. Defaults to current directory.
-
-.EXAMPLE
-.\code-drift-check.ps1 -ChangeDir agent-flow/changes/add-user-module
-.\code-drift-check.ps1 -ChangeDir agent-flow/changes/add-user-module -ProjectRoot C:\Projects\my-app
-#>
-
 $ErrorActionPreference = "Stop"
 
-if (-not (Test-Path -LiteralPath $ChangeDir)) {
-    throw "ChangeDir not found: $ChangeDir"
+function Resolve-ProjectPath {
+    param([string]$Path)
+    if ([System.IO.Path]::IsPathRooted($Path)) {
+        return [System.IO.Path]::GetFullPath($Path)
+    }
+    return [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Path))
 }
 
-$ProjectRoot = [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $ProjectRoot))
+$changeDirPath = Resolve-ProjectPath -Path $ChangeDir
+if (-not (Test-Path -LiteralPath $changeDirPath)) {
+    throw "ChangeDir not found: $changeDirPath"
+}
 
-# --- Read DESIGN.md ---
-$designPath = Join-Path $ChangeDir "DESIGN.md"
+$projectRootPath = Resolve-ProjectPath -Path $ProjectRoot
+$designPath = Join-Path $changeDirPath "DESIGN.md"
 if (-not (Test-Path -LiteralPath $designPath)) {
-    Write-Host "SKIP: No DESIGN.md in $ChangeDir (Light change or not yet created)"
+    Write-Host "SKIP: No DESIGN.md in $changeDirPath (Light change or not yet created)"
     exit 0
 }
 
 $designText = Get-Content -Raw -Encoding utf8 -LiteralPath $designPath
 $issues = @()
 
-# --- 1. Schema drift: extract table names from DESIGN.md and check migration files ---
-$tableMatches = [regex]::Matches($designText, '(?i)(CREATE TABLE|ALTER TABLE|TABLE\s+)(\w+)')
-$declaredTables = $tableMatches | ForEach-Object { $_.Groups[2].Value.Trim('`"''[]') } | Sort-Object -Unique
+function Get-FilesFromDirs {
+    param(
+        [string[]]$Dirs,
+        [string[]]$Extensions
+    )
+
+    $files = @()
+    foreach ($dir in $Dirs) {
+        $fullDir = Join-Path $projectRootPath $dir
+        if (Test-Path -LiteralPath $fullDir) {
+            $files += Get-ChildItem -LiteralPath $fullDir -Recurse -File |
+                Where-Object { $Extensions -contains $_.Extension.ToLowerInvariant() } |
+                ForEach-Object { $_.FullName }
+        }
+    }
+    return $files
+}
+
+function Read-AllText {
+    param([string[]]$Files)
+
+    $text = ""
+    foreach ($file in $Files) {
+        try {
+            $text += "`n" + (Get-Content -Raw -Encoding utf8 -LiteralPath $file)
+        } catch {
+            # Skip binary or unreadable files.
+        }
+    }
+    return $text
+}
+
+# 1. Schema drift.
+$tableMatches = [regex]::Matches($designText, '(?i)\b(?:CREATE|ALTER)\s+TABLE\s+[`"\''\[]?([A-Za-z_][A-Za-z0-9_]*)')
+$declaredTables = $tableMatches | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
 
 if ($declaredTables.Count -gt 0) {
     Write-Host "--- Schema drift check ---"
     Write-Host "Tables declared in DESIGN.md: $($declaredTables -join ', ')"
 
-    # Look for migration/schema directories
-    $schemaDirs = @("migrations", "schema", "sql", "db", "database", "prisma", "src/main/resources/db")
-    $foundFiles = @()
-    foreach ($dir in $schemaDirs) {
-        $fullDir = Join-Path $ProjectRoot $dir
-        if (Test-Path -LiteralPath $fullDir) {
-            $foundFiles += Get-ChildItem -LiteralPath $fullDir -Recurse -File -Include "*.sql", "*.xml", "*.yaml", "*.yml", "*.json", "*.prisma", "*.ts", "*.js", "*.java", "*.kt" | ForEach-Object { $_.FullName }
-        }
-    }
-
-    if ($foundFiles.Count -gt 0) {
-        $allCodeText = ""
-        foreach ($f in $foundFiles) {
-            try {
-                $allCodeText += "`n" + (Get-Content -Raw -Encoding utf8 -LiteralPath $f)
-            } catch {
-                # Skip binary files
-            }
-        }
-
-        foreach ($table in $declaredTables) {
-            # Normalize for comparison
-            $searchPattern = [regex]::Escape($table)
-            if ($allCodeText -notmatch $searchPattern) {
-                $issues += "SCHEMA_DRIFT: Table '$table' declared in DESIGN.md but not found in any schema/migration file under ($($schemaDirs -join ', '))."
-            }
-        }
-    } else {
+    $schemaFiles = Get-FilesFromDirs -Dirs @("migrations", "schema", "sql", "db", "database", "prisma", "src/main/resources/db") -Extensions @(".sql", ".xml", ".yaml", ".yml", ".json", ".prisma", ".ts", ".js", ".java", ".kt")
+    if ($schemaFiles.Count -eq 0) {
         Write-Host "  No schema/migration directories found. Skipping schema drift check."
+    } else {
+        $schemaText = Read-AllText -Files $schemaFiles
+        foreach ($table in $declaredTables) {
+            if ($schemaText -notmatch [regex]::Escape($table)) {
+                $issues += "SCHEMA_DRIFT: Table '$table' declared in DESIGN.md but not found in schema/migration files."
+            }
+        }
     }
 }
 
-# --- 2. API route drift: extract route paths from DESIGN.md and check route files ---
-$routeMatches = [regex]::Matches($designText, '(?<=`?)(/[a-zA-Z0-9_{}/:.-]+)(?=`?|[\s,;\)])')
-$declaredRoutes = $routeMatches | ForEach-Object {
-    $route = $_.Groups[1].Value
-    # Filter out non-route paths (file paths, markdown links, etc.)
-    if ($route -match '^/[a-zA-Z]' -and $route -notmatch '\.md|\.ps1|\.sh|\.java|\.ts|\.js|node_modules|\.git') {
-        $route
-    }
-} | Sort-Object -Unique
+# 2. API route drift (heuristic only).
+$routeMatches = [regex]::Matches($designText, '(?<![A-Za-z0-9_.-])(/[A-Za-z][A-Za-z0-9_{}/:.-]*)')
+$declaredRoutes = $routeMatches |
+    ForEach-Object { $_.Groups[1].Value } |
+    Where-Object { $_ -notmatch '\.(md|ps1|sh|java|ts|tsx|js|jsx)$' -and $_ -notmatch '(node_modules|\.git)' } |
+    Sort-Object -Unique
 
 if ($declaredRoutes.Count -gt 0) {
     Write-Host ""
@@ -98,21 +96,15 @@ if ($declaredRoutes.Count -gt 0) {
     Write-Host "  NOTE: Route drift check is heuristic. Review route matches manually."
 }
 
-# --- 3. Permission drift: extract permission codes from DESIGN.md ---
-$permMatches = [regex]::Matches($designText, '@SaCheckPermission\s*\(\s*["'']([^"'']+)["'']|["'']([A-Z_]{3,})["'']')
+# 3. Permission drift.
 $declaredPerms = @()
-foreach ($m in $permMatches) {
-    if ($m.Groups[1].Success) { $declaredPerms += $m.Groups[1].Value }
-    if ($m.Groups[2].Success) { $declaredPerms += $m.Groups[2].Value }
+$saMatches = [regex]::Matches($designText, '@SaCheckPermission\s*\(\s*["'']([^"'']+)["'']')
+foreach ($match in $saMatches) {
+    $declaredPerms += $match.Groups[1].Value
 }
-# Also check for permission table mentions
-$permTableMatches = [regex]::Matches($designText, '权限码\s*\|[^|]+\|')
-foreach ($m in $permTableMatches) {
-    $cells = $m.Value -split '\|'
-    if ($cells.Count -ge 3) {
-        $code = $cells[2].Trim()
-        if ($code -match '^[A-Z_]') { $declaredPerms += $code }
-    }
+$permissionMatches = [regex]::Matches($designText, '(?im)\bpermission[-_ ]?code\b\s*[:|]\s*([A-Z][A-Z0-9_:.-]+)')
+foreach ($match in $permissionMatches) {
+    $declaredPerms += $match.Groups[1].Value
 }
 $declaredPerms = $declaredPerms | Sort-Object -Unique
 
@@ -121,68 +113,40 @@ if ($declaredPerms.Count -gt 0) {
     Write-Host "--- Permission drift check ---"
     Write-Host "Permission codes declared in DESIGN.md: $($declaredPerms -join ', ')"
 
-    # Walk source files for permission references
-    $srcDirs = @("src", "app", "modules", "services", "common", "shared", "packages")
-    $foundFiles = @()
-    foreach ($dir in $srcDirs) {
-        $fullDir = Join-Path $ProjectRoot $dir
-        if (Test-Path -LiteralPath $fullDir) {
-            $foundFiles += Get-ChildItem -LiteralPath $fullDir -Recurse -File -Include "*.java", "*.kt", "*.ts", "*.tsx", "*.js", "*.jsx" | ForEach-Object { $_.FullName }
-        }
-    }
-
-    if ($foundFiles.Count -gt 0) {
-        $allCodeText = ""
-        foreach ($f in $foundFiles) {
-            try {
-                $allCodeText += "`n" + (Get-Content -Raw -Encoding utf8 -LiteralPath $f) -join "`n"
-            } catch {
-                # Skip binary files
-            }
-        }
-
-        foreach ($perm in $declaredPerms) {
-            if ($allCodeText -notmatch [regex]::Escape($perm)) {
-                $issues += "PERM_DRIFT: Permission code '$perm' declared in DESIGN.md but not found in any source file."
-            }
-        }
-    } else {
+    $sourceFiles = Get-FilesFromDirs -Dirs @("src", "app", "modules", "services", "common", "shared", "packages") -Extensions @(".java", ".kt", ".ts", ".tsx", ".js", ".jsx", ".vue")
+    if ($sourceFiles.Count -eq 0) {
         Write-Host "  No source directories found. Skipping permission drift check."
+    } else {
+        $sourceText = Read-AllText -Files $sourceFiles
+        foreach ($permission in $declaredPerms) {
+            if ($sourceText -notmatch [regex]::Escape($permission)) {
+                $issues += "PERM_DRIFT: Permission code '$permission' declared in DESIGN.md but not found in source files."
+            }
+        }
     }
 }
 
-# --- 4. Status / workflow drift ---
-if ($designText -match '(?i)状态机|state\s+machine|status\s+machine|Status\s+Vocabulary|Status\s+Mapping') {
+# 4. Workflow/status drift.
+$mentionsWorkflowOrStatus = $designText -match '(?i)(workflow|state\s+machine|status\s+machine|Status\s+Vocabulary|Status\s+Mapping)'
+$declaresNoWorkflowOrStatus = $designText -match '(?i)\b(no|not|without)\b.{0,80}(workflow|state\s+machine|status)'
+if ($mentionsWorkflowOrStatus -and -not $declaresNoWorkflowOrStatus) {
     Write-Host ""
     Write-Host "--- Workflow/status drift check ---"
 
-    $vocabMatch = [regex]::Match($designText, '(?s)##\s*Status\s+Vocabulary.*?(?=##\s|$)')
-    if ($vocabMatch.Success) {
-        $statuses = [regex]::Matches($vocabMatch.Value, '\|\s*([A-Za-z_0-9]+)\s*\|')
-        $declaredStatuses = $statuses | ForEach-Object { $_.Groups[1].Value } | Where-Object { $_ -ne "状态" -and $_ -ne "Status" }
-        if ($declaredStatuses.Count -gt 0) {
-            Write-Host "  Statuses declared: $($declaredStatuses -join ', ')"
-            Write-Host "  Manual review recommended."
-        }
-    }
-
-    # Check if Status Mapping or Legacy Compatibility sections are present
     if ($designText -notmatch '(?i)##\s*Status\s+Mapping') {
-        $issues += "WORKFLOW_DRIFT: Design mentions state machine but lacks Status Mapping section."
+        $issues += "WORKFLOW_DRIFT: Design mentions workflow/status but lacks Status Mapping section."
     }
     if ($designText -notmatch '(?i)##\s*Legacy\s+Compatibility') {
-        $issues += "WORKFLOW_DRIFT: Design mentions state machine but lacks Legacy Compatibility section."
+        $issues += "WORKFLOW_DRIFT: Design mentions workflow/status but lacks Legacy Compatibility section."
     }
 }
 
-# --- Summary ---
 Write-Host ""
 Write-Host "============================================"
 if ($issues.Count -gt 0) {
     Write-Host "Code-drift check found $($issues.Count) issue(s):"
     $issues | ForEach-Object { Write-Host " - $_" }
     exit 2
-} else {
-    Write-Host "Code-drift check passed. No drift detected between DESIGN.md and live code."
-    exit 0
 }
+
+Write-Host "Code-drift check passed. No drift detected between DESIGN.md and live code."

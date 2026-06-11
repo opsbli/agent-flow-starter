@@ -46,6 +46,7 @@ bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
 Continue agent-flow change: <change-id>.
 Do not implement yet.
 Complete REQUIREMENT, CODE_SCAN, DESIGN, Design Alignment / Grill, PLAN, TASKS, then run Plan Audit.
+Run scan-check after CODE_SCAN and task-check after TASKS.
 If Plan Audit is not accept, stop and list required fixes.
 ```
 
@@ -94,7 +95,8 @@ bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-i
 I accept the Plan Audit.
 Continue agent-flow change: <change-id>.
 Implement strictly within TASKS.md write_files.
-Update TASKS.md after each task.
+Update TASKS.md status after each task.
+Run task-check after updating TASKS.md.
 ```
 
 ## Closure
@@ -102,9 +104,28 @@ Update TASKS.md after each task.
 ```text
 Continue agent-flow change: <change-id>.
 Complete VERIFY, REVIEW, REPORT, EVOLUTION, and Closure Audit.
-Run ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, scaffold-health, and relevant run-verify commands.
+Run scan-check, task-check, ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, evolution-check, scaffold-health, and relevant run-verify commands.
 For Heavy changes, also run closure-check before saying the change is complete.
 If closure is conditional, list residual risks clearly.
+```
+
+## Full Change Check
+
+```text
+Run agent-flow full check for change: <change-id>.
+Use check-change. If any gate fails, stop and explain the failing gate before editing files.
+```
+
+Commands:
+
+```powershell
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure
+```
+
+```bash
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure
 ```
 
 ## Evolution

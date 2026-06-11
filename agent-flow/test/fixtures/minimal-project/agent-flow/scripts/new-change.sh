@@ -47,7 +47,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     -h|--help)
       cat <<'EOF'
-Usage: agent-flow/scripts/new-change.sh --name <change-name> [--flow Light|Standard|Heavy]
+Usage: agent-flow/scripts/new-change.sh --name <change-name> [--flow Light|Standard|Heavy|Emergency]
 
 Creates a change folder from templates and marks the selected flow in CHANGE.md.
 EOF
@@ -66,9 +66,9 @@ if [ -z "$name" ]; then
 fi
 
 case "$flow" in
-  Light|Standard|Heavy) ;;
+  Light|Standard|Heavy|Emergency) ;;
   *)
-    echo "Flow must be Light, Standard, or Heavy." >&2
+    echo "Flow must be Light, Standard, Heavy, or Emergency." >&2
     exit 2
     ;;
 esac
@@ -100,6 +100,9 @@ case "$flow" in
   Heavy)
     files=(STATE.md CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md PLAN.md TASKS.md VERIFY.md REVIEW.md REPORT.md AUDIT.md EVOLUTION.md)
     ;;
+  Emergency)
+    files=(STATE.md CHANGE.md CODE_SCAN.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md)
+    ;;
 esac
 
 for file in "${files[@]}"; do
@@ -124,6 +127,9 @@ for file in "${files[@]}"; do
         ;;
       Heavy)
         sed -E 's/- \[ \] Heavy/- [x] Heavy/' "$target" > "$tmp_target"
+        ;;
+      Emergency)
+        sed -E 's/- \[ \] Emergency/- [x] Emergency/' "$target" > "$tmp_target"
         ;;
     esac
     mv "$tmp_target" "$target"

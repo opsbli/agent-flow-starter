@@ -118,11 +118,73 @@ assert_gate_scripts() {
   local target_root="$1"
   local change_dir="$target_root/agent-flow/changes/demo-gates"
   mkdir -p "$change_dir"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$change_dir/CHANGE.md"
+  cat > "$change_dir/CODE_SCAN.md" <<'EOF'
+# Code Scan
+
+## 扫描时间
+2026-06-10 10:00
+
+## Machine Check
+scan_time: 2026-06-10 10:00
+related_modules: src/index.ts
+similar_implementations: src/index.ts
+reusable_abstractions: README contract
+test_baseline: scripts/test-starter.sh
+read_files: src/index.ts
+write_files: README.md
+open_questions: none
+
+## 相关模块
+- src/index.ts
+
+## 相似实现
+| 能力 | 参考文件 | 可复用点 |
+|---|---|---|
+| demo | `src/index.ts` | existing entry pattern |
+
+## 可复用抽象
+- README contract.
+
+## 禁止重复实现
+- No duplicate entry module.
+
+## 测试基线
+- scripts/test-starter.sh
+
+## read_files
+read_files:
+  - src/index.ts
+
+## write_files
+write_files:
+  - README.md
+
+## 未决问题
+- none
+EOF
   printf '# Requirement\n\n- AC-01: Demo criterion.\n' > "$change_dir/REQUIREMENT.md"
   printf '# Design\n\nNo schema, permission, auth, workflow, or status change.\n' > "$change_dir/DESIGN.md"
-  printf '# Tasks\n\nwrite_files:\n  - README.md\n' > "$change_dir/TASKS.md"
+  cat > "$change_dir/TASKS.md" <<'EOF'
+# Tasks
 
-  if bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"; then
+## Task Matrix
+
+| Task | Status | AC | read_files | write_files | Verify | Parallel |
+|---|---|---|---|---|---|---|
+| T001 | pending | AC-01 | `src/index.ts` | `README.md` | manual review | no |
+
+## write_files 汇总
+
+write_files:
+  - README.md
+EOF
+
+  bash "$target_root/agent-flow/scripts/scan-check.sh" --change-dir "$change_dir"
+  bash "$target_root/agent-flow/scripts/task-check.sh" --change-dir "$change_dir"
+
+  mkdir -p "$change_dir/empty-evidence"
+  if bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir/empty-evidence"; then
     echo "ac-check passed using REQUIREMENT.md as self-evidence." >&2
     exit 1
   fi
@@ -131,6 +193,36 @@ assert_gate_scripts() {
   bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"
   bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$change_dir" --project-root "$target_root"
   bash "$target_root/agent-flow/scripts/code-drift-check.sh" --change-dir "$change_dir" --project-root "$target_root"
+  cat > "$change_dir/EVOLUTION.md" <<'EOF'
+# Evolution
+
+## Machine Check
+problem: none
+knowledge: none
+adr: none
+gate: none
+template: none
+no_change_reason: no change needed
+
+## 本次 change 暴露的问题
+- none
+
+## 应写入 knowledge 的内容
+- none
+
+## 应新增或修改的 ADR
+- none
+
+## 应新增的 gate
+- none
+
+## 应调整的模板
+- none
+
+## 本次不调整的原因
+- no change needed
+EOF
+  bash "$target_root/agent-flow/scripts/evolution-check.sh" --change-dir "$change_dir"
 }
 
 assert_task_boundary() {
@@ -156,6 +248,11 @@ assert_task_boundary() {
     echo "task-boundary-check did not reject undeclared package.json change." >&2
     exit 1
   fi
+  (
+    cd "$target_root"
+    git add -A >/dev/null
+    git commit -m "after boundary smoke" >/dev/null
+  )
 }
 
 assert_closure_check() {
@@ -163,17 +260,103 @@ assert_closure_check() {
   local change_dir="$target_root/agent-flow/changes/demo-closure"
   mkdir -p "$change_dir"
   printf '# Change\n\n- [ ] Light\n- [ ] Standard\n- [x] Heavy\n' > "$change_dir/CHANGE.md"
-  printf '# Code Scan\n\nScanned.\n' > "$change_dir/CODE_SCAN.md"
+  printf '# State\n\nchange_id: demo-closure\nflow: Heavy\ncurrent_stage: closure-audit\nblocked: false\nnext_action: Run Closure Audit.\n' > "$change_dir/STATE.md"
+  cat > "$change_dir/CODE_SCAN.md" <<'EOF'
+# Code Scan
+
+## 扫描时间
+2026-06-10 10:00
+
+## Machine Check
+scan_time: 2026-06-10 10:00
+related_modules: src/index.ts
+similar_implementations: src/index.ts
+reusable_abstractions: README contract
+test_baseline: scripts/test-starter.sh
+read_files: src/index.ts
+write_files: README.md
+open_questions: none
+
+## 相关模块
+- src/index.ts
+
+## 相似实现
+| 能力 | 参考文件 | 可复用点 |
+|---|---|---|
+| demo | `src/index.ts` | existing entry pattern |
+
+## 可复用抽象
+- README contract.
+
+## 禁止重复实现
+- No duplicate entry module.
+
+## 测试基线
+- scripts/test-starter.sh
+
+## read_files
+read_files:
+  - src/index.ts
+
+## write_files
+write_files:
+  - README.md
+
+## 未决问题
+- none
+EOF
   printf '# Requirement\n\n- AC-01: Demo.\n' > "$change_dir/REQUIREMENT.md"
   printf '# Design\n\nAlignment Verdict: aligned\n' > "$change_dir/DESIGN.md"
   printf '# Plan\n\nPlan.\n' > "$change_dir/PLAN.md"
-  printf '# Tasks\n\nwrite_files:\n  - README.md\n' > "$change_dir/TASKS.md"
-  printf '# Verify\n\n## AC Evidence\n\n| AC | Evidence |\n|---|---|\n| AC-01 | pass |\n\nac-check pass\ncode-drift-check pass\nblocked-check pass\ntask-boundary-check pass\n' > "$change_dir/VERIFY.md"
+  cat > "$change_dir/TASKS.md" <<'EOF'
+# Tasks
+
+## Task Matrix
+
+| Task | Status | AC | read_files | write_files | Verify | Parallel |
+|---|---|---|---|---|---|---|
+| T001 | completed | AC-01 | `src/index.ts` | `README.md` | manual review | no |
+
+## write_files 汇总
+
+write_files:
+  - README.md
+EOF
+  printf '# Verify\n\n## AC Evidence\n\n| AC | Evidence |\n|---|---|\n| AC-01 | pass |\n\nscan-check pass\ntask-check pass\nac-check pass\ncode-drift-check pass\nblocked-check pass\ntask-boundary-check pass\nmanifest-check pass\nevolution-check pass\n' > "$change_dir/VERIFY.md"
   printf '# Review\n\nReviewed.\n' > "$change_dir/REVIEW.md"
   printf '# Report\n\nDone.\n' > "$change_dir/REPORT.md"
-  printf '# Evolution\n\nNo change.\n' > "$change_dir/EVOLUTION.md"
-  printf '# Audit\n\n## Closure Audit\n\nVerdict: acceptable\n\nac-check pass\ncode-drift-check pass\nblocked-check pass\ntask-boundary-check pass\n' > "$change_dir/AUDIT.md"
+  cat > "$change_dir/EVOLUTION.md" <<'EOF'
+# Evolution
+
+## Machine Check
+problem: none
+knowledge: none
+adr: none
+gate: none
+template: none
+no_change_reason: no change needed
+
+## 本次 change 暴露的问题
+- none
+
+## 应写入 knowledge 的内容
+- none
+
+## 应新增或修改的 ADR
+- none
+
+## 应新增的 gate
+- none
+
+## 应调整的模板
+- none
+
+## 本次不调整的原因
+- no change needed
+EOF
+  printf '# Audit\n\n## Closure Audit\n\nVerdict: acceptable\n\nscan-check pass\ntask-check pass\nac-check pass\ncode-drift-check pass\nblocked-check pass\ntask-boundary-check pass\nmanifest-check pass\nevolution-check pass\n' > "$change_dir/AUDIT.md"
   bash "$target_root/agent-flow/scripts/closure-check.sh" --change-dir "$change_dir" --project-root "$target_root"
+  bash "$target_root/agent-flow/scripts/check-change.sh" --change-dir "$change_dir" --project-root "$target_root" --closure
 }
 
 echo "== scaffold health =="
@@ -196,12 +379,20 @@ assert_path "$empty_target/agent-flow/scripts/sync-state.ps1"
 assert_path "$empty_target/agent-flow/scripts/sync-state.sh"
 assert_path "$empty_target/agent-flow/scripts/state-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/state-check.sh"
+assert_path "$empty_target/agent-flow/scripts/scan-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/scan-check.sh"
+assert_path "$empty_target/agent-flow/scripts/task-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/task-check.sh"
 assert_path "$empty_target/agent-flow/scripts/task-boundary-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/task-boundary-check.sh"
 assert_path "$empty_target/agent-flow/scripts/manifest-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/manifest-check.sh"
+assert_path "$empty_target/agent-flow/scripts/evolution-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/evolution-check.sh"
 assert_path "$empty_target/agent-flow/scripts/closure-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/closure-check.sh"
+assert_path "$empty_target/agent-flow/scripts/check-change.ps1"
+assert_path "$empty_target/agent-flow/scripts/check-change.sh"
 assert_path "$empty_target/agent-flow/scripts/new-change.ps1"
 assert_path "$empty_target/agent-flow/scripts/new-change.sh"
 assert_path "$empty_target/agent-flow/scripts/alignment-check.ps1"

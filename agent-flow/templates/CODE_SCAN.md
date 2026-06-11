@@ -5,16 +5,39 @@
 
 ## 扫描时间
 
+YYYY-MM-DD HH:mm
+
+## Machine Check
+
+scan_time: YYYY-MM-DD HH:mm
+related_modules: module-or-file
+similar_implementations: path-or-none-with-reason
+reusable_abstractions: abstraction-or-none-with-reason
+test_baseline: command-or-test-file
+read_files: path/to/read
+write_files: path/to/write
+open_questions: none-or-question
+
 ## 相关模块
+
+- 模块：
+- 入口：
 
 ## 相似实现
 
 | 能力 | 参考文件 | 可复用点 |
 |---|---|---|
+| 示例能力 | `path/to/file` | 可复用的模式、接口或约束 |
 
 ## 可复用抽象
 
+- 抽象：
+- 复用方式：
+
 ## 禁止重复实现
+
+- 不重复实现：
+- 原因：
 
 ## Maven / 模块影响
 
@@ -28,10 +51,21 @@
 
 ## 测试基线
 
+- 现有测试：
+- 可复用命令：
+
 ## read_files
 
+read_files:
+  - path/to/read
+
 ## write_files
+
+write_files:
+  - path/to/write
 
 ## 破坏性变更
 
 ## 未决问题
+
+- 无 / 待确认：

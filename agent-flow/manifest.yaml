@@ -86,12 +86,20 @@ gates:
   - agent-flow/scripts/state-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/scan-check.ps1
+  - agent-flow/scripts/scan-check.sh
+  - agent-flow/scripts/task-check.ps1
+  - agent-flow/scripts/task-check.sh
   - agent-flow/scripts/task-boundary-check.ps1
   - agent-flow/scripts/task-boundary-check.sh
   - agent-flow/scripts/manifest-check.ps1
   - agent-flow/scripts/manifest-check.sh
+  - agent-flow/scripts/evolution-check.ps1
+  - agent-flow/scripts/evolution-check.sh
   - agent-flow/scripts/closure-check.ps1
   - agent-flow/scripts/closure-check.sh
+  - agent-flow/scripts/check-change.ps1
+  - agent-flow/scripts/check-change.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1

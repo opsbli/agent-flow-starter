@@ -156,6 +156,19 @@ foreach ($item in $starterOwned) {
     }
 }
 
+# --- Install CI workflow template ---
+Write-Host ""
+Write-Host "=== CI workflow ==="
+$sourceCi = Join-Path $StarterRoot ".github/workflows/scaffold-ci.yml"
+if (Test-Path -LiteralPath $sourceCi) {
+    $targetCiDir = Join-Path $Target ".github/workflows"
+    New-Item -ItemType Directory -Force -Path $targetCiDir | Out-Null
+    Copy-Item -LiteralPath $sourceCi -Destination (Join-Path $targetCiDir "scaffold-ci.yml") -Force
+    Write-Host "  UPDATED: .github/workflows/scaffold-ci.yml"
+} else {
+    Write-Host "  SKIP: starter has no .github/workflows/scaffold-ci.yml"
+}
+
 # --- Preserve project-owned files ---
 Write-Host ""
 Write-Host "=== Preserving project-owned files ==="

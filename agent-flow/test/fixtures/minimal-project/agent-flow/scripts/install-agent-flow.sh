@@ -148,6 +148,17 @@ for item in "${starter_owned[@]}"; do
   fi
 done
 
+# --- Install CI workflow template ---
+echo ""
+echo "=== CI workflow ==="
+if [ -f "$starter_root/.github/workflows/scaffold-ci.yml" ]; then
+  mkdir -p "$target/.github/workflows"
+  cp "$starter_root/.github/workflows/scaffold-ci.yml" "$target/.github/workflows/scaffold-ci.yml"
+  echo "  UPDATED: .github/workflows/scaffold-ci.yml"
+else
+  echo "  SKIP: starter has no .github/workflows/scaffold-ci.yml"
+fi
+
 # --- Preserve project-owned files ---
 echo ""
 echo "=== Preserving project-owned files ==="

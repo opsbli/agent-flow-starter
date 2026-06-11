@@ -1,16 +1,6 @@
 #!/usr/bin/env bash
-# Check code drift against DESIGN.md declarations for Standard/Heavy changes.
-#
-# Reads DESIGN.md from a change directory and checks whether the actual code
-# matches what was declared. Covers schema, API routes, and permission codes.
-#
-# Usage:
-#   bash code-drift-check.sh --change-dir agent-flow/changes/my-change
-#   bash code-drift-check.sh --change-dir agent-flow/changes/my-change --project-root /path/to/project
-
 set -euo pipefail
 
-# --- Parse arguments ---
 change_dir=""
 project_root="."
 
@@ -40,14 +30,7 @@ if [ ! -d "$change_dir" ]; then
   exit 2
 fi
 
-project_root="$(cd "$project_root" && pwd 2>/dev/null || echo "$project_root")"
-
-# --- Helper: check if a file exists ---
-has_file() {
-  [ -f "$1" ]
-}
-
-# --- Read DESIGN.md ---
+project_root="$(cd "$project_root" 2>/dev/null && pwd || echo "$project_root")"
 design_path="$change_dir/DESIGN.md"
 if [ ! -f "$design_path" ]; then
   echo "SKIP: No DESIGN.md in $change_dir (Light change or not yet created)"
@@ -56,97 +39,92 @@ fi
 
 issues=()
 
-# --- 1. Schema drift ---
-echo "--- Schema drift check ---"
-# Extract table names from CREATE TABLE / ALTER TABLE patterns
-table_names=$(grep -oiP '(?i)(CREATE TABLE|ALTER TABLE|TABLE\s+)\s*`?(\w+)' "$design_path" 2>/dev/null | grep -oP '\w+' | tail -n +2 || true)
+append_files_text() {
+  local text=""
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    text="$text"$'\n'"$(cat "$file" 2>/dev/null || true)"
+  done
+  printf '%s' "$text"
+}
 
-if [ -n "$table_names" ]; then
-  echo "Tables declared in DESIGN.md: $(echo "$table_names" | tr '\n' ', ')"
-
-  # Look for migration/schema files
-  schema_found=false
-  for dir in migrations schema sql db database prisma "src/main/resources/db"; do
+find_files_in_dirs() {
+  local dirs="$1"
+  local extension_regex="$2"
+  local dir
+  for dir in $dirs; do
     if [ -d "$project_root/$dir" ]; then
-      schema_found=true
-      # Search for table names in migration files
-      for table in $table_names; do
-        if ! grep -rq "$table" "$project_root/$dir" 2>/dev/null; then
-          issues+=("SCHEMA_DRIFT: Table '$table' declared in DESIGN.md but not found in $dir/")
-        fi
-      done
+      find "$project_root/$dir" -type f 2>/dev/null | grep -Ei "$extension_regex" || true
     fi
   done
+}
 
-  if [ "$schema_found" = false ]; then
+table_names="$(grep -Eio '\b(CREATE|ALTER)[[:space:]]+TABLE[[:space:]]+[`"'\''[]?[A-Za-z_][A-Za-z0-9_]*' "$design_path" 2>/dev/null | sed -E 's/^.*TABLE[[:space:]]+[`"'\''[]?//' | sort -u || true)"
+if [ -n "$table_names" ]; then
+  echo "--- Schema drift check ---"
+  echo "Tables declared in DESIGN.md: $(printf '%s' "$table_names" | paste -sd ', ' -)"
+  schema_files="$(find_files_in_dirs 'migrations schema sql db database prisma src/main/resources/db' '\.(sql|xml|ya?ml|json|prisma|ts|js|java|kt)$' || true)"
+  if [ -z "$schema_files" ]; then
     echo "  No schema/migration directories found. Skipping schema drift check."
+  else
+    schema_text="$(printf '%s\n' "$schema_files" | append_files_text)"
+    while IFS= read -r table; do
+      if [ -n "$table" ] && ! printf '%s' "$schema_text" | grep -qF "$table"; then
+        issues+=("SCHEMA_DRIFT: Table '$table' declared in DESIGN.md but not found in schema/migration files.")
+      fi
+    done <<< "$table_names"
   fi
 fi
 
-# --- 2. API route drift (heuristic) ---
-echo ""
-echo "--- API route drift check ---"
-# Extract route-like paths (starting with /)
-routes=$(grep -oP '`?(/[a-zA-Z][a-zA-Z0-9_{}/:.\-]*)' "$design_path" 2>/dev/null | grep -vE '\.md$|\.ps1$|\.sh$|\.java$|\.ts$|\.js$|node_modules|\.git' | sort -u || true)
-
+routes="$(grep -Eo '(^|[^A-Za-z0-9_.-])/[A-Za-z][A-Za-z0-9_{}/:.-]*' "$design_path" 2>/dev/null | sed 's/^[^/]*//' | grep -Ev '\.(md|ps1|sh|java|ts|tsx|js|jsx)$|node_modules|\.git' | sort -u || true)"
 if [ -n "$routes" ]; then
+  echo ""
+  echo "--- API route drift check ---"
   echo "Routes declared in DESIGN.md:"
-  echo "$routes" | while IFS= read -r r; do echo "  - $r"; done
+  printf '%s\n' "$routes" | sed 's/^/  - /'
   echo "  NOTE: Route drift check is heuristic. Review route matches manually."
 fi
 
-# --- 3. Permission drift ---
-echo ""
-echo "--- Permission drift check ---"
-# Extract @SaCheckPermission values and permission code patterns
-perms=$(grep -oP '@SaCheckPermission\s*\(\s*["'"'"']\K[^"'"'"']+' "$design_path" 2>/dev/null || true)
-# Also extract from permission table
-perm_table_codes=$(grep -oP '权限码\s*\|[^|]+\|\s*\K[A-Z_]{3,}' "$design_path" 2>/dev/null || true)
-
-all_perms=$( (echo "$perms"; echo "$perm_table_codes") | sort -u | grep -v '^$' || true)
-
-if [ -n "$all_perms" ]; then
-  echo "Permission codes declared in DESIGN.md: $(echo "$all_perms" | tr '\n' ', ')"
-
-  # Search source files for permission codes
-  src_found=false
-  for dir in src app modules services common shared packages; do
-    if [ -d "$project_root/$dir" ]; then
-      src_found=true
-      for perm in $all_perms; do
-        if ! grep -rq "$perm" "$project_root/$dir" 2>/dev/null; then
-          issues+=("PERM_DRIFT: Permission code '$perm' declared in DESIGN.md but not found in $dir/")
-        fi
-      done
-    fi
-  done
-
-  if [ "$src_found" = false ]; then
+perms="$(
+  grep -Eo '@SaCheckPermission[[:space:]]*\([[:space:]]*["'\''][^"'\'']+' "$design_path" 2>/dev/null | sed -E 's/^.*["'\'']//' || true
+  grep -Eio 'permission[-_ ]?code[[:space:]]*[:|][[:space:]]*[A-Z][A-Z0-9_:.-]+' "$design_path" 2>/dev/null | sed -E 's/^.*[:|][[:space:]]*//' || true
+)"
+perms="$(printf '%s\n' "$perms" | grep -v '^$' | sort -u || true)"
+if [ -n "$perms" ]; then
+  echo ""
+  echo "--- Permission drift check ---"
+  echo "Permission codes declared in DESIGN.md: $(printf '%s' "$perms" | paste -sd ', ' -)"
+  source_files="$(find_files_in_dirs 'src app modules services common shared packages' '\.(java|kt|ts|tsx|js|jsx|vue)$' || true)"
+  if [ -z "$source_files" ]; then
     echo "  No source directories found. Skipping permission drift check."
+  else
+    source_text="$(printf '%s\n' "$source_files" | append_files_text)"
+    while IFS= read -r perm; do
+      if [ -n "$perm" ] && ! printf '%s' "$source_text" | grep -qF "$perm"; then
+        issues+=("PERM_DRIFT: Permission code '$perm' declared in DESIGN.md but not found in source files.")
+      fi
+    done <<< "$perms"
   fi
 fi
 
-# --- 4. Workflow/status drift ---
-if grep -qiE '状态机|state machine|status machine|Status Vocabulary|Status Mapping' "$design_path" 2>/dev/null; then
+if grep -Eiq '(workflow|state[[:space:]]+machine|status[[:space:]]+machine|Status[[:space:]]+Vocabulary|Status[[:space:]]+Mapping)' "$design_path" &&
+   ! grep -Eiq '\b(no|not|without)\b.{0,80}(workflow|state[[:space:]]+machine|status)' "$design_path"; then
   echo ""
   echo "--- Workflow/status drift check ---"
-
-  if ! grep -q "Status Mapping" "$design_path" 2>/dev/null; then
-    issues+=("WORKFLOW_DRIFT: Design mentions state machine but lacks Status Mapping section.")
+  if ! grep -Eiq '^##[[:space:]]*Status[[:space:]]+Mapping' "$design_path"; then
+    issues+=("WORKFLOW_DRIFT: Design mentions workflow/status but lacks Status Mapping section.")
   fi
-  if ! grep -q "Legacy Compatibility" "$design_path" 2>/dev/null; then
-    issues+=("WORKFLOW_DRIFT: Design mentions state machine but lacks Legacy Compatibility section.")
+  if ! grep -Eiq '^##[[:space:]]*Legacy[[:space:]]+Compatibility' "$design_path"; then
+    issues+=("WORKFLOW_DRIFT: Design mentions workflow/status but lacks Legacy Compatibility section.")
   fi
 fi
 
-# --- Summary ---
 echo ""
 echo "============================================"
 if [ "${#issues[@]}" -gt 0 ]; then
   echo "Code-drift check found ${#issues[@]} issue(s):"
   printf ' - %s\n' "${issues[@]}"
   exit 2
-else
-  echo "Code-drift check passed. No drift detected between DESIGN.md and live code."
-  exit 0
 fi
+
+echo "Code-drift check passed. No drift detected between DESIGN.md and live code."

@@ -239,12 +239,20 @@ gates:
   - agent-flow/scripts/state-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/scan-check.ps1
+  - agent-flow/scripts/scan-check.sh
+  - agent-flow/scripts/task-check.ps1
+  - agent-flow/scripts/task-check.sh
   - agent-flow/scripts/task-boundary-check.ps1
   - agent-flow/scripts/task-boundary-check.sh
   - agent-flow/scripts/manifest-check.ps1
   - agent-flow/scripts/manifest-check.sh
+  - agent-flow/scripts/evolution-check.ps1
+  - agent-flow/scripts/evolution-check.sh
   - agent-flow/scripts/closure-check.ps1
   - agent-flow/scripts/closure-check.sh
+  - agent-flow/scripts/check-change.ps1
+  - agent-flow/scripts/check-change.sh
   - agent-flow/scripts/run-verify.ps1
   - agent-flow/scripts/run-verify.sh
   - agent-flow/scripts/verify-backend.ps1
@@ -323,6 +331,10 @@ Windows:
 ~~~powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/manifest-check.ps1
+agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/run-verify.ps1 -All
 ~~~
 
@@ -331,6 +343,10 @@ Linux/macOS:
 ~~~bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/manifest-check.sh
+bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/run-verify.sh --all
 ~~~
 

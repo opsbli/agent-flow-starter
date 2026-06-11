@@ -123,11 +123,81 @@ function Assert-GateScripts {
 
     $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-gates"
     New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value @"
+# Code Scan
+
+## 扫描时间
+2026-06-10 10:00
+
+## Machine Check
+scan_time: 2026-06-10 10:00
+related_modules: src/index.ts
+similar_implementations: src/index.ts
+reusable_abstractions: README contract
+test_baseline: scripts/test-starter.ps1
+read_files: src/index.ts
+write_files: README.md
+open_questions: none
+
+## 相关模块
+- src/index.ts
+
+## 相似实现
+| 能力 | 参考文件 | 可复用点 |
+|---|---|---|
+| demo | `src/index.ts` | existing entry pattern |
+
+## 可复用抽象
+- README contract.
+
+## 禁止重复实现
+- No duplicate entry module.
+
+## 测试基线
+- scripts/test-starter.ps1
+
+## read_files
+read_files:
+  - src/index.ts
+
+## write_files
+write_files:
+  - README.md
+
+## 未决问题
+- none
+"@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n- AC-01: Demo criterion."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`nNo schema, permission, auth, workflow, or status change."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value @"
+# Tasks
 
-    & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $changeDir
+## Task Matrix
+
+| Task | Status | AC | read_files | write_files | Verify | Parallel |
+|---|---|---|---|---|---|---|
+| T001 | pending | AC-01 | `src/index.ts` | `README.md` | manual review | no |
+
+## write_files 汇总
+
+write_files:
+  - README.md
+"@
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/scan-check.ps1") -ChangeDir $changeDir
+    if (-not $?) {
+        throw "scan-check smoke test failed."
+    }
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/task-check.ps1") -ChangeDir $changeDir
+    if (-not $?) {
+        throw "task-check smoke test failed."
+    }
+
+    $emptyEvidence = Join-Path $changeDir "empty-evidence"
+    New-Item -ItemType Directory -Force -Path $emptyEvidence | Out-Null
+    & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $emptyEvidence
     if ($LASTEXITCODE -eq 0) {
         throw "ac-check passed using REQUIREMENT.md as self-evidence."
     }
@@ -146,6 +216,40 @@ function Assert-GateScripts {
     & (Join-Path $TargetRoot "agent-flow/scripts/code-drift-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
     if (-not $?) {
         throw "code-drift-check smoke test failed."
+    }
+
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value @"
+# Evolution
+
+## Machine Check
+problem: none
+knowledge: none
+adr: none
+gate: none
+template: none
+no_change_reason: no change needed
+
+## 本次 change 暴露的问题
+- none
+
+## 应写入 knowledge 的内容
+- none
+
+## 应新增或修改的 ADR
+- none
+
+## 应新增的 gate
+- none
+
+## 应调整的模板
+- none
+
+## 本次不调整的原因
+- no change needed
+"@
+    & (Join-Path $TargetRoot "agent-flow/scripts/evolution-check.ps1") -ChangeDir $changeDir
+    if (-not $?) {
+        throw "evolution-check smoke test failed."
     }
 }
 
@@ -178,6 +282,14 @@ function Assert-TaskBoundary {
     if ($LASTEXITCODE -eq 0) {
         throw "task-boundary-check did not reject undeclared package.json change. Output: $boundaryOutput"
     }
+
+    Push-Location $TargetRoot
+    try {
+        git add -A *> $null
+        git commit -m "after boundary smoke" *> $null
+    } finally {
+        Pop-Location
+    }
 }
 
 function Assert-ClosureCheck {
@@ -186,20 +298,110 @@ function Assert-ClosureCheck {
     $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-closure"
     New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [ ] Standard`n- [x] Heavy"
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value "# Code Scan`n`nScanned."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "STATE.md") -Value "# State`n`nchange_id: demo-closure`nflow: Heavy`ncurrent_stage: closure-audit`nblocked: false`nnext_action: Run Closure Audit."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value @"
+# Code Scan
+
+## 扫描时间
+2026-06-10 10:00
+
+## Machine Check
+scan_time: 2026-06-10 10:00
+related_modules: src/index.ts
+similar_implementations: src/index.ts
+reusable_abstractions: README contract
+test_baseline: scripts/test-starter.ps1
+read_files: src/index.ts
+write_files: README.md
+open_questions: none
+
+## 相关模块
+- src/index.ts
+
+## 相似实现
+| 能力 | 参考文件 | 可复用点 |
+|---|---|---|
+| demo | `src/index.ts` | existing entry pattern |
+
+## 可复用抽象
+- README contract.
+
+## 禁止重复实现
+- No duplicate entry module.
+
+## 测试基线
+- scripts/test-starter.ps1
+
+## read_files
+read_files:
+  - src/index.ts
+
+## write_files
+write_files:
+  - README.md
+
+## 未决问题
+- none
+"@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n- AC-01: Demo."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`nAlignment Verdict: aligned"
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "PLAN.md") -Value "# Plan`n`nPlan."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value "# Verify`n`n## AC Evidence`n`n| AC | Evidence |`n|---|---|`n| AC-01 | pass |`n`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value @"
+# Tasks
+
+## Task Matrix
+
+| Task | Status | AC | read_files | write_files | Verify | Parallel |
+|---|---|---|---|---|---|---|
+| T001 | completed | AC-01 | `src/index.ts` | `README.md` | manual review | no |
+
+## write_files 汇总
+
+write_files:
+  - README.md
+"@
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value "# Verify`n`n## AC Evidence`n`n| AC | Evidence |`n|---|---|`n| AC-01 | pass |`n`nscan-check pass`ntask-check pass`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass`nmanifest-check pass`nevolution-check pass"
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REVIEW.md") -Value "# Review`n`nReviewed."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REPORT.md") -Value "# Report`n`nDone."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value "# Evolution`n`nNo change."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value "# Audit`n`n## Closure Audit`n`nVerdict: acceptable`n`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value @"
+# Evolution
+
+## Machine Check
+problem: none
+knowledge: none
+adr: none
+gate: none
+template: none
+no_change_reason: no change needed
+
+## 本次 change 暴露的问题
+- none
+
+## 应写入 knowledge 的内容
+- none
+
+## 应新增或修改的 ADR
+- none
+
+## 应新增的 gate
+- none
+
+## 应调整的模板
+- none
+
+## 本次不调整的原因
+- no change needed
+"@
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value "# Audit`n`n## Closure Audit`n`nVerdict: acceptable`n`nscan-check pass`ntask-check pass`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass`nmanifest-check pass`nevolution-check pass"
 
     & (Join-Path $TargetRoot "agent-flow/scripts/closure-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
     if (-not $?) {
         throw "closure-check smoke test failed."
+    }
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/check-change.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot -Closure
+    if (-not $?) {
+        throw "check-change smoke test failed."
     }
 }
 
@@ -236,12 +438,20 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/sync-state.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/state-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/state-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/scan-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/scan-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-boundary-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-boundary-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/evolution-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/evolution-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/closure-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/closure-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/check-change.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/check-change.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.ps1")

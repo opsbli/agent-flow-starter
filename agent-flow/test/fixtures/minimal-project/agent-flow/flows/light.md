@@ -6,12 +6,13 @@
 
 1. 建立 `STATE.md` 和 `CHANGE.md`。
 2. 执行最小代码扫描，写 `CODE_SCAN.md`。
-3. 明确 `write_files`。
-4. 实现。
-5. 运行最小验证，写 `VERIFY.md`。
-6. 写 `REPORT.md`。
-7. 更新 `STATE.md`。
-8. 如有新坑，更新 `agent-flow/knowledge/pitfalls.md`。
+3. 运行 `scan-check`。
+4. 明确 `write_files`。
+5. 实现。
+6. 运行最小验证，写 `VERIFY.md`。
+7. 写 `REPORT.md`。
+8. 更新 `STATE.md`。
+9. 如有新坑，更新 `agent-flow/knowledge/pitfalls.md`。
 
 ## 禁止
 
