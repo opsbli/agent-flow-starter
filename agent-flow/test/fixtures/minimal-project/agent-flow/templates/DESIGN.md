@@ -4,12 +4,11 @@
 
 ## 设计约束
 
-> 声明本次设计必须服从的硬约束（性能、延迟、并发、部署、第三方依赖、合规等）。
-> 无约束则写
+说明本次设计必须服从的硬约束，例如性能、延迟、并发、部署、第三方依赖、合规等。没有特殊约束时写 `none`。
 
 ## 模块边界
 
-## 复用既有抽象
+## 复用现有抽象
 
 ## 不复用的原因
 
@@ -29,39 +28,46 @@
 | 方法 | 路径 | 权限 | 入参 | 出参 |
 |---|---|---|---|---|
 
-## API / Permission / Auth 决策
+## API / Permission / Auth Decisions
 
-必须明确记录，即使结论是“不变”。
+必须明确记录，即使结论是 `unchanged` 或 `not-applicable`。
 
-| 项 | 决策 | 说明 |
+Decision Status: pending
+
+Allowed Decision Values: unchanged / new / modified / deleted / not-applicable
+
+| Item | Decision | Evidence / Reason |
 |---|---|---|
-| REST 路径 | 不变 / 新增 / 修改 / 删除 | |
-| HTTP Method | 不变 / 新增 / 修改 / 删除 | |
-| 权限码 | 不新增 / 新增 / 修改 / 删除 | |
-| `@SaCheckPermission` | 不变 / 新增 / 修改 / 删除 | |
-| 匿名接口 | 不新增 / 新增 / 修改 / 删除 | |
-| 登录态 / Token | 不变 / 修改 | |
-| 租户 / 数据权限 | 不变 / 修改 | |
+| REST Path | pending | |
+| HTTP Method | pending | |
+| Permission Code | pending | |
+| SaCheckPermission | pending | |
+| Anonymous Interface | pending | |
+| Login/Token | pending | |
+| Tenant/Data Permission | pending | |
+| State Machine Impact | pending | |
+
+State Machine Impact: pending
 
 ## 数据设计
 
-## 状态机
+## State Machine
 
-普通 CRUD 可写“不涉及状态机”。涉及 workflow/status/state machine 的 change 必须补充：
+普通 CRUD 可写 `State Machine Impact: no`。涉及 workflow/status/state machine 的 change 必须补充下面三节。
 
 ### Status Vocabulary
 
-| 状态 | 来源 | 含义 | 是否新写入 | 前端展示 |
+| Status | Source | Meaning | New Write? | Frontend Display |
 |---|---|---|---|---|
 
 ### Status Mapping
 
-| 输入/旧状态 | 目标状态 | 使用位置 | 兼容策略 |
+| Input / Legacy Status | Target Status | Usage Location | Compatibility Strategy |
 |---|---|---|---|
 
 ### Legacy Compatibility
 
-| 旧值 | 新值 | 查询兼容 | 写入兼容 | 是否迁移 |
+| Legacy Value | New Value | Query Compatibility | Write Compatibility | Migration Required |
 |---|---|---|---|---|
 
 ## Service 编排
@@ -79,24 +85,26 @@
 
 ## Design Alignment / Grill
 
-目的：降低“用户自然语言描述”和“AI 理解”之间的偏差。进入 `PLAN.md` 或 `TASKS.md` 前，必须完成一次对齐。
+目的：降低“用户自然语言描述”和“AI 理解”之间的偏差。进入 `PLAN.md`、`TASKS.md` 或实现前，必须完成一次对齐。
 
 执行方式：
 
 - 一次只问一个关键问题。
-- 如果问题可以通过读代码回答，先读代码，不要问用户。
+- 如果问题可以通过读代码回答，先读代码，不问用户。
 - 每个问题都给出 AI 推荐答案。
 - 用户确认后，把结论沉淀回本节或上方设计小节。
 
-必问检查：
+Alignment Source: pending
 
-| 问题 | AI 推荐答案 | 用户确认 | 最终结论 |
+Open Questions: pending
+
+| Question | AI Recommended Answer | Confirmation | Final Decision |
 |---|---|---|---|
-| 这个设计最可能误解用户意图的地方是什么？ | | pending / confirmed | |
-| 有没有更贴近现有代码的实现方式？ | | pending / confirmed | |
-| 是否新增了不必要的抽象、状态或配置？ | | pending / confirmed | |
-| 是否触碰 protected areas？ | | pending / confirmed | |
-| 哪些需求边界、失败场景或非目标仍可能歧义？ | | pending / confirmed | |
+| Intent Risk | | pending | |
+| Existing Code Fit | | pending | |
+| Unnecessary Abstraction | | pending | |
+| Protected Areas | | pending | |
+| Boundary And Failure Modes | | pending | |
 
 Alignment Verdict: pending
 
@@ -104,7 +112,7 @@ Skip Reason:
 
 可选值：
 
-- `pending`：还未对齐，不允许进入 `PLAN.md` 或 `TASKS.md`。
+- `pending`：还未对齐，不允许进入 `PLAN.md`、`TASKS.md` 或实现。
 - `aligned`：用户和 AI 已对齐，可以继续。
 - `blocked`：存在未决问题，必须先解决。
 - `skipped`：仅限用户明确要求跳过，并必须填写 `Skip Reason`。

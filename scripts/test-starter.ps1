@@ -14,6 +14,194 @@ function Assert-Path {
     }
 }
 
+function Get-DemoDesign {
+    param(
+        [string]$Verdict = "aligned",
+        [string]$Source = "mixed",
+        [string]$OpenQuestions = "none",
+        [string]$Confirmation = "confirmed"
+    )
+
+@"
+# Design
+
+## API / Permission / Auth Decisions
+
+Decision Status: accepted
+
+| Item | Decision | Evidence / Reason |
+|---|---|---|
+| REST Path | unchanged | README.md documents no public API change |
+| HTTP Method | unchanged | No endpoint behavior changes |
+| Permission Code | not-applicable | No permission model touched |
+| SaCheckPermission | not-applicable | No controller permission annotation touched |
+| Anonymous Interface | not-applicable | No anonymous interface change |
+| Login/Token | unchanged | No auth/session behavior change |
+| Tenant/Data Permission | unchanged | No tenant/data scope change |
+| State Machine Impact | no | No workflow/status transition touched |
+
+State Machine Impact: no
+
+## Design Alignment / Grill
+
+Alignment Source: $Source
+
+Open Questions: $OpenQuestions
+
+| Question | AI Recommended Answer | Confirmation | Final Decision |
+|---|---|---|---|
+| Intent Risk | Demo intent is limited to README evidence. | $Confirmation | Keep scope limited. |
+| Existing Code Fit | Reuse README and existing scripts. | $Confirmation | No new abstraction. |
+| Unnecessary Abstraction | No abstraction is needed. | $Confirmation | Do not add one. |
+| Protected Areas | No protected area is touched. | $Confirmation | Continue. |
+| Boundary And Failure Modes | Failure is limited to test fixture behavior. | $Confirmation | Verify with scripts. |
+
+Alignment Verdict: $Verdict
+
+Skip Reason:
+"@
+}
+
+function Get-DemoPlan {
+@"
+# Plan
+
+> Plan Status: planned
+> Last Reviewed: 2026-06-10
+> Source: agent-flow/changes/demo-closure/CHANGE.md
+
+## Current Baseline
+
+README.md and existing agent-flow scripts are the baseline.
+
+## Goals
+
+- Prove the gate chain can close a demo Heavy change.
+
+## Non-Goals
+
+- No production code behavior changes.
+
+## Execution Phases
+
+### Phase 1 - Demo verification
+
+Status: planned
+
+Scope:
+
+- Update only declared demo files.
+
+read_files:
+
+- README.md
+
+write_files:
+
+- README.md
+
+Exit Criteria:
+
+- AC-01 has evidence.
+
+Verification:
+
+- Run check-change.
+
+## Closure Gates
+
+- [x] CODE_SCAN complete
+- [x] DESIGN reviewed
+- [x] design-check passed
+- [x] alignment-check passed or explicitly skipped
+- [x] TASKS bounded by read/write files
+- [x] Plan Audit completed and plan-check passed
+- [x] Verification passed
+- [x] AC evidence recorded
+- [x] Drift checks passed or adjudicated
+- [x] Closure audit acceptable
+- [x] Knowledge/decision/log/baseline updated
+
+## Risks
+
+- Test-only fixture risk.
+
+## Protected Area Review
+
+| Area | Touched | Approval / Reason |
+|---|---|---|
+| API/Auth/Permission | no | not-applicable |
+
+## Deferred But Adjudicated
+
+| Item | Classification | Reason |
+|---|---|---|
+| none | not-applicable | no deferred item |
+"@
+}
+
+function Get-DemoAudit {
+@"
+# Audit
+
+## Plan Audit
+
+Verdict: accept
+
+Reviewer: self-test
+
+Date: 2026-06-10
+
+Checklist:
+
+- [x] Current baseline checked against live code
+- [x] Goals and Non-Goals clear
+- [x] Code scan complete
+- [x] Design check passed
+- [x] Design Alignment completed
+- [x] Protected areas identified
+- [x] read_files/write_files bounded
+- [x] Exit criteria verifiable
+- [x] Risks mitigated
+
+Findings:
+
+- Plan accepted for self-test.
+
+## Closure Audit
+
+Verdict: acceptable
+
+Reviewer: self-test
+
+Date: 2026-06-10
+
+Checklist:
+
+- [x] Closure gates passed
+- [x] Verification evidence recorded
+- [x] AC coverage has evidence
+- [x] scan-check completed
+- [x] design-check completed
+- [x] alignment-check completed
+- [x] task-check completed
+- [x] plan-check completed for Heavy changes
+- [x] Drift checks completed
+- [x] No undeclared files modified
+- [x] task-boundary-check completed
+- [x] manifest-check completed
+- [x] emergency-check completed or explicitly skipped
+- [x] blocked-check completed
+- [x] evolution-check completed
+- [x] closure-check completed
+- [x] Knowledge/decision/log/baseline updated
+
+Findings:
+
+- Closure accepted for self-test.
+"@
+}
+
 function Assert-NextStage {
     param(
         [string]$TargetRoot,
@@ -81,7 +269,7 @@ Demo change for design alignment self-test.
 "@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md") -Value "# Code Scan`n`nRelevant code was scanned."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n## Acceptance Criteria`n`n- AC-01: Demo criterion."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`n## Design Alignment / Grill`n`nAlignment Verdict: pending"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value (Get-DemoDesign -Verdict "pending" -Source "pending" -OpenQuestions "pending" -Confirmation "pending")
 
     $json = & (Join-Path $TargetRoot "agent-flow/scripts/next-step.ps1") -ChangeDir $changeDir
     $result = $json | ConvertFrom-Json
@@ -111,10 +299,9 @@ function Assert-NewChangeAndAlignment {
     }
 
     $designPath = Join-Path $changeDir "DESIGN.md"
-    $design = Get-Content -Raw -Encoding utf8 -LiteralPath $designPath
-    $design = $design -replace "Alignment Verdict: pending", "Alignment Verdict: aligned"
-    Set-Content -Encoding utf8 -LiteralPath $designPath -Value $design
+    Set-Content -Encoding utf8 -LiteralPath $designPath -Value (Get-DemoDesign)
 
+    & (Join-Path $TargetRoot "agent-flow/scripts/design-check.ps1") -ChangeDir $changeDir
     & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $changeDir
 }
 
@@ -169,7 +356,7 @@ write_files:
 - none
 "@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n- AC-01: Demo criterion."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`nNo schema, permission, auth, workflow, or status change."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value (Get-DemoDesign)
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value @"
 # Tasks
 
@@ -193,6 +380,16 @@ write_files:
     & (Join-Path $TargetRoot "agent-flow/scripts/task-check.ps1") -ChangeDir $changeDir
     if (-not $?) {
         throw "task-check smoke test failed."
+    }
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/design-check.ps1") -ChangeDir $changeDir
+    if (-not $?) {
+        throw "design-check smoke test failed."
+    }
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $changeDir
+    if (-not $?) {
+        throw "alignment-check smoke test failed."
     }
 
     $emptyEvidence = Join-Path $changeDir "empty-evidence"
@@ -344,8 +541,8 @@ write_files:
 - none
 "@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REQUIREMENT.md") -Value "# Requirement`n`n- AC-01: Demo."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value "# Design`n`nAlignment Verdict: aligned"
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "PLAN.md") -Value "# Plan`n`nPlan."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "DESIGN.md") -Value (Get-DemoDesign)
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "PLAN.md") -Value (Get-DemoPlan)
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "TASKS.md") -Value @"
 # Tasks
 
@@ -374,7 +571,10 @@ write_files:
 | Gate | Required For | Result | Command | Exit Code | When | Evidence |
 |---|---|---|---|---|---|---|
 | scan-check | Heavy | pass | scan-check.ps1 -Strict | 0 | 2026-06-10 10:00 | strict scan passed |
+| design-check | Heavy | pass | design-check.ps1 | 0 | 2026-06-10 10:00 | decisions accepted |
+| alignment-check | Heavy | pass | alignment-check.ps1 | 0 | 2026-06-10 10:00 | alignment confirmed |
 | task-check | Heavy | pass | task-check.ps1 | 0 | 2026-06-10 10:00 | T001 maps to AC-01 |
+| plan-check | Heavy | pass | plan-check.ps1 | 0 | 2026-06-10 10:00 | plan audit accepted |
 | ac-check | Heavy | pass | ac-check.ps1 | 0 | 2026-06-10 10:00 | AC-01 evidence present |
 | code-drift-check | Heavy | pass | code-drift-check.ps1 | 0 | 2026-06-10 10:00 | no drift |
 | blocked-check | Heavy | pass | blocked-check.ps1 | 0 | 2026-06-10 10:00 | no blocked operations |
@@ -414,7 +614,7 @@ no_change_reason: no change needed
 ## 本次不调整的原因
 - no change needed
 "@
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value "# Audit`n`n## Closure Audit`n`nVerdict: acceptable`n`nMachine Gate Summary accepted.`n"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value (Get-DemoAudit)
 
     & (Join-Path $TargetRoot "agent-flow/scripts/closure-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
     if (-not $?) {

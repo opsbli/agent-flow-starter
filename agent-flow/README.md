@@ -217,11 +217,11 @@ bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
 继续 agent-flow change：<change-id>。
 先不要写业务代码。
 请补全 REQUIREMENT、CODE_SCAN、DESIGN。
-DESIGN 完成后执行 Design Alignment / Grill：一次只问一个关键问题。
+DESIGN 完成后先运行 design-check；通过后执行 Design Alignment / Grill：一次只问一个关键问题。
 如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
 运行 alignment-check。
 Alignment Verdict 是 aligned，或我明确接受 skipped 且写明 Skip Reason 后，再补 TASKS。
-如果是 Heavy，再补 PLAN 并执行 Plan Audit。
+如果是 Heavy，再补 PLAN 并执行 Plan Audit，然后运行 plan-check。
 ```
 
 ### 开始实现
@@ -238,7 +238,7 @@ Alignment Verdict 是 aligned，或我明确接受 skipped 且写明 Skip Reason
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION、AUDIT。
-运行 scan-check、task-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health 和相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
+运行 scan-check、design-check、alignment-check、task-check、plan-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health 和相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
 如果 Closure Audit 是 conditional，请列出残余风险。
 ```
 
@@ -303,11 +303,13 @@ agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
+agent-flow/scripts/design-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/plan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
-agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
@@ -319,11 +321,13 @@ bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
+bash agent-flow/scripts/design-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/plan-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
-bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 ### 运行项目验证

@@ -8,8 +8,8 @@
 2. 需求澄清，写 `REQUIREMENT.md`。
 3. 代码优先扫描，写 `CODE_SCAN.md`。
 4. 运行 `scan-check`。
-5. 技术设计，写 `DESIGN.md`。
-6. 执行 `Design Alignment / Grill`，把对齐结论写回 `DESIGN.md`。
+5. 技术设计，写 `DESIGN.md`，运行 `design-check`。
+6. 执行 `Design Alignment / Grill`，把对齐结论写回 `DESIGN.md`，运行 `alignment-check`。
 7. 拆任务，写 `TASKS.md`，每个任务必须有状态、AC、read_files、write_files、验证命令。
 8. 运行 `task-check`。
 9. 按任务实现，每个任务有 verify，并更新任务状态。
@@ -32,6 +32,7 @@ Standard 需求也必须做一次轻量对齐：
 
 - 所有 AC 都有验证证据。
 - `scan-check` 已通过。
+- `design-check` 已通过。
 - `alignment-check` 已通过。
 - `task-check` 已通过。
 - `task-boundary-check` 已通过或记录跳过原因。

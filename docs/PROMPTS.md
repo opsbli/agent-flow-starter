@@ -46,8 +46,8 @@ bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
 Continue agent-flow change: <change-id>.
 Do not implement yet.
 Complete REQUIREMENT, CODE_SCAN, DESIGN, Design Alignment / Grill, PLAN, TASKS, then run Plan Audit.
-Run scan-check after CODE_SCAN, use strict scan when paths are known, and run task-check after TASKS.
-If Plan Audit is not accept, stop and list required fixes.
+Run scan-check after CODE_SCAN, design-check after DESIGN, alignment-check after Design Alignment, task-check after TASKS, and plan-check after Plan Audit.
+If Plan Audit is not accept/conditional or plan-check fails, stop and list required fixes.
 ```
 
 ## Design Alignment / Grill
@@ -61,6 +61,7 @@ Interview me one question at a time until user intent, code facts, and the desig
 If a question can be answered by reading the codebase, read the codebase instead of asking me.
 For every question, provide your recommended answer.
 After each confirmed answer, update DESIGN.md.
+Before alignment, run design-check and fix DESIGN.md until it passes.
 Run alignment-check after updating DESIGN.md.
 Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason.
 ```
@@ -96,7 +97,7 @@ I accept the Plan Audit.
 Continue agent-flow change: <change-id>.
 Implement strictly within TASKS.md write_files.
 Update TASKS.md status after each task.
-Run task-check after updating TASKS.md.
+Run task-check after updating TASKS.md, then run Plan Audit and plan-check before implementation.
 ```
 
 ## Closure
@@ -104,7 +105,7 @@ Run task-check after updating TASKS.md.
 ```text
 Continue agent-flow change: <change-id>.
 Complete VERIFY, REVIEW, REPORT, EVOLUTION, and Closure Audit.
-Run scan-check, task-check, ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, scaffold-health, and relevant run-verify commands.
+Run scan-check, design-check, alignment-check, task-check, plan-check, ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, scaffold-health, and relevant run-verify commands.
 Fill VERIFY.md Machine Gate Summary with Result, Command, Exit Code, When, and Evidence for every required gate.
 For Heavy changes, also run closure-check before saying the change is complete.
 If closure is conditional, list residual risks clearly.

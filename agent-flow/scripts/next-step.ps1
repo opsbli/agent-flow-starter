@@ -79,6 +79,36 @@ function Get-DesignAlignmentVerdict {
     return ""
 }
 
+function Get-DesignDecisionStatus {
+    param([string]$DesignPath)
+
+    if (-not (Test-Path -LiteralPath $DesignPath)) {
+        return ""
+    }
+
+    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $DesignPath
+    $match = [regex]::Match($text, "(?im)^\s*Decision Status:\s*([A-Za-z-]+)\s*$")
+    if ($match.Success) {
+        return $match.Groups[1].Value.ToLowerInvariant()
+    }
+    return ""
+}
+
+function Get-PlanStatus {
+    param([string]$PlanPath)
+
+    if (-not (Test-Path -LiteralPath $PlanPath)) {
+        return ""
+    }
+
+    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $PlanPath
+    $match = [regex]::Match($text, "(?im)^\s*>?\s*Plan Status:\s*([A-Za-z-]+)\s*$")
+    if ($match.Success) {
+        return $match.Groups[1].Value.ToLowerInvariant()
+    }
+    return ""
+}
+
 function Get-StateValue {
     param(
         [string]$StatePath,
@@ -122,6 +152,11 @@ function Analyze-Change {
     $statePath = Join-Path $Dir "STATE.md"
     $stateCurrentStage = Get-StateValue -StatePath $statePath -Key "current_stage"
     $stateNextAction = Get-StateValue -StatePath $statePath -Key "next_action"
+    $designDecisionStatus = ""
+    $alignmentVerdict = ""
+    $planVerdict = ""
+    $planStatus = ""
+    $closureVerdict = ""
 
     foreach ($file in @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")) {
         if (-not (Test-MeaningfulFile -Path (Join-Path $Dir $file) -Placeholders @("Status: not started", "No implementation verification has run yet"))) {
@@ -170,9 +205,13 @@ function Analyze-Change {
         }
 
         $audit = Join-Path $Dir "AUDIT.md"
+        $planPath = Join-Path $Dir "PLAN.md"
         $planVerdict = Get-AuditVerdict -AuditPath $audit -Section "Plan Audit"
+        $planStatus = Get-PlanStatus -PlanPath $planPath
         $closureVerdict = Get-AuditVerdict -AuditPath $audit -Section "Closure Audit"
-        $alignmentVerdict = Get-DesignAlignmentVerdict -DesignPath (Join-Path $Dir "DESIGN.md")
+        $designPath = Join-Path $Dir "DESIGN.md"
+        $alignmentVerdict = Get-DesignAlignmentVerdict -DesignPath $designPath
+        $designDecisionStatus = Get-DesignDecisionStatus -DesignPath $designPath
 
         if (Test-ListContains -List $missing -Value "REQUIREMENT.md") {
             $stage = "requirement"
@@ -181,18 +220,22 @@ function Analyze-Change {
         } elseif (Test-ListContains -List $missing -Value "DESIGN.md") {
             $stage = "design"
             $next = "Complete DESIGN.md with API / Permission / Auth decisions."
-            $prompt = "Continue agent-flow change: $changeId. Based on REQUIREMENT and CODE_SCAN, complete DESIGN.md with module boundaries, reusable abstractions, API/Permission/Auth decisions, test strategy, and risks. Do not implement code yet."
+            $prompt = "Continue agent-flow change: $changeId. Based on REQUIREMENT and CODE_SCAN, complete DESIGN.md with module boundaries, reusable abstractions, API/Permission/Auth decisions, state-machine impact, test strategy, and risks. Keep Decision Status pending until all decision rows have one final value and evidence. Do not implement code yet."
+        } elseif ($designDecisionStatus -ne "accepted") {
+            $stage = "design-decision"
+            $next = "Finalize DESIGN.md decisions and run design-check."
+            $prompt = "Continue agent-flow change: $changeId. Finalize DESIGN.md before alignment. Fill every API / Permission / Auth decision row with one final value, evidence or reason, and explicit State Machine Impact. Set Decision Status: accepted only after the decision block is complete. Then run design-check. Do not create PLAN.md, TASKS.md, or implement code yet."
         } elseif ($alignmentVerdict -ne "aligned" -and $alignmentVerdict -ne "skipped") {
             $stage = "design-alignment"
             if ($alignmentVerdict -eq "blocked") {
                 $blocked.Add("Design Alignment is blocked; resolve open questions before planning or implementation.")
             }
             $next = "Run Design Alignment / Grill before PLAN.md, TASKS.md, or implementation."
-            $prompt = "Continue agent-flow change: $changeId. Run Design Alignment / Grill before planning or implementation. Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md. Interview me one question at a time until user intent, code facts, and the design are aligned. If a question can be answered by reading the codebase, read the codebase instead of asking me. For every question, provide your recommended answer. After each confirmed answer, update DESIGN.md. Run alignment-check after updating DESIGN.md. Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason."
-        } elseif ($flow -eq "Heavy" -and (Test-ListContains -List $missing -Value "PLAN.md")) {
+            $prompt = "Continue agent-flow change: $changeId. Run Design Alignment / Grill before planning or implementation. Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md. Interview me one question at a time until user intent, code facts, and the design are aligned. If a question can be answered by reading the codebase, read the codebase instead of asking me. For every question, provide your recommended answer. Update DESIGN.md after each confirmed answer. Required rows: Intent Risk, Existing Code Fit, Unnecessary Abstraction, Protected Areas, Boundary And Failure Modes. Set Alignment Source and Open Questions: none before Alignment Verdict: aligned. Run alignment-check after updating DESIGN.md. Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason."
+        } elseif ($flow -eq "Heavy" -and ((Test-ListContains -List $missing -Value "PLAN.md") -or $planStatus -notin @("planned", "in-progress", "completed", "superseded", "deferred"))) {
             $stage = "plan"
             $next = "Complete PLAN.md."
-            $prompt = "Continue agent-flow change: $changeId. Based on REQUIREMENT, CODE_SCAN, and DESIGN, complete PLAN.md with Current Baseline, Execution Phases, Closure Gates, and Protected Area Review."
+            $prompt = "Continue agent-flow change: $changeId. Based on REQUIREMENT, CODE_SCAN, and DESIGN, complete PLAN.md with Current Baseline, Goals, Non-Goals, Execution Phases, read_files, write_files, Exit Criteria, Verification, Closure Gates, Risks, and Protected Area Review. Keep Plan Status planned when ready for Plan Audit."
         } elseif (Test-ListContains -List $missing -Value "TASKS.md") {
             $stage = "tasks"
             $next = "Complete TASKS.md with Task Matrix, status, read_files, and write_files."
@@ -200,7 +243,7 @@ function Analyze-Change {
         } elseif ($flow -eq "Heavy" -and $planVerdict -ne "accept" -and $planVerdict -ne "conditional") {
             $stage = "plan-audit"
             $next = "Run Plan Audit."
-            $prompt = "Continue agent-flow change: $changeId. Run Plan Audit against REQUIREMENT, CODE_SCAN, DESIGN, PLAN, and TASKS. Check consistency and protected areas. If verdict is not accept, stop and list required fixes."
+            $prompt = "Continue agent-flow change: $changeId. Run Plan Audit against REQUIREMENT, CODE_SCAN, DESIGN, PLAN, and TASKS. Check design-check, alignment-check, protected areas, read/write boundaries, exit criteria, and risks. Mark every Plan Audit checklist item with [x] only when verified. Set Verdict: accept or conditional with Findings, then run plan-check. If verdict cannot be accept/conditional, stop and list required fixes."
         } elseif (Test-ListContains -List $missing -Value "VERIFY.md") {
             $stage = "verify"
             $next = "Run verification and complete VERIFY.md."
@@ -240,6 +283,10 @@ function Analyze-Change {
         stage = $stage
         state_current_stage = $stateCurrentStage
         state_next_action = $stateNextAction
+        design_decision_status = $designDecisionStatus
+        alignment_verdict = $alignmentVerdict
+        plan_audit_verdict = $planVerdict
+        plan_status = $planStatus
         missing = @($missing | Select-Object -Unique)
         blocked = @($blocked | Select-Object -Unique)
         next = $next

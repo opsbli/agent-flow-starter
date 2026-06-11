@@ -107,6 +107,36 @@ design_alignment_verdict() {
   ' "$file"
 }
 
+design_decision_status() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  awk '
+    BEGIN { IGNORECASE = 1 }
+    /^[[:space:]]*Decision Status:[[:space:]]*/ {
+      value = $0
+      sub(/^.*Decision Status:[[:space:]]*/, "", value)
+      sub(/[[:space:]].*$/, "", value)
+      print tolower(value)
+      exit
+    }
+  ' "$file"
+}
+
+plan_status() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  awk '
+    BEGIN { IGNORECASE = 1 }
+    /^[[:space:]]*>?[[:space:]]*Plan Status:[[:space:]]*/ {
+      value = $0
+      sub(/^.*Plan Status:[[:space:]]*/, "", value)
+      sub(/[[:space:]].*$/, "", value)
+      print tolower(value)
+      exit
+    }
+  ' "$file"
+}
+
 state_value() {
   local file="$1"
   local key="$2"
@@ -155,12 +185,17 @@ analyze_change() {
   local dir="$1"
   [ -d "$dir" ] || { echo "ChangeDir not found: $dir" >&2; exit 1; }
 
-  local change_id flow stage next prompt plan_verdict closure_verdict alignment_verdict state_current_stage state_next_action
+  local change_id flow stage next prompt plan_verdict closure_verdict alignment_verdict design_status plan_doc_status state_current_stage state_next_action
   change_id="$(basename "$dir")"
   flow="$(flow_level "$dir")"
   stage="unknown"
   next=""
   prompt=""
+  plan_verdict=""
+  closure_verdict=""
+  alignment_verdict=""
+  design_status=""
+  plan_doc_status=""
   state_current_stage="$(state_value "$dir/STATE.md" "current_stage")"
   state_next_action="$(state_value "$dir/STATE.md" "next_action")"
   local missing=()
@@ -214,8 +249,10 @@ analyze_change() {
     fi
 
     plan_verdict="$(audit_verdict "$dir/AUDIT.md" "Plan Audit")"
+    plan_doc_status="$(plan_status "$dir/PLAN.md")"
     closure_verdict="$(audit_verdict "$dir/AUDIT.md" "Closure Audit")"
     alignment_verdict="$(design_alignment_verdict "$dir/DESIGN.md")"
+    design_status="$(design_decision_status "$dir/DESIGN.md")"
 
     if contains_item "REQUIREMENT.md" "${missing[@]}"; then
       stage="requirement"
@@ -224,18 +261,22 @@ analyze_change() {
     elif contains_item "DESIGN.md" "${missing[@]}"; then
       stage="design"
       next="Complete DESIGN.md with API / Permission / Auth decisions."
-      prompt="Continue agent-flow change: $change_id. Based on REQUIREMENT and CODE_SCAN, complete DESIGN.md with module boundaries, reusable abstractions, API/Permission/Auth decisions, test strategy, and risks. Do not implement code yet."
+      prompt="Continue agent-flow change: $change_id. Based on REQUIREMENT and CODE_SCAN, complete DESIGN.md with module boundaries, reusable abstractions, API/Permission/Auth decisions, state-machine impact, test strategy, and risks. Keep Decision Status pending until all decision rows have one final value and evidence. Do not implement code yet."
+    elif [ "$design_status" != "accepted" ]; then
+      stage="design-decision"
+      next="Finalize DESIGN.md decisions and run design-check."
+      prompt="Continue agent-flow change: $change_id. Finalize DESIGN.md before alignment. Fill every API / Permission / Auth decision row with one final value, evidence or reason, and explicit State Machine Impact. Set Decision Status: accepted only after the decision block is complete. Then run design-check. Do not create PLAN.md, TASKS.md, or implement code yet."
     elif [ "$alignment_verdict" != "aligned" ] && [ "$alignment_verdict" != "skipped" ]; then
       stage="design-alignment"
       if [ "$alignment_verdict" = "blocked" ]; then
         blocked+=("Design Alignment is blocked; resolve open questions before planning or implementation.")
       fi
       next="Run Design Alignment / Grill before PLAN.md, TASKS.md, or implementation."
-      prompt="Continue agent-flow change: $change_id. Run Design Alignment / Grill before planning or implementation. Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md. Interview me one question at a time until user intent, code facts, and the design are aligned. If a question can be answered by reading the codebase, read the codebase instead of asking me. For every question, provide your recommended answer. After each confirmed answer, update DESIGN.md. Run alignment-check after updating DESIGN.md. Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason."
-    elif [ "$flow" = "Heavy" ] && contains_item "PLAN.md" "${missing[@]}"; then
+      prompt="Continue agent-flow change: $change_id. Run Design Alignment / Grill before planning or implementation. Read REQUIREMENT.md, CODE_SCAN.md, and DESIGN.md. Interview me one question at a time until user intent, code facts, and the design are aligned. If a question can be answered by reading the codebase, read the codebase instead of asking me. For every question, provide your recommended answer. Update DESIGN.md after each confirmed answer. Required rows: Intent Risk, Existing Code Fit, Unnecessary Abstraction, Protected Areas, Boundary And Failure Modes. Set Alignment Source and Open Questions: none before Alignment Verdict: aligned. Run alignment-check after updating DESIGN.md. Do not create PLAN.md, TASKS.md, or implement code until Alignment Verdict is aligned or I explicitly accept skipped with Skip Reason."
+    elif [ "$flow" = "Heavy" ] && { contains_item "PLAN.md" "${missing[@]}" || ! [[ "$plan_doc_status" =~ ^(planned|in-progress|completed|superseded|deferred)$ ]]; }; then
       stage="plan"
       next="Complete PLAN.md."
-      prompt="Continue agent-flow change: $change_id. Based on REQUIREMENT, CODE_SCAN, and DESIGN, complete PLAN.md with Current Baseline, Execution Phases, Closure Gates, and Protected Area Review."
+      prompt="Continue agent-flow change: $change_id. Based on REQUIREMENT, CODE_SCAN, and DESIGN, complete PLAN.md with Current Baseline, Goals, Non-Goals, Execution Phases, read_files, write_files, Exit Criteria, Verification, Closure Gates, Risks, and Protected Area Review. Keep Plan Status planned when ready for Plan Audit."
     elif contains_item "TASKS.md" "${missing[@]}"; then
       stage="tasks"
       next="Complete TASKS.md with Task Matrix, status, read_files, and write_files."
@@ -243,7 +284,7 @@ analyze_change() {
     elif [ "$flow" = "Heavy" ] && [ "$plan_verdict" != "accept" ] && [ "$plan_verdict" != "conditional" ]; then
       stage="plan-audit"
       next="Run Plan Audit."
-      prompt="Continue agent-flow change: $change_id. Run Plan Audit against REQUIREMENT, CODE_SCAN, DESIGN, PLAN, and TASKS. Check consistency and protected areas. If verdict is not accept, stop and list required fixes."
+      prompt="Continue agent-flow change: $change_id. Run Plan Audit against REQUIREMENT, CODE_SCAN, DESIGN, PLAN, and TASKS. Check design-check, alignment-check, protected areas, read/write boundaries, exit criteria, and risks. Mark every Plan Audit checklist item with [x] only when verified. Set Verdict: accept or conditional with Findings, then run plan-check. If verdict cannot be accept/conditional, stop and list required fixes."
     elif contains_item "VERIFY.md" "${missing[@]}"; then
       stage="verify"
       next="Run verification and complete VERIFY.md."
@@ -283,6 +324,10 @@ analyze_change() {
   printf '  "stage": "%s",\n' "$(json_string "$stage")"
   printf '  "state_current_stage": "%s",\n' "$(json_string "$state_current_stage")"
   printf '  "state_next_action": "%s",\n' "$(json_string "$state_next_action")"
+  printf '  "design_decision_status": "%s",\n' "$(json_string "$design_status")"
+  printf '  "alignment_verdict": "%s",\n' "$(json_string "$alignment_verdict")"
+  printf '  "plan_audit_verdict": "%s",\n' "$(json_string "$plan_verdict")"
+  printf '  "plan_status": "%s",\n' "$(json_string "$plan_doc_status")"
   printf '  "missing": %s,\n' "$(json_array "${missing[@]}")"
   printf '  "blocked": %s,\n' "$(json_array "${blocked[@]}")"
   printf '  "next": "%s",\n' "$(json_string "$next")"

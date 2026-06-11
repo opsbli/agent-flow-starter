@@ -23,6 +23,20 @@
       "requiredSections": ["AC Evidence", "Machine Gate Summary"],
       "machineGateColumns": ["Gate", "Required For", "Result", "Command", "Exit Code", "When", "Evidence"]
     },
+    "DESIGN.md": {
+      "decisionStatus": ["accepted"],
+      "decisionRows": ["REST Path", "HTTP Method", "Permission Code", "SaCheckPermission", "Anonymous Interface", "Login/Token", "Tenant/Data Permission", "State Machine Impact"],
+      "alignmentRows": ["Intent Risk", "Existing Code Fit", "Unnecessary Abstraction", "Protected Areas", "Boundary And Failure Modes"],
+      "alignmentVerdicts": ["aligned", "skipped"]
+    },
+    "PLAN.md": {
+      "requiredKeys": ["Plan Status", "Current Baseline", "Goals", "Non-Goals", "Execution Phases", "read_files", "write_files", "Exit Criteria", "Verification", "Closure Gates", "Protected Area Review"],
+      "statusValues": ["planned", "in-progress", "completed", "superseded", "deferred"]
+    },
+    "AUDIT.md": {
+      "planAuditVerdicts": ["accept", "conditional"],
+      "planAuditChecklist": ["Current baseline checked against live code", "Goals and Non-Goals clear", "Code scan complete", "Design check passed", "Design Alignment completed", "Protected areas identified", "read_files/write_files bounded", "Exit criteria verifiable", "Risks mitigated"]
+    },
     "EVOLUTION.md": {
       "machineCheckKeys": ["problem", "knowledge", "adr", "gate", "template", "no_change_reason"]
     },

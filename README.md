@@ -42,8 +42,8 @@
 - 代码事实优先于聊天描述。
 - 聊天不是长期记忆，仓库文件才是。
 - 非平凡需求不能直接写代码。
-- Standard / Heavy 需求必须先完成 `Design Alignment / Grill`，再进入计划或实现。
-- Heavy 需求必须先 Plan Audit，再实现。
+- Standard / Heavy 需求必须先通过 `design-check`，再完成 `Design Alignment / Grill`，再进入计划或实现。
+- Heavy 需求必须先 Plan Audit，并通过 `plan-check`，再实现。
 - 没有验证证据，就不能说完成。
 - 经验要反哺到 `knowledge/`、`templates/`、`scripts/`。
 
@@ -287,7 +287,7 @@ EVOLUTION.md
 ```text
 继续 agent-flow change：<change-id>。
 按 Standard 流程补全 REQUIREMENT、CODE_SCAN、DESIGN。
-DESIGN 完成后执行 Design Alignment / Grill：一次只问一个关键问题；如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
+DESIGN 完成后先运行 design-check；通过后执行 Design Alignment / Grill：一次只问一个关键问题；如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
 Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 TASKS。
 每个任务必须声明 read_files 和 write_files。
 先不要实现，等我确认设计。
@@ -326,9 +326,9 @@ Plan Audit -> Verdict: accept
 这个需求按 Heavy 处理。
 不要实现代码。
 请补全 REQUIREMENT、CODE_SCAN、DESIGN。
-DESIGN 完成后执行 Design Alignment / Grill：一次只问一个关键问题；如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
+DESIGN 完成后先运行 design-check；通过后执行 Design Alignment / Grill：一次只问一个关键问题；如果问题能通过读代码回答，先读代码；每个问题给出你的推荐答案。
 Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TASKS，并执行 Plan Audit。
-如果 Plan Audit 不是 accept，停止并列出必须修正项。
+如果 Plan Audit 不是 accept/conditional 或 plan-check 未通过，停止并列出必须修正项。
 ```
 
 实现时：
@@ -346,7 +346,7 @@ Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TAS
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION 和 Closure Audit。
-运行 scan-check、task-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health，以及 manifest 中相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
+运行 scan-check、design-check、alignment-check、task-check、plan-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health，以及 manifest 中相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
 如果 Closure Audit 是 conditional，请明确残余风险和后续处理建议。
 ```
 
@@ -363,8 +363,10 @@ agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/design-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
 agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/plan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
@@ -388,8 +390,10 @@ bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/design-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/plan-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json

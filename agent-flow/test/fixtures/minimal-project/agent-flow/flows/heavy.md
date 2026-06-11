@@ -89,6 +89,8 @@
 - 用户确认后，把结论写回 `DESIGN.md`。
 - `Alignment Verdict` 必须是 `aligned`，或用户明确接受 `skipped` 且填写 `Skip Reason`。
 
+先运行 `design-check`。如果 `Decision Status` 不是 `accepted`，不得进入 Design Alignment。
+
 如果 `Alignment Verdict: pending` 或 `blocked`，不得进入 `PLAN.md`、`TASKS.md` 或实现。
 
 ## 阶段 3.6：Plan
@@ -104,6 +106,7 @@
 - Protected Area Review。
 - Deferred But Adjudicated。
 - `alignment-check` 已通过或用户明确接受 `skipped` 风险。
+- `design-check` 已通过。
 
 如果涉及 protected areas，必须记录用户批准或停止。
 
@@ -135,6 +138,8 @@ Verdict: accept
 
 完成 `TASKS.md` 后必须运行 `task-check`。未通过时，不进入实现。
 
+完成 Plan Audit 后必须运行 `plan-check`。未通过时，不进入实现。
+
 ## 阶段 5：Dev
 
 每个任务独立上下文执行：
@@ -156,7 +161,10 @@ Verdict: accept
 - module compile
 - module test
 - scan-check
+- design-check
+- alignment-check
 - task-check
+- plan-check
 - ac-check
 - code-drift-check（首选：设计声明 vs 实际代码的漂移检查）
 - drift-check（可选补充：DESIGN.md 内部一致性）

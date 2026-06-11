@@ -29,7 +29,10 @@
 | permission | | |
 | pom | | |
 | scan-check | | |
+| design-check | | |
+| alignment-check | | |
 | task-check | | |
+| plan-check | | |
 | task-boundary-check | | |
 | manifest-check | | |
 | blocked-check | | |
@@ -41,7 +44,10 @@
 | Gate | Required For | Result | Command | Exit Code | When | Evidence |
 |---|---|---|---|---|---|---|
 | scan-check | Light / Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| design-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| alignment-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
 | task-check | Standard / Heavy / Emergency with TASKS.md | pass / fail / skipped / conditional | | | | |
+| plan-check | Heavy | pass / fail / skipped / conditional | | | | |
 | ac-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
 | code-drift-check | Heavy | pass / fail / skipped / conditional | | | | |
 | blocked-check | Heavy | pass / fail / skipped / conditional | | | | |

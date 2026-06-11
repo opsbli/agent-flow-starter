@@ -133,8 +133,10 @@ else
 fi
 
 if has_file DESIGN.md; then
+  run_gate design-check bash "$script_dir/design-check.sh" --change-dir "$change_dir"
   run_gate alignment-check bash "$script_dir/alignment-check.sh" --change-dir "$change_dir"
 else
+  skip_gate design-check "DESIGN.md not present"
   skip_gate alignment-check "DESIGN.md not present"
 fi
 
@@ -144,6 +146,12 @@ if has_file TASKS.md; then
 else
   skip_gate task-check "TASKS.md not present"
   skip_gate task-boundary-check "TASKS.md not present"
+fi
+
+if has_file PLAN.md || has_file AUDIT.md; then
+  run_gate plan-check bash "$script_dir/plan-check.sh" --change-dir "$change_dir"
+else
+  skip_gate plan-check "PLAN.md or AUDIT.md not present"
 fi
 
 if has_file REQUIREMENT.md && has_file VERIFY.md; then

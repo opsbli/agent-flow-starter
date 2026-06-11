@@ -20,6 +20,8 @@
 | Gate | Required For | Result | Command | Exit Code | When | Evidence |
 |---|---|---|---|---|---|---|
 | scan-check | Standard | pass | `agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/sample-status-label -ProjectRoot . -Strict` | 0 | 2026-06-10 10:00 | CODE_SCAN paths checked |
+| design-check | Standard | pass | `agent-flow/scripts/design-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | API/Auth/Permission decisions accepted |
+| alignment-check | Standard | pass | `agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | design alignment confirmed |
 | task-check | Standard | pass | `agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | tasks mapped to AC ids |
 | ac-check | Standard | pass | `agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | 2 AC ids have evidence |
 | code-drift-check | Standard | pass | `agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | no schema/API/permission drift |

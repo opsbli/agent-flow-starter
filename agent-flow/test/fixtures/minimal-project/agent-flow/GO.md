@@ -113,10 +113,11 @@ AUDIT.md
 - `STATE.md` 滞后时，运行 `sync-state` 后再继续。
 - 没有 `CODE_SCAN.md`，不写 `DESIGN.md`。
 - `CODE_SCAN.md` 完成后运行 `scan-check`，Standard / Heavy 必须通过后再进入设计。
+- Standard / Heavy change 没有通过 `design-check`，不进入 `Design Alignment / Grill`、`PLAN.md`、`TASKS.md` 或实现代码。
 - Standard / Heavy change 没有完成 `Design Alignment / Grill`，不写 `PLAN.md`、`TASKS.md` 或实现代码。
 - Standard / Heavy change 的 `alignment-check` 未通过，不写 `PLAN.md`、`TASKS.md` 或实现代码。
 - 没有 `DESIGN.md`，不写实现代码。
-- Heavy change 没有 Plan Audit，不写实现代码。
+- Heavy change 没有 Plan Audit 或 `plan-check` 未通过，不写实现代码。
 - Standard / Heavy change 实现前必须运行 `task-check`，确认 `TASKS.md` 的任务状态、AC 映射、读写文件和验证命令完整。
 - 没有 `VERIFY.md`，不说完成。
 - Heavy change 没有 Closure Audit，不标记完成。
@@ -128,7 +129,7 @@ AUDIT.md
 - 收口前必须运行 `manifest-check`，确认脚手架清单、gate 文件和 blocked_if 规则完整。
 - Standard / Heavy change 收口前必须运行 `evolution-check`，确认经验升级或不升级理由已写清。
 - Heavy change 标记完成前必须运行 `closure-check`。
-- 不确定当前 change 是否健康时，运行 `check-change`，它会串起状态、扫描、任务、AC、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查，并可输出 `CHECK_RESULT.json`。
+- 不确定当前 change 是否健康时，运行 `check-change`，它会串起状态、扫描、设计、对齐、计划、任务、AC、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查，并可输出 `CHECK_RESULT.json`。
 - 发现术语、规则、坑点，立即写入 `agent-flow/knowledge/`。
 - 发现不可逆取舍，写入 `agent-flow/decisions/`。
 - 验证通过后，如形成新的健康状态，更新 `agent-flow/knowledge/known-good-baselines.md`。

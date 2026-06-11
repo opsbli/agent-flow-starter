@@ -144,6 +144,9 @@ foreach ($item in $starterOwned) {
         }
         Get-ChildItem -LiteralPath $sourcePath -Recurse -File | ForEach-Object {
             $relPath = $_.FullName.Substring($sourcePath.Length + 1)
+            if ($item -eq "test" -and $relPath -match "^(fixtures[\\/])") {
+                return
+            }
             $dest = Join-Path $targetPath $relPath
             $destDir = Split-Path -Parent $dest
             if (-not (Test-Path -LiteralPath $destDir)) {

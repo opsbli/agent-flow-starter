@@ -44,7 +44,10 @@ Verification:
 
 - [ ] CODE_SCAN complete
 - [ ] DESIGN reviewed
+- [ ] design-check passed
+- [ ] alignment-check passed or explicitly skipped
 - [ ] TASKS bounded by read/write files
+- [ ] Plan Audit completed and plan-check passed
 - [ ] Verification passed
 - [ ] AC evidence recorded
 - [ ] Drift checks passed or adjudicated

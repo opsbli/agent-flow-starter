@@ -28,6 +28,191 @@ assert_path() {
   fi
 }
 
+demo_design() {
+  local verdict="${1:-aligned}"
+  local source="${2:-mixed}"
+  local open_questions="${3:-none}"
+  local confirmation="${4:-confirmed}"
+  cat <<EOF
+# Design
+
+## API / Permission / Auth Decisions
+
+Decision Status: accepted
+
+| Item | Decision | Evidence / Reason |
+|---|---|---|
+| REST Path | unchanged | README.md documents no public API change |
+| HTTP Method | unchanged | No endpoint behavior changes |
+| Permission Code | not-applicable | No permission model touched |
+| SaCheckPermission | not-applicable | No controller permission annotation touched |
+| Anonymous Interface | not-applicable | No anonymous interface change |
+| Login/Token | unchanged | No auth/session behavior change |
+| Tenant/Data Permission | unchanged | No tenant/data scope change |
+| State Machine Impact | no | No workflow/status transition touched |
+
+State Machine Impact: no
+
+## Design Alignment / Grill
+
+Alignment Source: $source
+
+Open Questions: $open_questions
+
+| Question | AI Recommended Answer | Confirmation | Final Decision |
+|---|---|---|---|
+| Intent Risk | Demo intent is limited to README evidence. | $confirmation | Keep scope limited. |
+| Existing Code Fit | Reuse README and existing scripts. | $confirmation | No new abstraction. |
+| Unnecessary Abstraction | No abstraction is needed. | $confirmation | Do not add one. |
+| Protected Areas | No protected area is touched. | $confirmation | Continue. |
+| Boundary And Failure Modes | Failure is limited to test fixture behavior. | $confirmation | Verify with scripts. |
+
+Alignment Verdict: $verdict
+
+Skip Reason:
+EOF
+}
+
+demo_plan() {
+  cat <<'EOF'
+# Plan
+
+> Plan Status: planned
+> Last Reviewed: 2026-06-10
+> Source: agent-flow/changes/demo-closure/CHANGE.md
+
+## Current Baseline
+
+README.md and existing agent-flow scripts are the baseline.
+
+## Goals
+
+- Prove the gate chain can close a demo Heavy change.
+
+## Non-Goals
+
+- No production code behavior changes.
+
+## Execution Phases
+
+### Phase 1 - Demo verification
+
+Status: planned
+
+Scope:
+
+- Update only declared demo files.
+
+read_files:
+
+- README.md
+
+write_files:
+
+- README.md
+
+Exit Criteria:
+
+- AC-01 has evidence.
+
+Verification:
+
+- Run check-change.
+
+## Closure Gates
+
+- [x] CODE_SCAN complete
+- [x] DESIGN reviewed
+- [x] design-check passed
+- [x] alignment-check passed or explicitly skipped
+- [x] TASKS bounded by read/write files
+- [x] Plan Audit completed and plan-check passed
+- [x] Verification passed
+- [x] AC evidence recorded
+- [x] Drift checks passed or adjudicated
+- [x] Closure audit acceptable
+- [x] Knowledge/decision/log/baseline updated
+
+## Risks
+
+- Test-only fixture risk.
+
+## Protected Area Review
+
+| Area | Touched | Approval / Reason |
+|---|---|---|
+| API/Auth/Permission | no | not-applicable |
+
+## Deferred But Adjudicated
+
+| Item | Classification | Reason |
+|---|---|---|
+| none | not-applicable | no deferred item |
+EOF
+}
+
+demo_audit() {
+  cat <<'EOF'
+# Audit
+
+## Plan Audit
+
+Verdict: accept
+
+Reviewer: self-test
+
+Date: 2026-06-10
+
+Checklist:
+
+- [x] Current baseline checked against live code
+- [x] Goals and Non-Goals clear
+- [x] Code scan complete
+- [x] Design check passed
+- [x] Design Alignment completed
+- [x] Protected areas identified
+- [x] read_files/write_files bounded
+- [x] Exit criteria verifiable
+- [x] Risks mitigated
+
+Findings:
+
+- Plan accepted for self-test.
+
+## Closure Audit
+
+Verdict: acceptable
+
+Reviewer: self-test
+
+Date: 2026-06-10
+
+Checklist:
+
+- [x] Closure gates passed
+- [x] Verification evidence recorded
+- [x] AC coverage has evidence
+- [x] scan-check completed
+- [x] design-check completed
+- [x] alignment-check completed
+- [x] task-check completed
+- [x] plan-check completed for Heavy changes
+- [x] Drift checks completed
+- [x] No undeclared files modified
+- [x] task-boundary-check completed
+- [x] manifest-check completed
+- [x] emergency-check completed or explicitly skipped
+- [x] blocked-check completed
+- [x] evolution-check completed
+- [x] closure-check completed
+- [x] Knowledge/decision/log/baseline updated
+
+Findings:
+
+- Closure accepted for self-test.
+EOF
+}
+
 assert_next_stage() {
   local target_root="$1"
   local expected_stage="$2"
@@ -85,7 +270,7 @@ Demo change for design alignment self-test.
 EOF
   printf '# Code Scan\n\nRelevant code was scanned.\n' > "$change_dir/CODE_SCAN.md"
   printf '# Requirement\n\n## Acceptance Criteria\n\n- AC-01: Demo criterion.\n' > "$change_dir/REQUIREMENT.md"
-  printf '# Design\n\n## Design Alignment / Grill\n\nAlignment Verdict: pending\n' > "$change_dir/DESIGN.md"
+  demo_design pending pending pending pending > "$change_dir/DESIGN.md"
 
   local output
   output="$(bash "$target_root/agent-flow/scripts/next-step.sh" --change-dir "$change_dir")"
@@ -109,8 +294,8 @@ assert_new_change_and_alignment() {
   assert_path "$change_dir/AUDIT.md"
   grep -Eq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"
 
-  sed -E 's/Alignment Verdict: pending/Alignment Verdict: aligned/' "$change_dir/DESIGN.md" > "$change_dir/DESIGN.md.tmp"
-  mv "$change_dir/DESIGN.md.tmp" "$change_dir/DESIGN.md"
+  demo_design > "$change_dir/DESIGN.md"
+  bash "$target_root/agent-flow/scripts/design-check.sh" --change-dir "$change_dir"
   bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$change_dir"
 }
 
@@ -164,7 +349,7 @@ write_files:
 - none
 EOF
   printf '# Requirement\n\n- AC-01: Demo criterion.\n' > "$change_dir/REQUIREMENT.md"
-  printf '# Design\n\nNo schema, permission, auth, workflow, or status change.\n' > "$change_dir/DESIGN.md"
+  demo_design > "$change_dir/DESIGN.md"
   cat > "$change_dir/TASKS.md" <<'EOF'
 # Tasks
 
@@ -182,6 +367,8 @@ EOF
 
   bash "$target_root/agent-flow/scripts/scan-check.sh" --change-dir "$change_dir"
   bash "$target_root/agent-flow/scripts/task-check.sh" --change-dir "$change_dir"
+  bash "$target_root/agent-flow/scripts/design-check.sh" --change-dir "$change_dir"
+  bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$change_dir"
 
   mkdir -p "$change_dir/empty-evidence"
   if bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir/empty-evidence"; then
@@ -306,8 +493,8 @@ write_files:
 - none
 EOF
   printf '# Requirement\n\n- AC-01: Demo.\n' > "$change_dir/REQUIREMENT.md"
-  printf '# Design\n\nAlignment Verdict: aligned\n' > "$change_dir/DESIGN.md"
-  printf '# Plan\n\nPlan.\n' > "$change_dir/PLAN.md"
+  demo_design > "$change_dir/DESIGN.md"
+  demo_plan > "$change_dir/PLAN.md"
   cat > "$change_dir/TASKS.md" <<'EOF'
 # Tasks
 
@@ -336,7 +523,10 @@ EOF
 | Gate | Required For | Result | Command | Exit Code | When | Evidence |
 |---|---|---|---|---|---|---|
 | scan-check | Heavy | pass | scan-check.sh --strict | 0 | 2026-06-10 10:00 | strict scan passed |
+| design-check | Heavy | pass | design-check.sh | 0 | 2026-06-10 10:00 | decisions accepted |
+| alignment-check | Heavy | pass | alignment-check.sh | 0 | 2026-06-10 10:00 | alignment confirmed |
 | task-check | Heavy | pass | task-check.sh | 0 | 2026-06-10 10:00 | T001 maps to AC-01 |
+| plan-check | Heavy | pass | plan-check.sh | 0 | 2026-06-10 10:00 | plan audit accepted |
 | ac-check | Heavy | pass | ac-check.sh | 0 | 2026-06-10 10:00 | AC-01 evidence present |
 | code-drift-check | Heavy | pass | code-drift-check.sh | 0 | 2026-06-10 10:00 | no drift |
 | blocked-check | Heavy | pass | blocked-check.sh | 0 | 2026-06-10 10:00 | no blocked operations |
@@ -376,7 +566,7 @@ no_change_reason: no change needed
 ## 本次不调整的原因
 - no change needed
 EOF
-  printf '# Audit\n\n## Closure Audit\n\nVerdict: acceptable\n\nMachine Gate Summary accepted.\n' > "$change_dir/AUDIT.md"
+  demo_audit > "$change_dir/AUDIT.md"
   bash "$target_root/agent-flow/scripts/closure-check.sh" --change-dir "$change_dir" --project-root "$target_root"
   local check_result="$change_dir/CHECK_RESULT.json"
   bash "$target_root/agent-flow/scripts/check-change.sh" --change-dir "$change_dir" --project-root "$target_root" --closure --output "$check_result"

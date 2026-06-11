@@ -72,8 +72,12 @@ required_gates=(
   agent-flow/scripts/sync-state.sh
   agent-flow/scripts/state-check.ps1
   agent-flow/scripts/state-check.sh
+  agent-flow/scripts/design-check.ps1
+  agent-flow/scripts/design-check.sh
   agent-flow/scripts/alignment-check.ps1
   agent-flow/scripts/alignment-check.sh
+  agent-flow/scripts/plan-check.ps1
+  agent-flow/scripts/plan-check.sh
   agent-flow/scripts/scan-check.ps1
   agent-flow/scripts/scan-check.sh
   agent-flow/scripts/task-check.ps1

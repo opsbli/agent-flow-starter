@@ -121,8 +121,10 @@ if (Test-File "CHANGE.md") {
 }
 
 if (Test-File "DESIGN.md") {
+    Invoke-Gate -GateName "design-check" -GatePath (Join-Path $scriptDir "design-check.ps1") -GateArgs @($ChangeDir)
     Invoke-Gate -GateName "alignment-check" -GatePath (Join-Path $scriptDir "alignment-check.ps1") -GateArgs @($ChangeDir)
 } else {
+    Skip-Gate -GateName "design-check" -Reason "DESIGN.md not present"
     Skip-Gate -GateName "alignment-check" -Reason "DESIGN.md not present"
 }
 
@@ -132,6 +134,12 @@ if (Test-File "TASKS.md") {
 } else {
     Skip-Gate -GateName "task-check" -Reason "TASKS.md not present"
     Skip-Gate -GateName "task-boundary-check" -Reason "TASKS.md not present"
+}
+
+if ((Test-File "PLAN.md") -or (Test-File "AUDIT.md")) {
+    Invoke-Gate -GateName "plan-check" -GatePath (Join-Path $scriptDir "plan-check.ps1") -GateArgs @($ChangeDir)
+} else {
+    Skip-Gate -GateName "plan-check" -Reason "PLAN.md or AUDIT.md not present"
 }
 
 if ((Test-File "REQUIREMENT.md") -and (Test-File "VERIFY.md")) {

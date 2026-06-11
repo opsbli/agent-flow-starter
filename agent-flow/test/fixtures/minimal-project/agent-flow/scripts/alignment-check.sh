@@ -39,6 +39,8 @@ if [ ! -d "$change_dir" ]; then
   exit 1
 fi
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 flow_level() {
   local file="$1/CHANGE.md"
   if [ ! -f "$file" ]; then
@@ -69,9 +71,18 @@ alignment_verdict() {
   ' "$file"
 }
 
+alignment_section() {
+  awk '
+    BEGIN { in_section = 0 }
+    /^[[:space:]]*##[[:space:]]+Design Alignment \/ Grill[[:space:]]*$/ { in_section = 1; next }
+    /^[[:space:]]*##[[:space:]]+/ && in_section { exit }
+    in_section { print }
+  ' "$1"
+}
+
 flow="$(flow_level "$change_dir")"
 if [ "$flow" = "Light" ]; then
-  echo "Alignment check skipped: Light change."
+  echo "SKIP: alignment-check is not required for Light changes."
   exit 0
 fi
 
@@ -87,24 +98,61 @@ if [ ! -f "$design" ]; then
 fi
 
 verdict="$(alignment_verdict "$design")"
-if [ "$verdict" = "aligned" ]; then
-  echo "Alignment check passed: Alignment Verdict is aligned."
-  exit 0
+section="$(alignment_section "$design")"
+issues=()
+
+if [ -z "$(printf '%s' "$section" | xargs)" ]; then
+  issues+=("DESIGN.md missing 'Design Alignment / Grill' section.")
 fi
 
 if [ "$verdict" = "skipped" ]; then
   if grep -Eiq '^[[:space:]]*Skip Reason:[[:space:]]*\S' "$design"; then
-    echo "Alignment check passed: Alignment Verdict is skipped with reason."
+    echo "alignment-check passed: skipped with explicit reason."
     exit 0
   fi
   echo "Alignment Verdict is skipped, but Skip Reason is missing." >&2
   exit 2
 fi
 
-if [ -z "$verdict" ]; then
-  echo "Alignment Verdict missing in DESIGN.md." >&2
-else
-  echo "Alignment Verdict is not accepted: $verdict" >&2
+if [ "$verdict" != "aligned" ]; then
+  if [ -z "$verdict" ]; then
+    issues+=("Alignment Verdict missing in DESIGN.md.")
+  else
+    issues+=("Alignment Verdict is not accepted: $verdict")
+  fi
 fi
-echo "Use 'Alignment Verdict: aligned' or 'Alignment Verdict: skipped' with 'Skip Reason: ...'." >&2
-exit 2
+
+if [ "$verdict" = "aligned" ]; then
+  if ! printf '%s\n' "$section" | grep -Eiq '^[[:space:]]*Alignment Source:[[:space:]]*(code-confirmed|user-confirmed|mixed)[[:space:]]*$'; then
+    issues+=("Alignment Source must be code-confirmed, user-confirmed, or mixed.")
+  fi
+  if ! printf '%s\n' "$section" | grep -Eiq '^[[:space:]]*Open Questions:[[:space:]]*none[[:space:]]*$'; then
+    issues+=("Open Questions must be 'none' before Alignment Verdict is aligned.")
+  fi
+
+  rules="$script_dir/../rules/design-alignment.questions"
+  if [ ! -f "$rules" ]; then
+    echo "Rule file not found: $rules" >&2
+    exit 1
+  fi
+  while IFS= read -r question; do
+    question="$(printf '%s' "$question" | xargs)"
+    [ -n "$question" ] || continue
+    case "$question" in \#*) continue ;; esac
+    line="$(printf '%s\n' "$section" | grep -F "| $question |" | head -n 1 || true)"
+    if [ -z "$line" ]; then
+      issues+=("Missing alignment question row: $question")
+    elif ! printf '%s\n' "$line" | grep -Eiq '\|[[:space:]]*confirmed[[:space:]]*\|'; then
+      issues+=("Alignment question is not confirmed: $question")
+    fi
+  done < "$rules"
+fi
+
+if [ "${#issues[@]}" -gt 0 ]; then
+  echo "alignment-check failed:" >&2
+  for issue in "${issues[@]}"; do echo " - $issue" >&2; done
+  echo "Use 'Alignment Verdict: aligned' after required questions are confirmed, or 'Alignment Verdict: skipped' with Skip Reason." >&2
+  exit 2
+fi
+
+echo "alignment-check passed."

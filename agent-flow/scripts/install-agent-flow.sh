@@ -91,8 +91,13 @@ mkdir -p "$target_af"
 # --- Helper: copy a directory recursively ---
 copy_dir() {
   local src="$1" dst="$2"
+  local exclude_fixtures="${3:-false}"
   mkdir -p "$dst"
-  find "$src" -type f | while IFS= read -r f; do
+  if [ "$exclude_fixtures" = true ]; then
+    find "$src" -type f ! -path "$src/fixtures/*"
+  else
+    find "$src" -type f
+  fi | while IFS= read -r f; do
     local rel="${f#$src/}"
     local dest_file="$dst/$rel"
     mkdir -p "$(dirname "$dest_file")"
@@ -142,7 +147,11 @@ for item in "${starter_owned[@]}"; do
   fi
 
   if [ -d "$src" ]; then
-    copy_dir "$src" "$dst"
+    if [ "$item" = "test" ]; then
+      copy_dir "$src" "$dst" true
+    else
+      copy_dir "$src" "$dst"
+    fi
     echo "  UPDATED: $item/"
   else
     cp "$src" "$dst"

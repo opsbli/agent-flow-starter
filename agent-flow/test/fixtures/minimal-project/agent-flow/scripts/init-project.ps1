@@ -266,8 +266,12 @@ gates:
   - agent-flow/scripts/sync-state.sh
   - agent-flow/scripts/state-check.ps1
   - agent-flow/scripts/state-check.sh
+  - agent-flow/scripts/design-check.ps1
+  - agent-flow/scripts/design-check.sh
   - agent-flow/scripts/alignment-check.ps1
   - agent-flow/scripts/alignment-check.sh
+  - agent-flow/scripts/plan-check.ps1
+  - agent-flow/scripts/plan-check.sh
   - agent-flow/scripts/scan-check.ps1
   - agent-flow/scripts/scan-check.sh
   - agent-flow/scripts/task-check.ps1
@@ -362,7 +366,10 @@ Windows:
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
+agent-flow/scripts/design-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/plan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
@@ -375,7 +382,10 @@ Linux/macOS:
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
+bash agent-flow/scripts/design-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/plan-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
