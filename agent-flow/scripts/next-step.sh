@@ -43,37 +43,8 @@ EOF
   esac
 done
 
-meaningful_file() {
-  local file="$1"
-  shift || true
-  [ -f "$file" ] || return 1
-  [ -s "$file" ] || return 1
-  local text
-  text="$(cat "$file")"
-  [ -n "${text//[[:space:]]/}" ] || return 1
-  for placeholder in "$@"; do
-    if grep -Fq "$placeholder" "$file"; then
-      return 1
-    fi
-  done
-  return 0
-}
-
-flow_level() {
-  local dir="$1"
-  local file="$dir/CHANGE.md"
-  if [ ! -f "$file" ]; then
-    echo "Unknown"
-  elif grep -Eiq '\[x\][[:space:]]+Heavy' "$file"; then
-    echo "Heavy"
-  elif grep -Eiq '\[x\][[:space:]]+Standard' "$file"; then
-    echo "Standard"
-  elif grep -Eiq '\[x\][[:space:]]+Light' "$file"; then
-    echo "Light"
-  else
-    echo "Unknown"
-  fi
-}
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/_common.sh"
 
 audit_verdict() {
   local file="$1"
@@ -210,8 +181,8 @@ analyze_change() {
 
   if [ "$flow" = "Unknown" ]; then
     stage="intake"
-    next="Confirm Light / Standard / Heavy and complete CHANGE.md."
-    prompt="Continue agent-flow change: $change_id. Read the existing artifacts, confirm the flow level as Light/Standard/Heavy, and complete CHANGE.md. Do not implement code yet."
+    next="Confirm Light / Standard / Heavy / Emergency and complete CHANGE.md."
+    prompt="Continue agent-flow change: $change_id. Read the existing artifacts, confirm the flow level as Light/Standard/Heavy/Emergency, and complete CHANGE.md. Do not implement code yet."
   elif contains_item "CHANGE.md" "${missing[@]}"; then
     stage="intake"
     next="Complete CHANGE.md."
@@ -220,6 +191,34 @@ analyze_change() {
     stage="code-scan"
     next="Run code-first scan and complete CODE_SCAN.md."
     prompt="Continue agent-flow change: $change_id. Run a code-first scan and complete CODE_SCAN.md with related modules, similar implementations, reusable abstractions, read_files, write_files, and open questions. Do not implement code yet."
+  elif [ "$flow" = "Emergency" ]; then
+    for file in TASKS.md EVOLUTION.md; do
+      if ! meaningful_file "$dir/$file" "Status: not started" "TODO"; then
+        missing+=("$file")
+      fi
+    done
+
+    if contains_item "TASKS.md" "${missing[@]}"; then
+      stage="emergency-backfill"
+      next="Backfill TASKS.md for the Emergency change."
+      prompt="Continue agent-flow Emergency change: $change_id. Backfill TASKS.md with completed response tasks, AC mapping, read_files, write_files, verification command, and parallelization status. Then run emergency-check."
+    elif contains_item "VERIFY.md" "${missing[@]}"; then
+      stage="verify"
+      next="Run verification and complete VERIFY.md."
+      prompt="Continue agent-flow Emergency change: $change_id. Run relevant verification, complete VERIFY.md with AC Evidence and command results, and run emergency-check."
+    elif contains_item "REPORT.md" "${missing[@]}"; then
+      stage="report"
+      next="Complete REPORT.md."
+      prompt="Continue agent-flow Emergency change: $change_id. Complete REPORT.md with incident impact, delivered fix, verification, rollback notes, and residual risks."
+    elif contains_item "EVOLUTION.md" "${missing[@]}"; then
+      stage="evolution"
+      next="Complete EVOLUTION.md and record Emergency follow-up lessons."
+      prompt="Continue agent-flow Emergency change: $change_id. Complete EVOLUTION.md with what was bypassed, what must be backfilled, and any script/template lessons. Then run emergency-check and evolution-check."
+    else
+      stage="complete-or-review"
+      next="Emergency backfill artifacts are ready. Run emergency-check and review manually."
+      prompt="Continue agent-flow Emergency change: $change_id. Run emergency-check and relevant verification, then summarize remaining incident risk and backfill status."
+    fi
   elif [ "$flow" = "Light" ]; then
     if contains_item "VERIFY.md" "${missing[@]}"; then
       stage="verify"

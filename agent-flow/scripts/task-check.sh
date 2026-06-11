@@ -21,6 +21,9 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
   exit 2
 fi
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/_common.sh"
+
 tasks_path="$change_dir/TASKS.md"
 if [ ! -f "$tasks_path" ]; then
   echo "Task check failed:"
@@ -33,12 +36,6 @@ verify_text=""
 if [ -f "$verify_path" ]; then
   verify_text="$(cat "$verify_path")"
 fi
-
-meaningful() {
-  local value="$1"
-  [ -n "$(printf '%s' "$value" | tr -d '[:space:]')" ] || return 1
-  ! printf '%s' "$value" | grep -Eiq 'TODO|TBD|path/to|example|\{.+\}'
-}
 
 has_verify_evidence() {
   local task_id="$1"

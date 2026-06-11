@@ -1,4 +1,18 @@
 <#
+.SYNOPSIS
+Run the drift-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Path to the agent-flow change directory to check.
+
+.EXAMPLE
+agent-flow/scripts/drift-check.ps1
+#>
+
+<#
 .DEPRECATED
 Use code-drift-check.ps1 instead, which compares DESIGN.md declarations against
 actual code (schema files, route files, permission refs).
@@ -53,3 +67,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Drift check passed."
+
+
+

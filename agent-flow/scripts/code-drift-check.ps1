@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Run the code-drift-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/code-drift-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -150,3 +167,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Code-drift check passed. No drift detected between DESIGN.md and live code."
+
+
+

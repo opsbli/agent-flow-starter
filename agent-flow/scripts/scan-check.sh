@@ -29,7 +29,7 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-rules_dir="$(cd "$script_dir/.." && pwd)/rules"
+source "$script_dir/_common.sh"
 project_root="$(cd "$project_root" 2>/dev/null && pwd || echo "$project_root")"
 scan_path="$change_dir/CODE_SCAN.md"
 
@@ -39,30 +39,11 @@ if [ ! -f "$scan_path" ]; then
   exit 2
 fi
 
-read_rules() {
-  local file="$rules_dir/$1"
-  [ -f "$file" ] || { echo "Rule file not found: $file" >&2; exit 2; }
-  grep -Ev '^[[:space:]]*(#|$)' "$file"
-}
-
-flow="Unknown"
-if [ -f "$change_dir/CHANGE.md" ]; then
-  if grep -Eiq '\[x\][[:space:]]+Emergency' "$change_dir/CHANGE.md"; then flow="Emergency"
-  elif grep -Eiq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"; then flow="Heavy"
-  elif grep -Eiq '\[x\][[:space:]]+Standard' "$change_dir/CHANGE.md"; then flow="Standard"
-  elif grep -Eiq '\[x\][[:space:]]+Light' "$change_dir/CHANGE.md"; then flow="Light"
-  fi
-fi
+flow="$(flow_level "$change_dir")"
 
 key_value() {
   local key="$1"
   sed -nE "s/^[[:space:]]*$key[[:space:]]*:[[:space:]]*(.+)$/\1/ip" "$scan_path" | head -n 1
-}
-
-meaningful() {
-  local value="$1"
-  [ -n "$(printf '%s' "$value" | tr -d '[:space:]')" ] || return 1
-  ! printf '%s' "$value" | grep -Eiq 'TODO|TBD|path/to|example|\{.+\}'
 }
 
 normalize_entry() {
@@ -88,9 +69,9 @@ list_entries() {
 }
 
 issues=()
-mapfile -t required < <(read_rules code-scan-light.keys)
+mapfile -t required < <(get_rule_list code-scan-light.keys)
 if [ "$flow" = "Standard" ] || [ "$flow" = "Heavy" ]; then
-  mapfile -t extra < <(read_rules code-scan-standard-heavy.keys)
+  mapfile -t extra < <(get_rule_list code-scan-standard-heavy.keys)
   required+=("${extra[@]}")
 fi
 

@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Run the task-boundary-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/task-boundary-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -110,3 +127,6 @@ if ($violations.Count -gt 0) {
 }
 
 Write-Host "Task boundary check passed: changed files are within write_files or the change folder."
+
+
+

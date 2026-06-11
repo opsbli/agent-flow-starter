@@ -1,16 +1,24 @@
+<#
+.SYNOPSIS
+Run the task-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/task-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
 )
 
 $ErrorActionPreference = "Stop"
-
-function Test-Meaningful {
-    param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|path/to|example|\{.+?\}") { return $false }
-    return $true
-}
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 function Get-AcIds {
     param([string]$Text)
@@ -108,3 +116,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Task check passed."
+
+
+

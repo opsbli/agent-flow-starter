@@ -1,52 +1,27 @@
+<#
+.SYNOPSIS
+Run the design-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/design-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 if (-not (Test-Path -LiteralPath $ChangeDir)) {
     throw "ChangeDir not found: $ChangeDir"
-}
-
-function Get-FlowLevel {
-    param([string]$Dir)
-
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) {
-        return "Unknown"
-    }
-
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
-}
-
-function Get-RuleList {
-    param([string]$Name)
-
-    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
-    if (-not (Test-Path -LiteralPath $path)) {
-        throw "Rule file not found: $path"
-    }
-
-    Get-Content -Encoding utf8 -LiteralPath $path |
-        ForEach-Object { $_.Trim() } |
-        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
-}
-
-function Test-MeaningfulValue {
-    param(
-        [string]$Value,
-        [switch]$AllowSlash
-    )
-
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|pending|\{.+?\}") { return $false }
-    if (-not $AllowSlash -and $Value -match "\s/\s") { return $false }
-    return $true
 }
 
 function Get-MarkdownRow {
@@ -71,13 +46,13 @@ function Get-Cells {
 }
 
 $flow = Get-FlowLevel -Dir $ChangeDir
-if ($flow -eq "Light") {
-    Write-Host "SKIP: design-check is not required for Light changes."
+if ($flow -eq "Light" -or $flow -eq "Emergency") {
+    Write-Host "SKIP: design-check is not required for $flow changes."
     exit 0
 }
 
 if ($flow -eq "Unknown") {
-    throw "Cannot determine flow level from CHANGE.md. Mark one of Light / Standard / Heavy."
+    throw "Cannot determine flow level from CHANGE.md. Mark one of Light / Standard / Heavy / Emergency."
 }
 
 $design = Join-Path $ChangeDir "DESIGN.md"
@@ -137,3 +112,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "design-check passed."
+
+
+

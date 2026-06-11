@@ -40,14 +40,22 @@ agent-flow/
 ├── FAQ.md                        # 常见问题解答
 ├── core/                         # 核心规则
 ├── flows/                        # Light / Standard / Heavy / Emergency 流程
+├── rules/                        # gate 读取的规则文件和检查清单
 ├── templates/                    # change 工件模板（含 CANCEL.md / ROLLBACK.md）
 ├── changes/                      # 每个需求的工作目录
 ├── knowledge/                    # 长期知识沉淀
 ├── decisions/                    # ADR 决策记录
 ├── logs/                         # 日级过程日志
 ├── reports/                      # 交付报告
+├── test/                         # scaffold 脚本测试资产
 └── scripts/                      # 验证、初始化、自检、升级脚本
 ```
+
+脚本约定：
+
+- `agent-flow/scripts/` 是目标项目内的 canonical 工具链位置，`manifest.yaml` 的 `gates` 以这里为准。
+- `agent-flow/scripts/_common.ps1` 和 `_common.sh` 只提供共享函数，不作为独立 gate 运行。
+- 从 starter 仓库安装时，可以使用根级 `scripts/install-agent-flow.*` 快捷入口；它会转发到这里的 canonical 安装器。
 
 ## 安装后第一步
 

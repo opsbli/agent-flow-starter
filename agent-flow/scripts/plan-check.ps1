@@ -1,40 +1,27 @@
+<#
+.SYNOPSIS
+Run the plan-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/plan-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 if (-not (Test-Path -LiteralPath $ChangeDir)) {
     throw "ChangeDir not found: $ChangeDir"
-}
-
-function Get-FlowLevel {
-    param([string]$Dir)
-
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) {
-        return "Unknown"
-    }
-
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
-}
-
-function Get-RuleList {
-    param([string]$Name)
-
-    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
-    if (-not (Test-Path -LiteralPath $path)) {
-        throw "Rule file not found: $path"
-    }
-
-    Get-Content -Encoding utf8 -LiteralPath $path |
-        ForEach-Object { $_.Trim() } |
-        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
 }
 
 function Get-Section {
@@ -47,14 +34,6 @@ function Get-Section {
     $match = [regex]::Match($Text, $pattern)
     if ($match.Success) { return $match.Groups[1].Value }
     return ""
-}
-
-function Test-MeaningfulText {
-    param([string]$Value)
-
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|\{.+?\}|not run") { return $false }
-    return $true
 }
 
 $flow = Get-FlowLevel -Dir $ChangeDir
@@ -126,3 +105,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "plan-check passed."
+
+
+

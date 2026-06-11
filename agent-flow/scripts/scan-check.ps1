@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Run the scan-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.PARAMETER Strict
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/scan-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -6,6 +26,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 function Resolve-ProjectPath {
     param([string]$Path)
@@ -13,29 +34,6 @@ function Resolve-ProjectPath {
         return [System.IO.Path]::GetFullPath($Path)
     }
     return [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Path))
-}
-
-function Get-RuleList {
-    param([string]$Name)
-    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
-    if (-not (Test-Path -LiteralPath $path)) {
-        throw "Rule file not found: $path"
-    }
-    Get-Content -Encoding utf8 -LiteralPath $path |
-        ForEach-Object { $_.Trim() } |
-        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
-}
-
-function Get-FlowLevel {
-    param([string]$Dir)
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) { return "Unknown" }
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Emergency") { return "Emergency" }
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
 }
 
 function Get-KeyValue {
@@ -47,13 +45,6 @@ function Get-KeyValue {
     $match = [regex]::Match($Text, $pattern)
     if ($match.Success) { return $match.Groups[1].Value.Trim() }
     return ""
-}
-
-function Test-Meaningful {
-    param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|path/to|example|\{.+?\}") { return $false }
-    return $true
 }
 
 function Normalize-Entry {
@@ -161,3 +152,6 @@ if ($Strict) {
 } else {
     Write-Host "Scan check passed for $flow change."
 }
+
+
+

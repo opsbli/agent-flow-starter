@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Run the ac-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER TestRoot
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/ac-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -47,3 +64,6 @@ if ($missing.Count -gt 0) {
 }
 
 Write-Host "AC check passed: $($acs.Count) AC ids have evidence."
+
+
+

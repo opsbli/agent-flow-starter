@@ -1,31 +1,24 @@
+<#
+.SYNOPSIS
+Run the evolution-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/evolution-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
 )
 
 $ErrorActionPreference = "Stop"
-
-function Get-FlowLevel {
-    param([string]$Dir)
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) { return "Unknown" }
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
-}
-
-function Get-RuleList {
-    param([string]$Name)
-    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
-    if (-not (Test-Path -LiteralPath $path)) {
-        throw "Rule file not found: $path"
-    }
-    Get-Content -Encoding utf8 -LiteralPath $path |
-        ForEach-Object { $_.Trim() } |
-        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
-}
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 function Get-KeyValue {
     param([string]$Text, [string]$Key)
@@ -33,13 +26,6 @@ function Get-KeyValue {
     $match = [regex]::Match($Text, $pattern)
     if ($match.Success) { return $match.Groups[1].Value.Trim() }
     return ""
-}
-
-function Test-Meaningful {
-    param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|\{.+?\}") { return $false }
-    return $true
 }
 
 if (-not (Test-Path -LiteralPath $ChangeDir)) {
@@ -80,3 +66,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Evolution check passed for $flow change."
+
+
+

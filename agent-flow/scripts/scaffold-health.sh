@@ -54,6 +54,8 @@ required=(
   "agent-flow/UPGRADE.md"
   "agent-flow/scripts/init-project.ps1"
   "agent-flow/scripts/init-project.sh"
+  "agent-flow/scripts/_common.ps1"
+  "agent-flow/scripts/_common.sh"
   "agent-flow/scripts/run-verify.ps1"
   "agent-flow/scripts/new-change.ps1"
   "agent-flow/scripts/next-step.ps1"

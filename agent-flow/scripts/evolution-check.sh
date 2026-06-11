@@ -22,21 +22,9 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-rules_dir="$(cd "$script_dir/.." && pwd)/rules"
+source "$script_dir/_common.sh"
 
-read_rules() {
-  local file="$rules_dir/$1"
-  [ -f "$file" ] || { echo "Rule file not found: $file" >&2; exit 2; }
-  grep -Ev '^[[:space:]]*(#|$)' "$file"
-}
-
-flow="Unknown"
-if [ -f "$change_dir/CHANGE.md" ]; then
-  if grep -Eiq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"; then flow="Heavy"
-  elif grep -Eiq '\[x\][[:space:]]+Standard' "$change_dir/CHANGE.md"; then flow="Standard"
-  elif grep -Eiq '\[x\][[:space:]]+Light' "$change_dir/CHANGE.md"; then flow="Light"
-  fi
-fi
+flow="$(flow_level "$change_dir")"
 
 path="$change_dir/EVOLUTION.md"
 if [ ! -f "$path" ]; then
@@ -54,17 +42,11 @@ key_value() {
   sed -nE "s/^[[:space:]]*$key[[:space:]]*:[[:space:]]*(.+)$/\1/ip" "$path" | head -n 1
 }
 
-meaningful() {
-  local value="$1"
-  [ -n "$(printf '%s' "$value" | tr -d '[:space:]')" ] || return 1
-  ! printf '%s' "$value" | grep -Eiq 'TODO|TBD|待填写|\{.+\}'
-}
-
 issues=()
-mapfile -t required < <(read_rules evolution.keys)
+mapfile -t required < <(get_rule_list evolution.keys)
 for key in "${required[@]}"; do
   content="$(key_value "$key")"
-  if ! meaningful "$content"; then
+  if ! meaningful "$content" true 'TODO|TBD|待填写|\{.+\}'; then
     issues+=("EVOLUTION.md key '$key' is missing or still empty.")
   fi
 done

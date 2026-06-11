@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Run the blocked-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.PARAMETER Manifest
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/blocked-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -150,3 +170,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Blocked-if check passed. No blocked operations detected."
+
+
+

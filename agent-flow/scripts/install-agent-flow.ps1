@@ -67,10 +67,14 @@ $starterOwned = @(
     "rules",
     "test",
     "README.md",
+    "FAQ.md",
+    "READING.md",
     "UPGRADE.md",
+    "CHANGELOG.md",
     "VERSION",
     "ADVANTAGES.md",
     "GO.md",
+    "project-profiles.json",
     "manifest.yaml"
 )
 
@@ -144,9 +148,6 @@ foreach ($item in $starterOwned) {
         }
         Get-ChildItem -LiteralPath $sourcePath -Recurse -File | ForEach-Object {
             $relPath = $_.FullName.Substring($sourcePath.Length + 1)
-            if ($item -eq "test" -and $relPath -match "^(fixtures[\\/])") {
-                return
-            }
             $dest = Join-Path $targetPath $relPath
             $destDir = Split-Path -Parent $dest
             if (-not (Test-Path -LiteralPath $destDir)) {
@@ -181,6 +182,9 @@ foreach ($item in $projectOwned) {
     $path = Join-Path $targetAf $item
     if (Test-Path -LiteralPath $path) {
         Write-Host "  PRESERVED: $item/"
+    } elseif (Test-Path -LiteralPath (Join-Path $sourceAf $item)) {
+        Copy-Item -LiteralPath (Join-Path $sourceAf $item) -Destination $path -Recurse -Force
+        Write-Host "  SEEDED: $item/"
     } else {
         New-Item -ItemType Directory -Force -Path $path | Out-Null
         # Add .gitkeep in new project-owned directories
@@ -200,16 +204,24 @@ $agentsTemplate = Join-Path $sourceAf "templates/AGENTS.md"
 
 if (Test-Path -LiteralPath $agentsMd) {
     $agentsContent = Get-Content -Raw -Encoding utf8 -LiteralPath $agentsMd
-    if ($agentsContent -match "<!-- agent-flow:start -->") {
-        Write-Host "  AGENTS.md already has agent-flow block (preserved)"
+    $projectName = Split-Path -Leaf $Target
+    $templateContent = (Get-Content -Raw -Encoding utf8 -LiteralPath $agentsTemplate).Replace("{project-name}", $projectName)
+    $blockMatch = [regex]::Match($templateContent, "(?s)<!-- agent-flow:start -->.*?<!-- agent-flow:end -->")
+    $agentBlock = if ($blockMatch.Success) { $blockMatch.Value } else { $templateContent }
+    $pattern = "(?s)<!-- agent-flow:start -->.*?<!-- agent-flow:end -->"
+    if ($agentsContent -match $pattern) {
+        $updated = [regex]::Replace($agentsContent, $pattern, $agentBlock, 1)
+        Set-Content -LiteralPath $agentsMd -Value $updated -Encoding utf8
+        Write-Host "  Replaced existing agent-flow block in AGENTS.md"
     } else {
-        $templateContent = Get-Content -Raw -Encoding utf8 -LiteralPath $agentsTemplate
         $addContent = "`n`n" + $templateContent
         Add-Content -LiteralPath $agentsMd -Value $addContent -Encoding utf8
         Write-Host "  Appended agent-flow block to AGENTS.md"
     }
 } else {
-    Copy-Item -LiteralPath $agentsTemplate -Destination $agentsMd
+    $projectName = Split-Path -Leaf $Target
+    $templateContent = (Get-Content -Raw -Encoding utf8 -LiteralPath $agentsTemplate).Replace("{project-name}", $projectName)
+    Set-Content -LiteralPath $agentsMd -Value $templateContent -Encoding utf8
     Write-Host "  Created AGENTS.md from template"
 }
 

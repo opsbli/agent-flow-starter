@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Inspect a change and print the next recommended agent-flow step.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER All
+Parameter accepted by this script.
+
+.PARAMETER ChangesRoot
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/next-step.ps1
+#>
+
 param(
     [string]$ChangeDir,
     [switch]$All,
@@ -5,45 +25,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-
-function Test-MeaningfulFile {
-    param(
-        [string]$Path,
-        [string[]]$Placeholders = @()
-    )
-
-    if (-not (Test-Path -LiteralPath $Path)) {
-        return $false
-    }
-
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $Path
-    if ([string]::IsNullOrWhiteSpace($text)) {
-        return $false
-    }
-
-    foreach ($placeholder in $Placeholders) {
-        if ($text.Contains($placeholder)) {
-            return $false
-        }
-    }
-
-    return $true
-}
-
-function Get-FlowLevel {
-    param([string]$Dir)
-
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) {
-        return "Unknown"
-    }
-
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
-}
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 function Get-AuditVerdict {
     param(
@@ -166,8 +148,8 @@ function Analyze-Change {
 
     if ($flow -eq "Unknown") {
         $stage = "intake"
-        $next = "Confirm Light / Standard / Heavy and complete CHANGE.md."
-        $prompt = "Continue agent-flow change: $changeId. Read the existing artifacts, confirm the flow level as Light/Standard/Heavy, and complete CHANGE.md. Do not implement code yet."
+        $next = "Confirm Light / Standard / Heavy / Emergency and complete CHANGE.md."
+        $prompt = "Continue agent-flow change: $changeId. Read the existing artifacts, confirm the flow level as Light/Standard/Heavy/Emergency, and complete CHANGE.md. Do not implement code yet."
     } elseif (Test-ListContains -List $missing -Value "CHANGE.md") {
         $stage = "intake"
         $next = "Complete CHANGE.md."
@@ -176,6 +158,34 @@ function Analyze-Change {
         $stage = "code-scan"
         $next = "Run code-first scan and complete CODE_SCAN.md."
         $prompt = "Continue agent-flow change: $changeId. Run a code-first scan and complete CODE_SCAN.md with related modules, similar implementations, reusable abstractions, read_files, write_files, and open questions. Do not implement code yet."
+    } elseif ($flow -eq "Emergency") {
+        foreach ($file in @("TASKS.md", "EVOLUTION.md")) {
+            if (-not (Test-MeaningfulFile -Path (Join-Path $Dir $file) -Placeholders @("Status: not started", "TODO"))) {
+                $missing.Add($file)
+            }
+        }
+
+        if (Test-ListContains -List $missing -Value "TASKS.md") {
+            $stage = "emergency-backfill"
+            $next = "Backfill TASKS.md for the Emergency change."
+            $prompt = "Continue agent-flow Emergency change: $changeId. Backfill TASKS.md with completed response tasks, AC mapping, read_files, write_files, verification command, and parallelization status. Then run emergency-check."
+        } elseif (Test-ListContains -List $missing -Value "VERIFY.md") {
+            $stage = "verify"
+            $next = "Run verification and complete VERIFY.md."
+            $prompt = "Continue agent-flow Emergency change: $changeId. Run relevant verification, complete VERIFY.md with AC Evidence and command results, and run emergency-check."
+        } elseif (Test-ListContains -List $missing -Value "REPORT.md") {
+            $stage = "report"
+            $next = "Complete REPORT.md."
+            $prompt = "Continue agent-flow Emergency change: $changeId. Complete REPORT.md with incident impact, delivered fix, verification, rollback notes, and residual risks."
+        } elseif (Test-ListContains -List $missing -Value "EVOLUTION.md") {
+            $stage = "evolution"
+            $next = "Complete EVOLUTION.md and record Emergency follow-up lessons."
+            $prompt = "Continue agent-flow Emergency change: $changeId. Complete EVOLUTION.md with what was bypassed, what must be backfilled, and any script/template lessons. Then run emergency-check and evolution-check."
+        } else {
+            $stage = "complete-or-review"
+            $next = "Emergency backfill artifacts are ready. Run emergency-check and review manually."
+            $prompt = "Continue agent-flow Emergency change: $changeId. Run emergency-check and relevant verification, then summarize remaining incident risk and backfill status."
+        }
     } elseif ($flow -eq "Light") {
         if (Test-ListContains -List $missing -Value "VERIFY.md") {
             $stage = "verify"
@@ -307,3 +317,6 @@ if ($All) {
     }
     Analyze-Change -Dir $ChangeDir | ConvertTo-Json -Depth 5
 }
+
+
+

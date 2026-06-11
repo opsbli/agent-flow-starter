@@ -22,31 +22,7 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-flow_level() {
-  local file="$1/CHANGE.md"
-  if [ ! -f "$file" ]; then
-    echo "Unknown"
-  elif grep -Eiq '\[x\][[:space:]]+Heavy' "$file"; then
-    echo "Heavy"
-  elif grep -Eiq '\[x\][[:space:]]+Standard' "$file"; then
-    echo "Standard"
-  elif grep -Eiq '\[x\][[:space:]]+Light' "$file"; then
-    echo "Light"
-  else
-    echo "Unknown"
-  fi
-}
-
-meaningful() {
-  local value="$1" allow_slash="${2:-false}"
-  [ -n "$(printf '%s' "$value" | xargs)" ] || return 1
-  printf '%s' "$value" | grep -Eiq 'TODO|TBD|pending|\{.+\}' && return 1
-  if [ "$allow_slash" != true ] && printf '%s' "$value" | grep -Eq '[[:space:]]/[[:space:]]'; then
-    return 1
-  fi
-  return 0
-}
+source "$script_dir/_common.sh"
 
 cell_value() {
   local line="$1" index="$2"
@@ -54,12 +30,12 @@ cell_value() {
 }
 
 flow="$(flow_level "$change_dir")"
-if [ "$flow" = "Light" ]; then
-  echo "SKIP: design-check is not required for Light changes."
+if [ "$flow" = "Light" ] || [ "$flow" = "Emergency" ]; then
+  echo "SKIP: design-check is not required for $flow changes."
   exit 0
 fi
 if [ "$flow" = "Unknown" ]; then
-  echo "Cannot determine flow level from CHANGE.md. Mark one of Light / Standard / Heavy." >&2
+  echo "Cannot determine flow level from CHANGE.md. Mark one of Light / Standard / Heavy / Emergency." >&2
   exit 1
 fi
 
@@ -88,16 +64,9 @@ elif [ "$decision_status" != "accepted" ]; then
   issues+=("Decision Status must be accepted before planning or implementation.")
 fi
 
-rules="$script_dir/../rules/design-decision.keys"
-if [ ! -f "$rules" ]; then
-  echo "Rule file not found: $rules" >&2
-  exit 1
-fi
-
 while IFS= read -r key; do
   key="$(printf '%s' "$key" | xargs)"
   [ -n "$key" ] || continue
-  case "$key" in \#*) continue ;; esac
 
   line="$(grep -F "| $key |" "$design" | head -n 1 || true)"
   if [ -z "$line" ]; then
@@ -106,13 +75,13 @@ while IFS= read -r key; do
   fi
   decision="$(cell_value "$line" 3)"
   evidence="$(cell_value "$line" 4)"
-  if ! meaningful "$decision"; then
+  if ! meaningful "$decision" false 'TODO|TBD|pending|\{.+\}'; then
     issues+=("Design decision '$key' has no final decision. Replace option lists with one value like unchanged/new/modified/deleted/not-applicable.")
   fi
-  if ! meaningful "$evidence" true; then
+  if ! meaningful "$evidence" true 'TODO|TBD|pending|\{.+\}'; then
     issues+=("Design decision '$key' needs evidence or a reason.")
   fi
-done < "$rules"
+done < <(get_rule_list "design-decision.keys")
 
 impact="$(awk '
   BEGIN { IGNORECASE = 1 }

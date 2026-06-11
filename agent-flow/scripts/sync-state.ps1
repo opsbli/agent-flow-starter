@@ -1,3 +1,17 @@
+<#
+.SYNOPSIS
+Run the sync-state agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/sync-state.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
@@ -66,3 +80,6 @@ $tail
 
 Set-Content -Encoding utf8 -LiteralPath $statePath -Value $content
 Write-Host "STATE.md synced to stage '$($result.stage)'."
+
+
+

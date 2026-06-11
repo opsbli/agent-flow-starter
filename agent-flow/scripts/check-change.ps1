@@ -1,3 +1,29 @@
+<#
+.SYNOPSIS
+Run the agent-flow gate chain for a change.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.PARAMETER Closure
+Parameter accepted by this script.
+
+.PARAMETER Json
+Parameter accepted by this script.
+
+.PARAMETER OutputPath
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/check-change.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -182,3 +208,6 @@ if ($failed -ne 0) {
 }
 
 Write-Host "check-change passed."
+
+
+

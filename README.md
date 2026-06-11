@@ -63,12 +63,21 @@ agent-flow-starter/
 ├── examples/
 │   └── sample-change/            # 教学用 change 示例
 ├── agent-flow/                   # 会被复制到目标项目的工作流目录
+│   ├── rules/                    # 机器门禁读取的规则清单
+│   ├── scripts/                  # 目标项目内运行的 canonical 工具脚本
+│   └── test/                     # 随 scaffold 分发的轻量脚本测试资产
 └── scripts/
-    ├── install-agent-flow.ps1    # Windows 安装/更新
-    ├── install-agent-flow.sh     # Linux/macOS 安装/更新
-    ├── test-starter.ps1          # Windows starter 自测
-    └── test-starter.sh           # Linux/macOS starter 自测
+    ├── install-agent-flow.ps1    # Windows 安装/更新快捷入口，转发到 agent-flow/scripts/
+    ├── install-agent-flow.sh     # Linux/macOS 安装/更新快捷入口，转发到 agent-flow/scripts/
+    ├── test-starter.ps1          # Windows starter 仓库自测，不复制到目标项目
+    └── test-starter.sh           # Linux/macOS starter 仓库自测，不复制到目标项目
 ```
+
+脚本边界：
+
+- `agent-flow/scripts/` 是 canonical 实现，会安装到目标项目并被 `manifest.yaml` gates 引用。
+- 根级 `scripts/install-agent-flow.*` 只是 starter 仓库的安装快捷入口。
+- 根级 `scripts/test-starter.*` 只测试 starter 本身；目标项目里的脚本测试资产在 `agent-flow/test/`。
 
 安装到目标项目后，目标项目会得到：
 
@@ -86,6 +95,8 @@ agent-flow/
 ├── decisions/
 ├── logs/
 ├── reports/
+├── rules/
+├── test/
 └── scripts/
 ```
 
@@ -568,6 +579,11 @@ GitHub Actions 也会在 push / pull request 时运行同一套 bash 自测：
 .github/workflows/agent-flow-starter-check.yml
 .github/workflows/scaffold-ci.yml
 ```
+
+两个 workflow 的分工：
+
+- `scaffold-ci.yml` 是完整 scaffold CI：运行 scaffold-health、manifest-check、脚本语法、ps1/sh 配对检查、轻量单元测试和 starter 自测。
+- `agent-flow-starter-check.yml` 是 starter 自测入口：直接运行根级 `scripts/test-starter.*`，便于保留最小回归链路。
 
 自测覆盖：
 

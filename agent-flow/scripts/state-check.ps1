@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Run the state-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ExpectedStage
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/state-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -46,3 +63,6 @@ if ($stateStage -ne $inferredStage) {
 }
 
 Write-Host "State check passed: STATE.md current_stage matches next-step stage '$inferredStage'."
+
+
+

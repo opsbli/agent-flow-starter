@@ -135,3 +135,21 @@ AUDIT.md
 - 验证通过后，如形成新的健康状态，更新 `agent-flow/knowledge/known-good-baselines.md`。
 - Heavy change 必须写入 `agent-flow/logs/YYYY/MM-DD.md`。
 - 每次完成后必须写 `EVOLUTION.md`，判断脚手架是否应升级。
+
+## 运行所有门禁
+
+单个 change 需要机器汇总时，运行：
+
+```text
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+```
+
+收口阶段加 closure 模式：
+
+```text
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+```
+
+脚手架自身改动还必须同时运行 Windows 和 Linux/macOS 两套 `scaffold-health`。

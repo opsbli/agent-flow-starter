@@ -1,3 +1,17 @@
+<#
+.SYNOPSIS
+Run the init-project agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER Target
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/init-project.ps1
+#>
+
 param([string]$Target = ".")
 
 $ErrorActionPreference = "Stop"
@@ -423,3 +437,6 @@ if (Test-Path -LiteralPath $agentsPath) {
 & (Join-Path $root "agent-flow/scripts/scaffold-health.ps1")
 
 Write-Host "agent-flow initialized for $projectName"
+
+
+

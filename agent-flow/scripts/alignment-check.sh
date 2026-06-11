@@ -40,21 +40,7 @@ if [ ! -d "$change_dir" ]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-flow_level() {
-  local file="$1/CHANGE.md"
-  if [ ! -f "$file" ]; then
-    echo "Unknown"
-  elif grep -Eiq '\[x\][[:space:]]+Heavy' "$file"; then
-    echo "Heavy"
-  elif grep -Eiq '\[x\][[:space:]]+Standard' "$file"; then
-    echo "Standard"
-  elif grep -Eiq '\[x\][[:space:]]+Light' "$file"; then
-    echo "Light"
-  else
-    echo "Unknown"
-  fi
-}
+source "$script_dir/_common.sh"
 
 alignment_verdict() {
   local file="$1"
@@ -81,13 +67,13 @@ alignment_section() {
 }
 
 flow="$(flow_level "$change_dir")"
-if [ "$flow" = "Light" ]; then
-  echo "SKIP: alignment-check is not required for Light changes."
+if [ "$flow" = "Light" ] || [ "$flow" = "Emergency" ]; then
+  echo "SKIP: alignment-check is not required for $flow changes."
   exit 0
 fi
 
 if [ "$flow" = "Unknown" ]; then
-  echo "Cannot determine flow level from CHANGE.md. Mark one of Light / Standard / Heavy." >&2
+  echo "Cannot determine flow level from CHANGE.md. Mark one of Light / Standard / Heavy / Emergency." >&2
   exit 1
 fi
 
@@ -130,22 +116,16 @@ if [ "$verdict" = "aligned" ]; then
     issues+=("Open Questions must be 'none' before Alignment Verdict is aligned.")
   fi
 
-  rules="$script_dir/../rules/design-alignment.questions"
-  if [ ! -f "$rules" ]; then
-    echo "Rule file not found: $rules" >&2
-    exit 1
-  fi
   while IFS= read -r question; do
     question="$(printf '%s' "$question" | xargs)"
     [ -n "$question" ] || continue
-    case "$question" in \#*) continue ;; esac
     line="$(printf '%s\n' "$section" | grep -F "| $question |" | head -n 1 || true)"
     if [ -z "$line" ]; then
       issues+=("Missing alignment question row: $question")
     elif ! printf '%s\n' "$line" | grep -Eiq '\|[[:space:]]*confirmed[[:space:]]*\|'; then
       issues+=("Alignment question is not confirmed: $question")
     fi
-  done < "$rules"
+  done < <(get_rule_list "design-alignment.questions")
 fi
 
 if [ "${#issues[@]}" -gt 0 ]; then

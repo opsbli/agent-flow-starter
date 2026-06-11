@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Run the manifest-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.PARAMETER Manifest
+Parameter accepted by this script.
+
+.PARAMETER StrictTodo
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/manifest-check.ps1
+#>
+
 param(
     [string]$ProjectRoot = ".",
     [string]$Manifest = "agent-flow/manifest.yaml",
@@ -141,3 +161,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Manifest check passed."
+
+
+

@@ -143,6 +143,30 @@ agent-flow/scripts/scaffold-health.ps1   # 验证脚手架完整性
 
 完整的命令列表见 `agent-flow/manifest.yaml` 的 `gates` 部分。
 
+### 如何一次运行所有检查？
+
+优先使用 `check-change` 汇总单个 change 的门禁结果。
+
+Windows：
+
+```powershell
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+agent-flow/scripts/scaffold-health.ps1
+agent-flow/scripts/manifest-check.ps1
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/scaffold-health.sh
+bash agent-flow/scripts/manifest-check.sh
+```
+
+`check-change` 会串起状态、扫描、设计、对齐、计划、任务、AC、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查；项目业务验证仍由 `run-verify` 根据 `manifest.yaml` 执行。
+
 ### run-verify 和 verify-backend 什么关系？
 
 `verify-backend.ps1` 已废弃，只是 `run-verify.ps1` 的包装。直接使用：

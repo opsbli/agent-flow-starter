@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Run the closure-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/closure-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -5,43 +22,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-
-function Test-MeaningfulFile {
-    param([string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) { return $false }
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $Path
-    return -not [string]::IsNullOrWhiteSpace($text)
-}
-
-function Test-Meaningful {
-    param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|\{.+?\}") { return $false }
-    return $true
-}
-
-function Get-RuleList {
-    param([string]$Name)
-    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
-    if (-not (Test-Path -LiteralPath $path)) {
-        throw "Rule file not found: $path"
-    }
-    Get-Content -Encoding utf8 -LiteralPath $path |
-        ForEach-Object { $_.Trim() } |
-        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
-}
-
-function Get-FlowLevel {
-    param([string]$Dir)
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) { return "Unknown" }
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Emergency") { return "Emergency" }
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
-}
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 function Get-ClosureVerdict {
     param([string]$AuditPath)
@@ -174,3 +155,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Closure check passed for $flow change."
+
+
+

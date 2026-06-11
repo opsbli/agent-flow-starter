@@ -69,10 +69,14 @@ starter_owned=(
   "rules"
   "test"
   "README.md"
+  "FAQ.md"
+  "READING.md"
   "UPGRADE.md"
+  "CHANGELOG.md"
   "VERSION"
   "ADVANTAGES.md"
   "GO.md"
+  "project-profiles.json"
   "manifest.yaml"
 )
 
@@ -147,11 +151,7 @@ for item in "${starter_owned[@]}"; do
   fi
 
   if [ -d "$src" ]; then
-    if [ "$item" = "test" ]; then
-      copy_dir "$src" "$dst" true
-    else
-      copy_dir "$src" "$dst"
-    fi
+    copy_dir "$src" "$dst"
     echo "  UPDATED: $item/"
   else
     cp "$src" "$dst"
@@ -177,6 +177,9 @@ for item in "${project_owned[@]}"; do
   path="$target_af/$item"
   if [ -d "$path" ]; then
     echo "  PRESERVED: $item/"
+  elif [ -d "$source_af/$item" ]; then
+    cp -R "$source_af/$item" "$path"
+    echo "  SEEDED: $item/"
   else
     mkdir -p "$path"
     gitkeep="$path/.gitkeep"
@@ -190,19 +193,50 @@ echo ""
 echo "=== AGENTS.md ==="
 agents_md="$target/AGENTS.md"
 agents_template="$source_af/templates/AGENTS.md"
+project_name="$(basename "$target")"
+tmp_template="$(mktemp)"
+tmp_block="$(mktemp)"
+sed "s/{project-name}/$project_name/g" "$agents_template" > "$tmp_template"
+awk '
+  /<!-- agent-flow:start -->/ { in_block = 1 }
+  in_block { print }
+  /<!-- agent-flow:end -->/ && in_block { exit }
+' "$tmp_template" > "$tmp_block"
 
 if [ -f "$agents_md" ]; then
-  if grep -q "<!-- agent-flow:start -->" "$agents_md" 2>/dev/null; then
-    echo "  AGENTS.md already has agent-flow block (preserved)"
+  if grep -q "<!-- agent-flow:start -->" "$agents_md" 2>/dev/null && grep -q "<!-- agent-flow:end -->" "$agents_md" 2>/dev/null; then
+    tmp_agents="$(mktemp)"
+    awk -v block_file="$tmp_block" '
+      BEGIN {
+        while ((getline line < block_file) > 0) {
+          block = block line "\n"
+        }
+      }
+      /<!-- agent-flow:start -->/ {
+        printf "%s", block
+        skipping = 1
+        next
+      }
+      /<!-- agent-flow:end -->/ {
+        if (skipping) {
+          skipping = 0
+          next
+        }
+      }
+      !skipping { print }
+    ' "$agents_md" > "$tmp_agents"
+    mv "$tmp_agents" "$agents_md"
+    echo "  Replaced existing agent-flow block in AGENTS.md"
   else
     echo "" >> "$agents_md"
-    cat "$agents_template" >> "$agents_md"
+    cat "$tmp_template" >> "$agents_md"
     echo "  Appended agent-flow block to AGENTS.md"
   fi
 else
-  cp "$agents_template" "$agents_md"
+  cp "$tmp_template" "$agents_md"
   echo "  Created AGENTS.md from template"
 fi
+rm -f "$tmp_template" "$tmp_block"
 
 # --- Done ---
 echo ""

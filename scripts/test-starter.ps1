@@ -1,3 +1,17 @@
+<#
+.SYNOPSIS
+Run the test-starter agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER KeepTemp
+Parameter accepted by this script.
+
+.EXAMPLE
+scripts/test-starter.ps1
+#>
+
 param([switch]$KeepTemp)
 
 $ErrorActionPreference = "Stop"
@@ -739,3 +753,6 @@ old block
         Write-Host "Temp kept: $tempRoot"
     }
 }
+
+
+

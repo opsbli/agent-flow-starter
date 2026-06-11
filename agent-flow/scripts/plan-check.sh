@@ -22,21 +22,7 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-flow_level() {
-  local file="$1/CHANGE.md"
-  if [ ! -f "$file" ]; then
-    echo "Unknown"
-  elif grep -Eiq '\[x\][[:space:]]+Heavy' "$file"; then
-    echo "Heavy"
-  elif grep -Eiq '\[x\][[:space:]]+Standard' "$file"; then
-    echo "Standard"
-  elif grep -Eiq '\[x\][[:space:]]+Light' "$file"; then
-    echo "Light"
-  else
-    echo "Unknown"
-  fi
-}
+source "$script_dir/_common.sh"
 
 extract_plan_audit() {
   awk '
@@ -45,13 +31,6 @@ extract_plan_audit() {
     /^[[:space:]]*##[[:space:]]+/ && in_section { exit }
     in_section { print }
   ' "$1"
-}
-
-meaningful() {
-  local value="$1"
-  [ -n "$(printf '%s' "$value" | xargs)" ] || return 1
-  printf '%s' "$value" | grep -Eiq 'TODO|TBD|\{.+\}|not run' && return 1
-  return 0
 }
 
 flow="$(flow_level "$change_dir")"
@@ -67,16 +46,13 @@ audit="$change_dir/AUDIT.md"
 
 issues=()
 
-required="$script_dir/../rules/plan-required.keys"
-[ -f "$required" ] || { echo "Rule file not found: $required" >&2; exit 1; }
 while IFS= read -r key; do
   key="$(printf '%s' "$key" | xargs)"
   [ -n "$key" ] || continue
-  case "$key" in \#*) continue ;; esac
   if ! grep -Fq "$key" "$plan"; then
     issues+=("PLAN.md missing required key or section: $key")
   fi
-done < "$required"
+done < <(get_rule_list "plan-required.keys")
 
 if grep -Eiq '\{.+\}|TODO|TBD' "$plan"; then
   issues+=("PLAN.md still contains placeholders.")
@@ -99,7 +75,7 @@ case "$plan_status" in
 esac
 
 plan_audit="$(extract_plan_audit "$audit")"
-if ! meaningful "$plan_audit"; then
+if ! meaningful "$plan_audit" true 'TODO|TBD|\{.+\}|not run'; then
   issues+=("AUDIT.md missing meaningful Plan Audit section.")
 else
   if ! printf '%s\n' "$plan_audit" | grep -Eiq '^[[:space:]]*Verdict:[[:space:]]*(accept|conditional)[[:space:]]*$'; then
@@ -107,28 +83,25 @@ else
   fi
   for field in Reviewer Date; do
     value="$(printf '%s\n' "$plan_audit" | awk -F':' -v f="$field" 'tolower($1) ~ "^[[:space:]]*" tolower(f) "$" { sub(/^[^:]+:[[:space:]]*/, "", $0); print; exit }')"
-    if ! meaningful "$value"; then
+    if ! meaningful "$value" true 'TODO|TBD|\{.+\}|not run'; then
       issues+=("Plan Audit missing meaningful $field.")
     fi
   done
 
-  audit_rules="$script_dir/../rules/plan-audit.keys"
-  [ -f "$audit_rules" ] || { echo "Rule file not found: $audit_rules" >&2; exit 1; }
   while IFS= read -r item; do
     item="$(printf '%s' "$item" | xargs)"
     [ -n "$item" ] || continue
-    case "$item" in \#*) continue ;; esac
     if ! printf '%s\n' "$plan_audit" | grep -Fq -- "- [x] $item"; then
       issues+=("Plan Audit checklist item is not checked: $item")
     fi
-  done < "$audit_rules"
+  done < <(get_rule_list "plan-audit.keys")
 
   if printf '%s\n' "$plan_audit" | grep -Eq '^[[:space:]]*-[[:space:]]+\[[[:space:]]\][[:space:]]+'; then
     issues+=("Plan Audit still has unchecked checklist items.")
   fi
   if printf '%s\n' "$plan_audit" | grep -Eiq '^[[:space:]]*Verdict:[[:space:]]*conditional[[:space:]]*$'; then
     findings="$(printf '%s\n' "$plan_audit" | awk 'BEGIN{f=0} /^Findings:[[:space:]]*$/{f=1;next} f{print}')"
-    if ! meaningful "$findings"; then
+    if ! meaningful "$findings" true 'TODO|TBD|\{.+\}|not run'; then
       issues+=("Conditional Plan Audit must include findings and residual risk.")
     fi
   fi

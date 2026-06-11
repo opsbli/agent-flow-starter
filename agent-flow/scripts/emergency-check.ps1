@@ -1,21 +1,24 @@
+<#
+.SYNOPSIS
+Run the emergency-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/emergency-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir
 )
 
 $ErrorActionPreference = "Stop"
-
-function Get-FlowLevel {
-    param([string]$Dir)
-    $change = Join-Path $Dir "CHANGE.md"
-    if (-not (Test-Path -LiteralPath $change)) { return "Unknown" }
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
-    if ($text -match "(?i)\[x\]\s+Emergency") { return "Emergency" }
-    if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
-    if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
-    if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
-    return "Unknown"
-}
+. (Join-Path $PSScriptRoot "_common.ps1")
 
 function Get-Field {
     param(
@@ -26,13 +29,6 @@ function Get-Field {
     $match = [regex]::Match($Text, $pattern)
     if ($match.Success) { return $match.Groups[1].Value.Trim() }
     return ""
-}
-
-function Test-Meaningful {
-    param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
-    if ($Value -match "(?i)TODO|TBD|\{.+?\}|pending-user|your-name") { return $false }
-    return $true
 }
 
 if (-not (Test-Path -LiteralPath $ChangeDir)) {
@@ -60,17 +56,18 @@ $approvedBy = Get-Field -Text $text -Key "Approved by"
 $bypassReason = Get-Field -Text $text -Key "Bypass reason"
 $deadline = Get-Field -Text $text -Key "Backfill deadline"
 $status = Get-Field -Text $text -Key "Backfill status"
+$emergencyInvalid = "(?i)TODO|TBD|\{.+?\}|pending-user|your-name"
 
 if ($level -notmatch "(?i)^(P0|P1)$") {
     $issues += "Emergency Level must be P0 or P1."
 }
-if (-not (Test-Meaningful -Value $approvedBy)) {
+if (-not (Test-Meaningful -Value $approvedBy -InvalidPattern $emergencyInvalid)) {
     $issues += "Emergency Approved by must name an accountable approver."
 }
-if (-not (Test-Meaningful -Value $bypassReason)) {
+if (-not (Test-Meaningful -Value $bypassReason -InvalidPattern $emergencyInvalid)) {
     $issues += "Emergency Bypass reason must explain why the full flow was skipped."
 }
-if (-not (Test-Meaningful -Value $deadline)) {
+if (-not (Test-Meaningful -Value $deadline -InvalidPattern $emergencyInvalid)) {
     $issues += "Emergency Backfill deadline must be set."
 }
 if ($status -notmatch "^(?i)pending|done|waived$") {
@@ -91,3 +88,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Emergency check passed."
+
+
+

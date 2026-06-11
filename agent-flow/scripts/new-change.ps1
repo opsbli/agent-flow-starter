@@ -1,3 +1,29 @@
+<#
+.SYNOPSIS
+Run the new-change agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER Name
+Parameter accepted by this script.
+
+.PARAMETER Flow
+Parameter accepted by this script.
+
+.PARAMETER ChangesRoot
+Parameter accepted by this script.
+
+.PARAMETER TemplateRoot
+Parameter accepted by this script.
+
+.PARAMETER Force
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/new-change.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$Name,
@@ -65,3 +91,6 @@ foreach ($file in $filesByFlow[$Flow]) {
 Write-Host "Created agent-flow change: $changeDir"
 Write-Host "Flow: $Flow"
 Write-Host "Next: agent-flow/scripts/next-step.ps1 -ChangeDir $changeDir"
+
+
+
