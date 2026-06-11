@@ -94,6 +94,8 @@ gates:
   - agent-flow/scripts/task-boundary-check.sh
   - agent-flow/scripts/manifest-check.ps1
   - agent-flow/scripts/manifest-check.sh
+  - agent-flow/scripts/emergency-check.ps1
+  - agent-flow/scripts/emergency-check.sh
   - agent-flow/scripts/evolution-check.ps1
   - agent-flow/scripts/evolution-check.sh
   - agent-flow/scripts/closure-check.ps1

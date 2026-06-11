@@ -204,7 +204,7 @@ function Analyze-Change {
         } elseif (Test-ListContains -List $missing -Value "VERIFY.md") {
             $stage = "verify"
             $next = "Run verification and complete VERIFY.md."
-            $prompt = "Continue agent-flow change: $changeId. Run the relevant verification commands and complete VERIFY.md with command log, AC evidence, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, skipped checks, and conclusion."
+            $prompt = "Continue agent-flow change: $changeId. Run the relevant verification commands and complete VERIFY.md with command log, AC evidence, Machine Gate Summary, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, skipped checks, and conclusion."
         } elseif ($flow -eq "Heavy" -and (Test-ListContains -List $missing -Value "REVIEW.md")) {
             $stage = "review"
             $next = "Complete REVIEW.md."
@@ -216,7 +216,7 @@ function Analyze-Change {
         } elseif ($flow -eq "Heavy" -and $closureVerdict -ne "acceptable" -and $closureVerdict -ne "accept" -and $closureVerdict -ne "conditional") {
             $stage = "closure-audit"
             $next = "Run Closure Audit."
-            $prompt = "Continue agent-flow change: $changeId. Run Closure Audit. Check Closure Gates, VERIFY evidence, AC coverage, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, evolution-check, closure-check, and knowledge/decision/log/baseline updates."
+            $prompt = "Continue agent-flow change: $changeId. Run Closure Audit. Check Closure Gates, VERIFY evidence, AC coverage, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, closure-check, CHECK_RESULT.json, and knowledge/decision/log/baseline updates."
         } elseif (Test-ListContains -List $missing -Value "EVOLUTION.md") {
             $stage = "evolution"
             $next = "Complete EVOLUTION.md and evaluate whether agent-flow should be upgraded."

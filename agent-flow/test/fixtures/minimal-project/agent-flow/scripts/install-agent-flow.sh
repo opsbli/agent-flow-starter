@@ -5,7 +5,7 @@
 #   bash agent-flow/scripts/install-agent-flow.sh --target /path/to/project
 #   bash agent-flow/scripts/install-agent-flow.sh --target /path/to/project --starter-root /path/to/starter --force
 #
-# Starter-owned files (overwritten): core/, flows/, templates/, scripts/, README.md, UPGRADE.md, VERSION, ADVANTAGES.md, GO.md, manifest.yaml
+# Starter-owned files (overwritten): core/, flows/, templates/, scripts/, rules/, test/, README.md, UPGRADE.md, VERSION, ADVANTAGES.md, GO.md, manifest.yaml
 # Project-owned files (preserved): changes/, logs/, reports/, knowledge/, decisions/
 
 set -euo pipefail
@@ -66,6 +66,8 @@ starter_owned=(
   "flows"
   "templates"
   "scripts"
+  "rules"
+  "test"
   "README.md"
   "UPGRADE.md"
   "VERSION"

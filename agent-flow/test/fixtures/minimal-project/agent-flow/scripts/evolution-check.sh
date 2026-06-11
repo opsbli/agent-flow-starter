@@ -21,6 +21,15 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
   exit 2
 fi
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+rules_dir="$(cd "$script_dir/.." && pwd)/rules"
+
+read_rules() {
+  local file="$rules_dir/$1"
+  [ -f "$file" ] || { echo "Rule file not found: $file" >&2; exit 2; }
+  grep -Ev '^[[:space:]]*(#|$)' "$file"
+}
+
 flow="Unknown"
 if [ -f "$change_dir/CHANGE.md" ]; then
   if grep -Eiq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"; then flow="Heavy"
@@ -52,7 +61,7 @@ meaningful() {
 }
 
 issues=()
-required=(problem knowledge adr gate template no_change_reason)
+mapfile -t required < <(read_rules evolution.keys)
 for key in "${required[@]}"; do
   content="$(key_value "$key")"
   if ! meaningful "$content"; then

@@ -10,7 +10,7 @@ param(
 Install or upgrade agent-flow scaffold into a target project.
 
 .DESCRIPTION
-Copies starter-owned files (core/, flows/, templates/, scripts/, README.md,
+Copies starter-owned files (core/, flows/, templates/, scripts/, rules/, test/, README.md,
 UPGRADE.md, VERSION) into the target project's agent-flow/ directory.
 Preserves project-owned files (changes/, logs/, reports/, knowledge/, decisions/)
 by default.
@@ -64,6 +64,8 @@ $starterOwned = @(
     "flows",
     "templates",
     "scripts",
+    "rules",
+    "test",
     "README.md",
     "UPGRADE.md",
     "VERSION",

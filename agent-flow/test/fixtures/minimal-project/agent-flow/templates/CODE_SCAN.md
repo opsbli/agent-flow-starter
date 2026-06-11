@@ -18,6 +18,8 @@ read_files: path/to/read
 write_files: path/to/write
 open_questions: none-or-question
 
+> `scan-check -Strict` / `scan-check.sh --strict` 会检查 `read_files` 是否存在，并检查 `write_files` 的目标或父目录是否可落地。
+
 ## 相关模块
 
 - 模块：

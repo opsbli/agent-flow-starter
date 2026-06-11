@@ -13,7 +13,7 @@
 | 范围 | IDE 级别 | 项目级别（跨 IDE、跨设备） |
 | 存储 | IDE 配置 | 代码仓库 |agent-flow/ |
 | 流程 | 规则片段 | 完整流程（Light/Standard/Heavy/Emergency） |
-| 验证 | 无内置 | AC Evidence、drift-check、blocked-check |
+| 验证 | 无内置 | AC Evidence、code-drift-check、task-boundary-check、blocked-check |
 | 记忆 | 有限 | 知识库 + ADR 决策记录 |
 
 ### 一定要用全部流程吗？
@@ -125,7 +125,7 @@ agent-flow/scripts/scaffold-health.ps1   # 验证脚手架完整性
 
 ### 我改了一个文件但不在 write_files 里
 
-在 `TASKS.md` 的 `write_files` 中声明你要修改的文件。未声明的文件被修改后会触发 `drift-check` 警告。
+在 `TASKS.md` 的 `write_files` 中声明你要修改的文件。未声明的文件被修改后会触发 `task-boundary-check` 失败。
 
 ## 脚本参考
 

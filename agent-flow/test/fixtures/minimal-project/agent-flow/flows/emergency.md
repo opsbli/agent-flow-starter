@@ -45,7 +45,8 @@ Emergency 通道绕过了以下安全门：
    - `write_files`（只写修复必需的文件）
    - `未决问题`
 2. 写 `TASKS.md`（只包含修复任务，任务粒度为 5-15 分钟）。
-3. 实现修复。
+3. 运行 `emergency-check`，确认 P0/P1、批准人、bypass 理由和回填状态完整。
+4. 实现修复。
 
 ### 阶段 2：最小验证
 
@@ -72,6 +73,7 @@ Emergency 通道绕过了以下安全门：
 - [ ] `REVIEW.md`
 - [ ] `AUDIT.md`（Closure Audit）
 - [ ] `EVOLUTION.md`
+- [ ] `emergency-check` 已通过
 - [ ] 更新 `agent-flow/knowledge/pitfalls.md`（如果有坑）
 - [ ] 更新 `agent-flow/logs/YYYY/MM-DD.md`
 

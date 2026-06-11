@@ -28,6 +28,34 @@ if [ ! -f "$tasks_path" ]; then
   exit 2
 fi
 
+verify_path="$change_dir/VERIFY.md"
+verify_text=""
+if [ -f "$verify_path" ]; then
+  verify_text="$(cat "$verify_path")"
+fi
+
+meaningful() {
+  local value="$1"
+  [ -n "$(printf '%s' "$value" | tr -d '[:space:]')" ] || return 1
+  ! printf '%s' "$value" | grep -Eiq 'TODO|TBD|path/to|example|\{.+\}'
+}
+
+has_verify_evidence() {
+  local task_id="$1"
+  local ac_text="$2"
+  [ -n "$verify_text" ] || return 1
+  if printf '%s' "$verify_text" | grep -qF "$task_id"; then
+    return 0
+  fi
+  while IFS= read -r ac; do
+    [ -n "$ac" ] || continue
+    if printf '%s' "$verify_text" | grep -qF "$ac"; then
+      return 0
+    fi
+  done < <(printf '%s' "$ac_text" | grep -Eo 'AC-[0-9]{2}' | sort -u)
+  return 1
+}
+
 issues=()
 allowed_status='^(pending|not_started|in_progress|completed|blocked|skipped)$'
 allowed_parallel='^(yes|no|true|false|allowed|blocked)$'
@@ -47,18 +75,20 @@ if [ "${#task_rows[@]}" -gt 0 ]; then
     [ -n "$parallel" ] || issues+=("Task Matrix row must have 7 columns: $row")
     printf '%s' "$status" | grep -Eiq "$allowed_status" || issues+=("$task_id has invalid Status: $status")
     printf '%s' "$ac" | grep -Eq 'AC-[0-9]{2}' || issues+=("$task_id must map to at least one AC id.")
-    [ -n "$read_files" ] && ! printf '%s' "$read_files" | grep -Eiq 'TODO|TBD|待填写|path/to|example|示例|\{.+\}' || issues+=("$task_id must declare read_files.")
-    [ -n "$write_files" ] && ! printf '%s' "$write_files" | grep -Eiq 'TODO|TBD|待填写|path/to|example|示例|\{.+\}' || issues+=("$task_id must declare write_files.")
-    [ -n "$verify" ] && ! printf '%s' "$verify" | grep -Eiq 'TODO|TBD|待填写|path/to|example|示例|\{.+\}' || issues+=("$task_id must declare Verify.")
+    meaningful "$read_files" || issues+=("$task_id must declare read_files.")
+    meaningful "$write_files" || issues+=("$task_id must declare write_files.")
+    meaningful "$verify" || issues+=("$task_id must declare Verify.")
     printf '%s' "$parallel" | grep -Eiq "$allowed_parallel" || issues+=("$task_id has invalid Parallel value: $parallel")
+    if printf '%s' "$status" | grep -Eiq '^completed$' && ! has_verify_evidence "$task_id" "$ac"; then
+      issues+=("$task_id is completed but VERIFY.md has no matching task id or AC evidence.")
+    fi
   done
 else
   if ! grep -Eq '^###[[:space:]]+T[-0-9A-Za-z]+' "$tasks_path"; then
     issues+=("TASKS.md must contain a Task Matrix row or task detail sections.")
   fi
-  # Fallback for older task detail style.
   for required in "Status" "Goal" "AC" "read_files" "write_files" "Verify" "Parallel"; do
-    if ! grep -Eq "^$required[[:space:]]*[:：][[:space:]]*[^[:space:]]" "$tasks_path"; then
+    if ! grep -Eq "^$required[[:space:]]*:[[:space:]]*[^[:space:]]" "$tasks_path"; then
       issues+=("TASKS.md missing non-empty '$required'.")
     fi
   done

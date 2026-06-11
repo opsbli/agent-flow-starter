@@ -73,6 +73,8 @@ $requiredGates = @(
     "agent-flow/scripts/task-boundary-check.sh",
     "agent-flow/scripts/manifest-check.ps1",
     "agent-flow/scripts/manifest-check.sh",
+    "agent-flow/scripts/emergency-check.ps1",
+    "agent-flow/scripts/emergency-check.sh",
     "agent-flow/scripts/evolution-check.ps1",
     "agent-flow/scripts/evolution-check.sh",
     "agent-flow/scripts/closure-check.ps1",
@@ -96,6 +98,17 @@ $requiredGates = @(
     "agent-flow/scripts/scaffold-health.ps1",
     "agent-flow/scripts/scaffold-health.sh"
 )
+
+$gateRulesPath = Join-Path $projectRootPath "agent-flow/rules/gates.txt"
+if (Test-Path -LiteralPath $gateRulesPath) {
+    $requiredGates = @(
+        Get-Content -Encoding utf8 -LiteralPath $gateRulesPath |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
+    )
+} else {
+    $warnings += "agent-flow/rules/gates.txt not found; using built-in gate list."
+}
 
 foreach ($gate in $requiredGates) {
     if ($text -notmatch "(?m)^\s+-\s+$([regex]::Escape($gate))\s*$") {

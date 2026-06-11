@@ -52,6 +52,7 @@ scan-check
 task-check
 task-boundary-check
 manifest-check
+emergency-check
 ac-check
 code-drift-check
 blocked-check
@@ -70,6 +71,7 @@ scaffold-health
 4. Do not edit outside TASKS.md write_files.
 5. Run task-check before implementation and after task status changes.
 6. Run task-boundary-check before closure.
-7. Run check-change when unsure whether a change is healthy.
-8. Run closure-check before calling the change complete.
+7. Run emergency-check for Emergency changes, or record its skipped result in Heavy closure.
+8. Run check-change when unsure whether a change is healthy.
+9. Run closure-check before calling the change complete.
 ```

@@ -12,6 +12,25 @@ function Test-Meaningful {
     return $true
 }
 
+function Get-AcIds {
+    param([string]$Text)
+    [regex]::Matches($Text, "AC-\d{2}") | ForEach-Object { $_.Value } | Select-Object -Unique
+}
+
+function Test-VerifyEvidence {
+    param(
+        [string]$VerifyText,
+        [string]$TaskId,
+        [string[]]$AcIds
+    )
+    if ([string]::IsNullOrWhiteSpace($VerifyText)) { return $false }
+    if ($VerifyText -match [regex]::Escape($TaskId)) { return $true }
+    foreach ($ac in $AcIds) {
+        if ($VerifyText -match [regex]::Escape($ac)) { return $true }
+    }
+    return $false
+}
+
 if (-not (Test-Path -LiteralPath $ChangeDir)) {
     throw "ChangeDir not found: $ChangeDir"
 }
@@ -24,6 +43,8 @@ if (-not (Test-Path -LiteralPath $tasksPath)) {
 }
 
 $text = Get-Content -Raw -Encoding utf8 -LiteralPath $tasksPath
+$verifyPath = Join-Path $ChangeDir "VERIFY.md"
+$verifyText = if (Test-Path -LiteralPath $verifyPath) { Get-Content -Raw -Encoding utf8 -LiteralPath $verifyPath } else { "" }
 $issues = @()
 $allowedStatus = "pending|not_started|in_progress|completed|blocked|skipped"
 $allowedParallel = "yes|no|true|false|allowed|blocked"
@@ -44,12 +65,16 @@ if ($taskRows.Count -gt 0) {
             continue
         }
         $taskId, $status, $ac, $readFiles, $writeFiles, $verify, $parallel = $cells[0..6]
+        $acIds = @(Get-AcIds -Text $ac)
         if ($status -notmatch "^(?i)($allowedStatus)$") { $issues += "$taskId has invalid Status: $status" }
-        if ($ac -notmatch "AC-\d{2}") { $issues += "$taskId must map to at least one AC id." }
+        if ($acIds.Count -eq 0) { $issues += "$taskId must map to at least one AC id." }
         if (-not (Test-Meaningful -Value $readFiles)) { $issues += "$taskId must declare read_files." }
         if (-not (Test-Meaningful -Value $writeFiles)) { $issues += "$taskId must declare write_files." }
         if (-not (Test-Meaningful -Value $verify)) { $issues += "$taskId must declare Verify." }
         if ($parallel -notmatch "^(?i)($allowedParallel)$") { $issues += "$taskId has invalid Parallel value: $parallel" }
+        if ($status -match "^(?i)completed$" -and -not (Test-VerifyEvidence -VerifyText $verifyText -TaskId $taskId -AcIds $acIds)) {
+            $issues += "$taskId is completed but VERIFY.md has no matching task id or AC evidence."
+        }
     }
 } else {
     $blocks = [regex]::Matches($text, "(?ims)^###\s+(T[-0-9A-Za-z]+).*?(?=^###\s+|\z)")
@@ -64,7 +89,11 @@ if ($taskRows.Count -gt 0) {
                 $issues += "$taskId missing non-empty '$label'."
             }
         }
-        if ($block -notmatch "AC-\d{2}") { $issues += "$taskId must map to at least one AC id." }
+        $acIds = @(Get-AcIds -Text $block)
+        if ($acIds.Count -eq 0) { $issues += "$taskId must map to at least one AC id." }
+        if ($block -match "(?im)^Status\s*:\s*completed\s*$" -and -not (Test-VerifyEvidence -VerifyText $verifyText -TaskId $taskId -AcIds $acIds)) {
+            $issues += "$taskId is completed but VERIFY.md has no matching task id or AC evidence."
+        }
     }
 }
 

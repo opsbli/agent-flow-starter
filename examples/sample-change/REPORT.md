@@ -12,9 +12,8 @@ Added an archived status label using the existing status label renderer.
 
 - AC-01: pass
 - AC-02: pass
-- drift-check: pass
+- code-drift-check: pass
 
 ## Follow-Up
 
 No follow-up required.
-

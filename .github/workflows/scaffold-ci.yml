@@ -63,7 +63,7 @@ jobs:
       - name: Run next-step unit tests
         run: bash agent-flow/test/test-scripts/test-next-step.sh
 
-  drift-check:
+  syntax-check:
     name: Syntax Check All Scripts
     runs-on: ubuntu-latest
     needs: scaffold-health

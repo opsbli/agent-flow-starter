@@ -23,7 +23,7 @@
 - 哪个错误差点漏掉？
 - 是否能写成 `agent-flow/scripts/*` gate？
 - AC 是否能被机器检查？
-- drift-check 是否需要新增规则？
+- code-drift-check / task-boundary-check 是否需要新增规则？
 
 ### 4. 模板推演
 

@@ -1,0 +1,9 @@
+scan-check
+task-check
+ac-check
+code-drift-check
+blocked-check
+task-boundary-check
+manifest-check
+emergency-check
+evolution-check

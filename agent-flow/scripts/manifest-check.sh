@@ -82,6 +82,8 @@ required_gates=(
   agent-flow/scripts/task-boundary-check.sh
   agent-flow/scripts/manifest-check.ps1
   agent-flow/scripts/manifest-check.sh
+  agent-flow/scripts/emergency-check.ps1
+  agent-flow/scripts/emergency-check.sh
   agent-flow/scripts/evolution-check.ps1
   agent-flow/scripts/evolution-check.sh
   agent-flow/scripts/closure-check.ps1
@@ -105,6 +107,13 @@ required_gates=(
   agent-flow/scripts/scaffold-health.ps1
   agent-flow/scripts/scaffold-health.sh
 )
+
+gate_rules_path="$project_root/agent-flow/rules/gates.txt"
+if [ -f "$gate_rules_path" ]; then
+  mapfile -t required_gates < <(grep -Ev '^[[:space:]]*(#|$)' "$gate_rules_path")
+else
+  warnings+=("agent-flow/rules/gates.txt not found; using built-in gate list.")
+fi
 
 for gate in "${required_gates[@]}"; do
   require_text "gate entry: $gate" "^[[:space:]]*-[[:space:]]+$gate[[:space:]]*$"

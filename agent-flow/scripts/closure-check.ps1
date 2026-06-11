@@ -13,11 +13,30 @@ function Test-MeaningfulFile {
     return -not [string]::IsNullOrWhiteSpace($text)
 }
 
+function Test-Meaningful {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
+    if ($Value -match "(?i)TODO|TBD|\{.+?\}") { return $false }
+    return $true
+}
+
+function Get-RuleList {
+    param([string]$Name)
+    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
+    if (-not (Test-Path -LiteralPath $path)) {
+        throw "Rule file not found: $path"
+    }
+    Get-Content -Encoding utf8 -LiteralPath $path |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
+}
+
 function Get-FlowLevel {
     param([string]$Dir)
     $change = Join-Path $Dir "CHANGE.md"
     if (-not (Test-Path -LiteralPath $change)) { return "Unknown" }
     $text = Get-Content -Raw -Encoding utf8 -LiteralPath $change
+    if ($text -match "(?i)\[x\]\s+Emergency") { return "Emergency" }
     if ($text -match "(?i)\[x\]\s+Heavy") { return "Heavy" }
     if ($text -match "(?i)\[x\]\s+Standard") { return "Standard" }
     if ($text -match "(?i)\[x\]\s+Light") { return "Light" }
@@ -39,6 +58,30 @@ function Resolve-ProjectPath {
         return [System.IO.Path]::GetFullPath($Path)
     }
     return [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Path))
+}
+
+function Get-GateSummaryRows {
+    param([string]$VerifyText)
+    $rows = @{}
+    foreach ($line in ($VerifyText -split "\r?\n")) {
+        $trim = $line.Trim()
+        if ($trim -notmatch "^\|") { continue }
+        $cells = @($trim.Trim("|").Split("|") | ForEach-Object { $_.Trim() })
+        if ($cells.Count -lt 7) { continue }
+        $gate = $cells[0]
+        if ($gate -match "^[a-z0-9-]+$") {
+            $rows[$gate] = [pscustomobject]@{
+                Gate = $gate
+                RequiredFor = $cells[1]
+                Result = $cells[2].ToLowerInvariant()
+                Command = $cells[3]
+                ExitCode = $cells[4]
+                When = $cells[5]
+                Evidence = $cells[6]
+            }
+        }
+    }
+    return $rows
 }
 
 if (-not (Test-Path -LiteralPath $ChangeDir)) {
@@ -86,13 +129,40 @@ if ($verifyText -notmatch "AC Evidence") {
 }
 
 if ($flow -eq "Heavy") {
-    foreach ($gate in @("scan-check", "task-check", "ac-check", "code-drift-check", "blocked-check", "task-boundary-check", "manifest-check", "evolution-check")) {
-        if (($verifyText + "`n" + $auditText) -notmatch [regex]::Escape($gate)) {
-            $issues += "Heavy closure must mention gate result: $gate"
+    if ($verifyText -notmatch "Machine Gate Summary") {
+        $issues += "VERIFY.md must include Machine Gate Summary."
+    }
+    foreach ($column in @("Command", "Exit Code", "When", "Evidence")) {
+        if ($verifyText -notmatch [regex]::Escape($column)) {
+            $issues += "Machine Gate Summary must include column: $column"
         }
     }
 
-    if ($auditText -match "(?i)Verdict:\s*conditional" -and (($verifyText + "`n" + $auditText + "`n" + $reportText) -notmatch "(?i)residual risk|残余风险|剩余风险")) {
+    $rows = Get-GateSummaryRows -VerifyText $verifyText
+    foreach ($gate in (Get-RuleList -Name "closure-heavy-gates.keys")) {
+        if (-not $rows.ContainsKey($gate)) {
+            $issues += "Heavy closure Machine Gate Summary missing gate row: $gate"
+            continue
+        }
+        $row = $rows[$gate]
+        if ($row.Result -notmatch "^(pass|skipped|conditional)$") {
+            $issues += "$gate result must be pass, skipped, or conditional for closure."
+        }
+        if ($row.Result -eq "pass" -and $row.ExitCode -ne "0") {
+            $issues += "$gate pass row must record Exit Code 0."
+        }
+        if (-not (Test-Meaningful -Value $row.Command)) {
+            $issues += "$gate row must record the command that was run."
+        }
+        if (-not (Test-Meaningful -Value $row.When)) {
+            $issues += "$gate row must record when it was run or decided."
+        }
+        if (-not (Test-Meaningful -Value $row.Evidence)) {
+            $issues += "$gate row must record evidence or a skip reason."
+        }
+    }
+
+    if ($auditText -match "(?i)Verdict:\s*conditional" -and (($verifyText + "`n" + $auditText + "`n" + $reportText) -notmatch "(?i)residual risk|remaining risk|known risk|风险")) {
         $issues += "Conditional closure must document residual risk."
     }
 }

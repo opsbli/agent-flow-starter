@@ -28,15 +28,31 @@ if [ ! -d "$change_dir" ]; then
   echo "ChangeDir not found: $change_dir" >&2
   exit 2
 fi
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+rules_dir="$(cd "$script_dir/.." && pwd)/rules"
 project_root="$(cd "$project_root" 2>/dev/null && pwd || echo "$project_root")"
 
 meaningful_file() {
   [ -f "$1" ] && [ -s "$1" ]
 }
 
+meaningful() {
+  local value="$1"
+  [ -n "$(printf '%s' "$value" | tr -d '[:space:]')" ] || return 1
+  ! printf '%s' "$value" | grep -Eiq 'TODO|TBD|\{.+\}'
+}
+
+read_rules() {
+  local file="$rules_dir/$1"
+  [ -f "$file" ] || { echo "Rule file not found: $file" >&2; exit 2; }
+  grep -Ev '^[[:space:]]*(#|$)' "$file"
+}
+
 flow="Unknown"
 if [ -f "$change_dir/CHANGE.md" ]; then
-  if grep -Eiq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"; then flow="Heavy"
+  if grep -Eiq '\[x\][[:space:]]+Emergency' "$change_dir/CHANGE.md"; then flow="Emergency"
+  elif grep -Eiq '\[x\][[:space:]]+Heavy' "$change_dir/CHANGE.md"; then flow="Heavy"
   elif grep -Eiq '\[x\][[:space:]]+Standard' "$change_dir/CHANGE.md"; then flow="Standard"
   elif grep -Eiq '\[x\][[:space:]]+Light' "$change_dir/CHANGE.md"; then flow="Light"
   fi
@@ -83,14 +99,44 @@ if ! printf '%s' "$verify_text" | grep -q "AC Evidence"; then
 fi
 
 if [ "$flow" = "Heavy" ]; then
-  combined="$verify_text"$'\n'"$audit_text"
-  for gate in scan-check task-check ac-check code-drift-check blocked-check task-boundary-check manifest-check evolution-check; do
-    if ! printf '%s' "$combined" | grep -qF "$gate"; then
-      issues+=("Heavy closure must mention gate result: $gate")
-    fi
+  printf '%s' "$verify_text" | grep -q "Machine Gate Summary" || issues+=("VERIFY.md must include Machine Gate Summary.")
+  for column in Command "Exit Code" When Evidence; do
+    printf '%s' "$verify_text" | grep -qF "$column" || issues+=("Machine Gate Summary must include column: $column")
   done
+
+  while IFS= read -r gate; do
+    [ -n "$gate" ] || continue
+    row="$(printf '%s\n' "$verify_text" | awk -F'|' -v gate="$gate" '
+      {
+        first=$2
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", first)
+        if (first == gate) { print; exit }
+      }
+    ')"
+    if [ -z "$row" ]; then
+      issues+=("Heavy closure Machine Gate Summary missing gate row: $gate")
+      continue
+    fi
+    IFS='|' read -r _ gate_cell required_for result command exit_code when evidence _extra <<< "$row"
+    result="$(printf '%s' "$result" | xargs | tr '[:upper:]' '[:lower:]')"
+    command="$(printf '%s' "$command" | xargs)"
+    exit_code="$(printf '%s' "$exit_code" | xargs)"
+    when="$(printf '%s' "$when" | xargs)"
+    evidence="$(printf '%s' "$evidence" | xargs)"
+    case "$result" in
+      pass|skipped|conditional) ;;
+      *) issues+=("$gate result must be pass, skipped, or conditional for closure.") ;;
+    esac
+    if [ "$result" = "pass" ] && [ "$exit_code" != "0" ]; then
+      issues+=("$gate pass row must record Exit Code 0.")
+    fi
+    meaningful "$command" || issues+=("$gate row must record the command that was run.")
+    meaningful "$when" || issues+=("$gate row must record when it was run or decided.")
+    meaningful "$evidence" || issues+=("$gate row must record evidence or a skip reason.")
+  done < <(read_rules closure-heavy-gates.keys)
+
   if printf '%s' "$audit_text" | grep -Eiq 'Verdict:[[:space:]]*conditional' &&
-     ! printf '%s\n%s\n%s' "$verify_text" "$audit_text" "$report_text" | grep -Eiq 'residual risk|残余风险|剩余风险'; then
+     ! printf '%s\n%s\n%s' "$verify_text" "$audit_text" "$report_text" | grep -Eiq 'residual risk|remaining risk|known risk|风险'; then
     issues+=("Conditional closure must document residual risk.")
   fi
 fi

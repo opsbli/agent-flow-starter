@@ -127,21 +127,21 @@ assert_gate_scripts() {
 
 ## Machine Check
 scan_time: 2026-06-10 10:00
-related_modules: src/index.ts
-similar_implementations: src/index.ts
+related_modules: README.md
+similar_implementations: README.md
 reusable_abstractions: README contract
 test_baseline: scripts/test-starter.sh
-read_files: src/index.ts
+read_files: README.md
 write_files: README.md
 open_questions: none
 
 ## 相关模块
-- src/index.ts
+- README.md
 
 ## 相似实现
 | 能力 | 参考文件 | 可复用点 |
 |---|---|---|
-| demo | `src/index.ts` | existing entry pattern |
+| demo | `README.md` | existing entry pattern |
 
 ## 可复用抽象
 - README contract.
@@ -154,7 +154,7 @@ open_questions: none
 
 ## read_files
 read_files:
-  - src/index.ts
+  - README.md
 
 ## write_files
 write_files:
@@ -269,21 +269,21 @@ assert_closure_check() {
 
 ## Machine Check
 scan_time: 2026-06-10 10:00
-related_modules: src/index.ts
-similar_implementations: src/index.ts
+related_modules: README.md
+similar_implementations: README.md
 reusable_abstractions: README contract
 test_baseline: scripts/test-starter.sh
-read_files: src/index.ts
+read_files: README.md
 write_files: README.md
 open_questions: none
 
 ## 相关模块
-- src/index.ts
+- README.md
 
 ## 相似实现
 | 能力 | 参考文件 | 可复用点 |
 |---|---|---|
-| demo | `src/index.ts` | existing entry pattern |
+| demo | `README.md` | existing entry pattern |
 
 ## 可复用抽象
 - README contract.
@@ -296,7 +296,7 @@ open_questions: none
 
 ## read_files
 read_files:
-  - src/index.ts
+  - README.md
 
 ## write_files
 write_files:
@@ -315,14 +315,36 @@ EOF
 
 | Task | Status | AC | read_files | write_files | Verify | Parallel |
 |---|---|---|---|---|---|---|
-| T001 | completed | AC-01 | `src/index.ts` | `README.md` | manual review | no |
+| T001 | completed | AC-01 | `README.md` | `README.md` | manual review | no |
 
 ## write_files 汇总
 
 write_files:
   - README.md
 EOF
-  printf '# Verify\n\n## AC Evidence\n\n| AC | Evidence |\n|---|---|\n| AC-01 | pass |\n\nscan-check pass\ntask-check pass\nac-check pass\ncode-drift-check pass\nblocked-check pass\ntask-boundary-check pass\nmanifest-check pass\nevolution-check pass\n' > "$change_dir/VERIFY.md"
+  cat > "$change_dir/VERIFY.md" <<'EOF'
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | Demo | manual | VERIFY.md | pass | none |
+
+## Machine Gate Summary
+
+| Gate | Required For | Result | Command | Exit Code | When | Evidence |
+|---|---|---|---|---|---|---|
+| scan-check | Heavy | pass | scan-check.sh --strict | 0 | 2026-06-10 10:00 | strict scan passed |
+| task-check | Heavy | pass | task-check.sh | 0 | 2026-06-10 10:00 | T001 maps to AC-01 |
+| ac-check | Heavy | pass | ac-check.sh | 0 | 2026-06-10 10:00 | AC-01 evidence present |
+| code-drift-check | Heavy | pass | code-drift-check.sh | 0 | 2026-06-10 10:00 | no drift |
+| blocked-check | Heavy | pass | blocked-check.sh | 0 | 2026-06-10 10:00 | no blocked operations |
+| task-boundary-check | Heavy | pass | task-boundary-check.sh | 0 | 2026-06-10 10:00 | only change folder modified |
+| manifest-check | all closure | pass | manifest-check.sh | 0 | 2026-06-10 10:00 | manifest valid |
+| emergency-check | Heavy closure summary | skipped | emergency-check.sh | 0 | 2026-06-10 10:00 | not an Emergency change |
+| evolution-check | Heavy | pass | evolution-check.sh | 0 | 2026-06-10 10:00 | no change needed recorded |
+EOF
   printf '# Review\n\nReviewed.\n' > "$change_dir/REVIEW.md"
   printf '# Report\n\nDone.\n' > "$change_dir/REPORT.md"
   cat > "$change_dir/EVOLUTION.md" <<'EOF'
@@ -354,9 +376,12 @@ no_change_reason: no change needed
 ## 本次不调整的原因
 - no change needed
 EOF
-  printf '# Audit\n\n## Closure Audit\n\nVerdict: acceptable\n\nscan-check pass\ntask-check pass\nac-check pass\ncode-drift-check pass\nblocked-check pass\ntask-boundary-check pass\nmanifest-check pass\nevolution-check pass\n' > "$change_dir/AUDIT.md"
+  printf '# Audit\n\n## Closure Audit\n\nVerdict: acceptable\n\nMachine Gate Summary accepted.\n' > "$change_dir/AUDIT.md"
   bash "$target_root/agent-flow/scripts/closure-check.sh" --change-dir "$change_dir" --project-root "$target_root"
-  bash "$target_root/agent-flow/scripts/check-change.sh" --change-dir "$change_dir" --project-root "$target_root" --closure
+  local check_result="$change_dir/CHECK_RESULT.json"
+  bash "$target_root/agent-flow/scripts/check-change.sh" --change-dir "$change_dir" --project-root "$target_root" --closure --output "$check_result"
+  grep -q '"passed": true' "$check_result"
+  grep -q '"gate":"emergency-check"' "$check_result"
 }
 
 echo "== scaffold health =="
@@ -387,6 +412,8 @@ assert_path "$empty_target/agent-flow/scripts/task-boundary-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/task-boundary-check.sh"
 assert_path "$empty_target/agent-flow/scripts/manifest-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/manifest-check.sh"
+assert_path "$empty_target/agent-flow/scripts/emergency-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/emergency-check.sh"
 assert_path "$empty_target/agent-flow/scripts/evolution-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/evolution-check.sh"
 assert_path "$empty_target/agent-flow/scripts/closure-check.ps1"

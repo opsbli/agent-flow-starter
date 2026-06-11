@@ -162,6 +162,7 @@ Verdict: accept
 - drift-check（可选补充：DESIGN.md 内部一致性）
 - blocked-check（检查 blocked_if 规则违规）
 - task-boundary-check（检查实际 git 改动是否超出 TASKS.md write_files）
+- emergency-check（非 Emergency 时记录 skipped；Emergency 时必须通过）
 - manifest-check（检查 manifest/gates/blocked_if 完整性）
 - evolution-check（确认经验沉淀或不升级理由完整）
 - frontend typecheck/test/lint（如涉及前端）
@@ -193,6 +194,7 @@ Verdict: accept
 - drift-check（如执行）已通过或有明确裁决。
 - blocked-check 已通过或有明确裁决。
 - task-boundary-check 已通过或有明确裁决。
+- emergency-check 已通过或明确 skipped。
 - manifest-check 已通过或有明确裁决。
 - evolution-check 已通过或有明确裁决。
 - closure-check 已通过。

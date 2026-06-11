@@ -40,6 +40,7 @@ Checklist:
 - [ ] No undeclared files modified
 - [ ] task-boundary-check completed
 - [ ] manifest-check completed
+- [ ] emergency-check completed or explicitly skipped
 - [ ] blocked-check completed
 - [ ] evolution-check completed
 - [ ] closure-check completed

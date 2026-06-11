@@ -10,7 +10,8 @@
 | Heavy change bypassing Plan Audit | Implementation starts without bounded scope, leading to scope creep | `AUDIT.md` Plan Audit with verdict `accept` required before implementation | starter |
 | Using STATE.md as source of truth instead of navigation aid | Outdated state blocks correct next-step decisions | `STATE.md` is navigation only; actual truth is in artifacts | starter |
 | Editing files outside declared `write_files` | Undeclared side effects, hard-to-review changes | `TASKS.md` write_files is the exclusive write boundary | starter |
-| Not running drift-check after implementation | Schema/route/permission drift goes undetected until runtime | `VERIFY.md` must include drift-check results | starter |
+| Not running code-drift-check after implementation | Schema/route/permission drift goes undetected until runtime | `VERIFY.md` must include code-drift-check results | starter |
+| Not running task-boundary-check before closure | Undeclared file changes sneak into the final diff | `TASKS.md write_files` must match actual git changes | starter |
 | Bumping flow level (Light→Standard→Heavy) without updating CHANGE.md | Scripts misclassify the change, gates are skipped | Update `[x]` marker in CHANGE.md when flow changes | starter |
 | Writing REQURIEMENT.md AC numbers as AC-1 instead of AC-01 | `ac-check.ps1` regex fails to match two-digit requirement | Always use `AC-01`, `AC-02` format (zero-padded) | starter |
 | Forgetting to run scaffold-health after install/upgrade | Missing files go unnoticed until first change attempt | Always run `scaffold-health.ps1/.sh` after install | starter |

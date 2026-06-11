@@ -16,6 +16,17 @@ function Get-FlowLevel {
     return "Unknown"
 }
 
+function Get-RuleList {
+    param([string]$Name)
+    $path = Join-Path (Split-Path -Parent $PSScriptRoot) "rules/$Name"
+    if (-not (Test-Path -LiteralPath $path)) {
+        throw "Rule file not found: $path"
+    }
+    Get-Content -Encoding utf8 -LiteralPath $path |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
+}
+
 function Get-KeyValue {
     param([string]$Text, [string]$Key)
     $pattern = "(?im)^\s*$([regex]::Escape($Key))\s*:\s*(.+?)\s*$"
@@ -49,7 +60,7 @@ if (-not (Test-Path -LiteralPath $path)) {
 
 $text = Get-Content -Raw -Encoding utf8 -LiteralPath $path
 $issues = @()
-$required = @("problem", "knowledge", "adr", "gate", "template", "no_change_reason")
+$required = @(Get-RuleList -Name "evolution.keys")
 
 foreach ($key in $required) {
     $content = Get-KeyValue -Text $text -Key $key

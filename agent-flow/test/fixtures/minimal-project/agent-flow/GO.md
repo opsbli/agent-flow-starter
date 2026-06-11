@@ -124,10 +124,11 @@ AUDIT.md
 - `drift-check` 已废弃，请使用 `code-drift-check` 代替。
 - Heavy change 必须运行 `blocked-check`（检查是否触碰 manifest.yaml 中 `blocked_if` 规则）。
 - Standard / Heavy change 收口前必须运行 `task-boundary-check`，确认实际改动没有超出 `TASKS.md write_files`。
+- Emergency change 必须运行 `emergency-check`，确认 P0/P1、批准人、bypass 理由和回填状态完整。
 - 收口前必须运行 `manifest-check`，确认脚手架清单、gate 文件和 blocked_if 规则完整。
 - Standard / Heavy change 收口前必须运行 `evolution-check`，确认经验升级或不升级理由已写清。
 - Heavy change 标记完成前必须运行 `closure-check`。
-- 不确定当前 change 是否健康时，运行 `check-change`，它会串起状态、扫描、任务、AC、漂移、阻塞、边界、manifest、演进和关闭检查。
+- 不确定当前 change 是否健康时，运行 `check-change`，它会串起状态、扫描、任务、AC、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查，并可输出 `CHECK_RESULT.json`。
 - 发现术语、规则、坑点，立即写入 `agent-flow/knowledge/`。
 - 发现不可逆取舍，写入 `agent-flow/decisions/`。
 - 验证通过后，如形成新的健康状态，更新 `agent-flow/knowledge/known-good-baselines.md`。

@@ -247,7 +247,7 @@ analyze_change() {
     elif contains_item "VERIFY.md" "${missing[@]}"; then
       stage="verify"
       next="Run verification and complete VERIFY.md."
-      prompt="Continue agent-flow change: $change_id. Run the relevant verification commands and complete VERIFY.md with command log, AC evidence, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, skipped checks, and conclusion."
+      prompt="Continue agent-flow change: $change_id. Run the relevant verification commands and complete VERIFY.md with command log, AC evidence, Machine Gate Summary, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, skipped checks, and conclusion."
     elif [ "$flow" = "Heavy" ] && contains_item "REVIEW.md" "${missing[@]}"; then
       stage="review"
       next="Complete REVIEW.md."
@@ -259,7 +259,7 @@ analyze_change() {
     elif [ "$flow" = "Heavy" ] && [ "$closure_verdict" != "acceptable" ] && [ "$closure_verdict" != "accept" ] && [ "$closure_verdict" != "conditional" ]; then
       stage="closure-audit"
       next="Run Closure Audit."
-      prompt="Continue agent-flow change: $change_id. Run Closure Audit. Check Closure Gates, VERIFY evidence, AC coverage, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, evolution-check, closure-check, and knowledge/decision/log/baseline updates."
+      prompt="Continue agent-flow change: $change_id. Run Closure Audit. Check Closure Gates, VERIFY evidence, AC coverage, scan-check, task-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, closure-check, CHECK_RESULT.json, and knowledge/decision/log/baseline updates."
     elif contains_item "EVOLUTION.md" "${missing[@]}"; then
       stage="evolution"
       next="Complete EVOLUTION.md and evaluate whether agent-flow should be upgraded."

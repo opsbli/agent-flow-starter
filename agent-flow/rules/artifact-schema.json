@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0",
+  "artifacts": {
+    "CODE_SCAN.md": {
+      "machineCheckKeys": [
+        "scan_time",
+        "related_modules",
+        "similar_implementations",
+        "reusable_abstractions",
+        "test_baseline",
+        "read_files",
+        "write_files",
+        "open_questions"
+      ],
+      "strictPathKeys": ["read_files", "write_files"]
+    },
+    "TASKS.md": {
+      "matrixColumns": ["Task", "Status", "AC", "read_files", "write_files", "Verify", "Parallel"],
+      "statusValues": ["pending", "not_started", "in_progress", "completed", "blocked", "skipped"],
+      "requiresWriteFilesList": true
+    },
+    "VERIFY.md": {
+      "requiredSections": ["AC Evidence", "Machine Gate Summary"],
+      "machineGateColumns": ["Gate", "Required For", "Result", "Command", "Exit Code", "When", "Evidence"]
+    },
+    "EVOLUTION.md": {
+      "machineCheckKeys": ["problem", "knowledge", "adr", "gate", "template", "no_change_reason"]
+    },
+    "CHANGE.md": {
+      "emergencyKeys": ["Level", "Approved by", "Bypass reason", "Backfill deadline", "Backfill status"]
+    }
+  }
+}

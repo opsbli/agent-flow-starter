@@ -132,21 +132,21 @@ function Assert-GateScripts {
 
 ## Machine Check
 scan_time: 2026-06-10 10:00
-related_modules: src/index.ts
-similar_implementations: src/index.ts
+related_modules: README.md
+similar_implementations: README.md
 reusable_abstractions: README contract
 test_baseline: scripts/test-starter.ps1
-read_files: src/index.ts
+read_files: README.md
 write_files: README.md
 open_questions: none
 
 ## 相关模块
-- src/index.ts
+- README.md
 
 ## 相似实现
 | 能力 | 参考文件 | 可复用点 |
 |---|---|---|
-| demo | `src/index.ts` | existing entry pattern |
+| demo | `README.md` | existing entry pattern |
 
 ## 可复用抽象
 - README contract.
@@ -159,7 +159,7 @@ open_questions: none
 
 ## read_files
 read_files:
-  - src/index.ts
+  - README.md
 
 ## write_files
 write_files:
@@ -307,21 +307,21 @@ function Assert-ClosureCheck {
 
 ## Machine Check
 scan_time: 2026-06-10 10:00
-related_modules: src/index.ts
-similar_implementations: src/index.ts
+related_modules: README.md
+similar_implementations: README.md
 reusable_abstractions: README contract
 test_baseline: scripts/test-starter.ps1
-read_files: src/index.ts
+read_files: README.md
 write_files: README.md
 open_questions: none
 
 ## 相关模块
-- src/index.ts
+- README.md
 
 ## 相似实现
 | 能力 | 参考文件 | 可复用点 |
 |---|---|---|
-| demo | `src/index.ts` | existing entry pattern |
+| demo | `README.md` | existing entry pattern |
 
 ## 可复用抽象
 - README contract.
@@ -334,7 +334,7 @@ open_questions: none
 
 ## read_files
 read_files:
-  - src/index.ts
+  - README.md
 
 ## write_files
 write_files:
@@ -353,14 +353,36 @@ write_files:
 
 | Task | Status | AC | read_files | write_files | Verify | Parallel |
 |---|---|---|---|---|---|---|
-| T001 | completed | AC-01 | `src/index.ts` | `README.md` | manual review | no |
+| T001 | completed | AC-01 | `README.md` | `README.md` | manual review | no |
 
 ## write_files 汇总
 
 write_files:
   - README.md
 "@
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value "# Verify`n`n## AC Evidence`n`n| AC | Evidence |`n|---|---|`n| AC-01 | pass |`n`nscan-check pass`ntask-check pass`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass`nmanifest-check pass`nevolution-check pass"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value @"
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | Demo | manual | VERIFY.md | pass | none |
+
+## Machine Gate Summary
+
+| Gate | Required For | Result | Command | Exit Code | When | Evidence |
+|---|---|---|---|---|---|---|
+| scan-check | Heavy | pass | scan-check.ps1 -Strict | 0 | 2026-06-10 10:00 | strict scan passed |
+| task-check | Heavy | pass | task-check.ps1 | 0 | 2026-06-10 10:00 | T001 maps to AC-01 |
+| ac-check | Heavy | pass | ac-check.ps1 | 0 | 2026-06-10 10:00 | AC-01 evidence present |
+| code-drift-check | Heavy | pass | code-drift-check.ps1 | 0 | 2026-06-10 10:00 | no drift |
+| blocked-check | Heavy | pass | blocked-check.ps1 | 0 | 2026-06-10 10:00 | no blocked operations |
+| task-boundary-check | Heavy | pass | task-boundary-check.ps1 | 0 | 2026-06-10 10:00 | only change folder modified |
+| manifest-check | all closure | pass | manifest-check.ps1 | 0 | 2026-06-10 10:00 | manifest valid |
+| emergency-check | Heavy closure summary | skipped | emergency-check.ps1 | 0 | 2026-06-10 10:00 | not an Emergency change |
+| evolution-check | Heavy | pass | evolution-check.ps1 | 0 | 2026-06-10 10:00 | no change needed recorded |
+"@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REVIEW.md") -Value "# Review`n`nReviewed."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REPORT.md") -Value "# Report`n`nDone."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value @"
@@ -392,16 +414,24 @@ no_change_reason: no change needed
 ## 本次不调整的原因
 - no change needed
 "@
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value "# Audit`n`n## Closure Audit`n`nVerdict: acceptable`n`nscan-check pass`ntask-check pass`nac-check pass`ncode-drift-check pass`nblocked-check pass`ntask-boundary-check pass`nmanifest-check pass`nevolution-check pass"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "AUDIT.md") -Value "# Audit`n`n## Closure Audit`n`nVerdict: acceptable`n`nMachine Gate Summary accepted.`n"
 
     & (Join-Path $TargetRoot "agent-flow/scripts/closure-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
     if (-not $?) {
         throw "closure-check smoke test failed."
     }
 
-    & (Join-Path $TargetRoot "agent-flow/scripts/check-change.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot -Closure
+    $checkResult = Join-Path $changeDir "CHECK_RESULT.json"
+    & (Join-Path $TargetRoot "agent-flow/scripts/check-change.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot -Closure -OutputPath $checkResult
     if (-not $?) {
         throw "check-change smoke test failed."
+    }
+    $result = Get-Content -Raw -Encoding utf8 -LiteralPath $checkResult | ConvertFrom-Json
+    if (-not $result.passed) {
+        throw "check-change JSON summary did not report passed=true."
+    }
+    if (-not ($result.gates | Where-Object { $_.gate -eq "emergency-check" })) {
+        throw "check-change JSON summary missing emergency-check gate."
     }
 }
 
@@ -446,6 +476,8 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/task-boundary-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/emergency-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/emergency-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/evolution-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/evolution-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/closure-check.ps1")

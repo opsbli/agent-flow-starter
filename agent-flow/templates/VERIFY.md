@@ -38,17 +38,18 @@
 
 ## Machine Gate Summary
 
-| Gate | Required For | Result | Evidence |
-|---|---|---|---|
-| scan-check | Light / Standard / Heavy | pass / fail / skipped | |
-| task-check | Standard / Heavy / Emergency with TASKS.md | pass / fail / skipped | |
-| ac-check | Standard / Heavy | pass / fail / skipped | |
-| code-drift-check | Heavy | pass / fail / skipped | |
-| blocked-check | Heavy | pass / fail / skipped | |
-| task-boundary-check | Standard / Heavy | pass / fail / skipped | |
-| manifest-check | all closure | pass / fail / skipped | |
-| evolution-check | Standard / Heavy | pass / fail / skipped | |
-| closure-check | Heavy closure | pass / fail / skipped | |
+| Gate | Required For | Result | Command | Exit Code | When | Evidence |
+|---|---|---|---|---|---|---|
+| scan-check | Light / Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| task-check | Standard / Heavy / Emergency with TASKS.md | pass / fail / skipped / conditional | | | | |
+| ac-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| code-drift-check | Heavy | pass / fail / skipped / conditional | | | | |
+| blocked-check | Heavy | pass / fail / skipped / conditional | | | | |
+| task-boundary-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| manifest-check | all closure | pass / fail / skipped / conditional | | | | |
+| emergency-check | Emergency / Heavy closure summary | pass / fail / skipped / conditional | | | | |
+| evolution-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| closure-check | Heavy closure | pass / fail / skipped / conditional | | | | |
 
 ## 跳过项
 

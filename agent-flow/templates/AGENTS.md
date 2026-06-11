@@ -61,6 +61,7 @@ agent-flow/core/frontend-fit.md
 - 不修改未获批准的 `write_files` 之外的文件。
 - `CODE_SCAN.md` 完成后运行 `scan-check`。
 - Standard / Heavy 进入实现前运行 `task-check`。
+- Emergency change 必须运行 `emergency-check`。
 - 不确定 change 是否健康时运行 `check-change`。
 
 ## 受保护区域
@@ -75,30 +76,32 @@ Windows：
 
 ```text
 agent-flow/scripts/scaffold-health.ps1
-agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
 agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
 ```
 
 Linux/macOS：
 
 ```text
 bash agent-flow/scripts/scaffold-health.sh
-bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
 ```
 
 没有 `VERIFY.md`，不得声明完成。

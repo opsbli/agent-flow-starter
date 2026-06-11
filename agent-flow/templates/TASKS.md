@@ -7,6 +7,7 @@
 - 每个任务必须声明 `read_files` 和 `write_files`。
 - 未在 `write_files` 中声明的文件不得修改。
 - 每个任务必须有验证命令或验证说明。
+- 标记为 `completed` 的任务必须能在 `VERIFY.md` 中找到对应 Task ID 或 AC 证据。
 - 修改前后都可以运行 `task-check`，确保任务描述可被机器检查。
 
 ## Task Matrix

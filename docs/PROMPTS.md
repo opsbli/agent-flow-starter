@@ -46,7 +46,7 @@ bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard
 Continue agent-flow change: <change-id>.
 Do not implement yet.
 Complete REQUIREMENT, CODE_SCAN, DESIGN, Design Alignment / Grill, PLAN, TASKS, then run Plan Audit.
-Run scan-check after CODE_SCAN and task-check after TASKS.
+Run scan-check after CODE_SCAN, use strict scan when paths are known, and run task-check after TASKS.
 If Plan Audit is not accept, stop and list required fixes.
 ```
 
@@ -104,7 +104,8 @@ Run task-check after updating TASKS.md.
 ```text
 Continue agent-flow change: <change-id>.
 Complete VERIFY, REVIEW, REPORT, EVOLUTION, and Closure Audit.
-Run scan-check, task-check, ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, evolution-check, scaffold-health, and relevant run-verify commands.
+Run scan-check, task-check, ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, scaffold-health, and relevant run-verify commands.
+Fill VERIFY.md Machine Gate Summary with Result, Command, Exit Code, When, and Evidence for every required gate.
 For Heavy changes, also run closure-check before saying the change is complete.
 If closure is conditional, list residual risks clearly.
 ```
@@ -113,19 +114,19 @@ If closure is conditional, list residual risks clearly.
 
 ```text
 Run agent-flow full check for change: <change-id>.
-Use check-change. If any gate fails, stop and explain the failing gate before editing files.
+Use check-change and write CHECK_RESULT.json. If any gate fails, stop and explain the failing gate before editing files.
 ```
 
 Commands:
 
 ```powershell
-agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
 ```
 
 ```bash
-bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure --output agent-flow/changes/<change-id>/CHECK_RESULT.json
 ```
 
 ## Evolution

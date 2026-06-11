@@ -346,7 +346,7 @@ Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TAS
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION 和 Closure Audit。
-运行 scan-check、task-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、evolution-check、scaffold-health，以及 manifest 中相关 run-verify 命令。
+运行 scan-check、task-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health，以及 manifest 中相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
 如果 Closure Audit 是 conditional，请明确残余风险和后续处理建议。
 ```
 
@@ -363,10 +363,11 @@ agent-flow/scripts/sync-state.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/state-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/manifest-check.ps1
 agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
 agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
 agent-flow/scripts/run-verify.ps1 -All
 agent-flow/scripts/run-verify.ps1 -Name backend_test
 agent-flow/scripts/run-verify.ps1 -Name module_test -Module <module>
@@ -375,7 +376,7 @@ agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id
 agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/closure-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure
+agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
 ```
 
 Linux/macOS：
@@ -387,10 +388,11 @@ bash agent-flow/scripts/sync-state.sh --change-dir agent-flow/changes/<change-id
 bash agent-flow/scripts/state-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/manifest-check.sh
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
 bash agent-flow/scripts/run-verify.sh --all
 bash agent-flow/scripts/run-verify.sh --name backend_test
 bash agent-flow/scripts/run-verify.sh --name module_test --module <module>
@@ -399,7 +401,7 @@ bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<cha
 bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/closure-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure --output agent-flow/changes/<change-id>/CHECK_RESULT.json
 ```
 
 `run-verify` 会读取：
