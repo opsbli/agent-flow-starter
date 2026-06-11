@@ -83,6 +83,20 @@ State Machine Impact: pending
 | AC | 测试文件 | 测试方法 | 类型 |
 |---|---|---|---|
 
+## UI Flow / Component Tree
+
+> 无前端或交互改动时写 `none`。有前端/交互改动时，记录用户路径、页面/组件树、状态切换和错误态。
+
+| Screen / Component | State | User Action | Expected Result | Notes |
+|---|---|---|---|---|
+
+## Demo Evidence
+
+> 无需演示时写 `none`。前端/交互类需求应记录截图、录屏、Playwright 步骤或人工演示证据，并在 `VERIFY.md` 的 AC Evidence 中引用。
+
+| Evidence | Location / Command | Covered AC | Result |
+|---|---|---|---|
+
 ## Design Alignment / Grill
 
 目的：降低“用户自然语言描述”和“AI 理解”之间的偏差。进入 `PLAN.md`、`TASKS.md` 或实现前，必须完成一次对齐。

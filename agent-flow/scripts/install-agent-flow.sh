@@ -78,6 +78,7 @@ starter_owned=(
   "GO.md"
   "project-profiles.json"
   "manifest.yaml"
+  "ecc-integration.md"
 )
 
 # --- Project-owned files ---

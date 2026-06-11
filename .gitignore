@@ -13,3 +13,10 @@ dist/
 build/
 target/
 
+nul
+.pi/
+agent-flow/changes/
+ECC-pi-安装报告.md
+ECC-vs-agent-flow-对比报告.md
+ECC-集成评分报告.md
+项目能力评分报告.md

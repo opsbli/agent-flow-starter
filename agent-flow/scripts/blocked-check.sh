@@ -76,6 +76,11 @@ tasks_path="$change_dir/TASKS.md"
 if [ -f "$tasks_path" ]; then
   while IFS= read -r file_path; do
     fp="$(printf '%s' "$file_path" | sed 's/^[[:space:]]*-[[:space:]]*//; s/^`//; s/`$//; s/^"//; s/"$//; s/^'\''//; s/'\''$//')"
+    case "$fp" in
+      agent-flow/scripts/blocked-check.ps1|agent-flow/scripts/blocked-check.sh)
+        continue
+        ;;
+    esac
     if [ -n "$fp" ] && [ -f "$project_root/$fp" ]; then
       all_text="$all_text"$'\n'"$(cat "$project_root/$fp" 2>/dev/null || true)"
     fi
@@ -88,6 +93,14 @@ if [ -f "$tasks_path" ]; then
     ' "$tasks_path"
   )
 fi
+
+# Rule identifiers such as payment_bypass are metadata, not risky code evidence.
+scan_text="$all_text"
+while IFS= read -r rule_id; do
+  [ -z "$rule_id" ] && continue
+  scan_text="${scan_text//$rule_id/blocked_rule_id}"
+done <<< "$blocked_rules"
+all_text="$scan_text"
 
 issues=()
 while IFS= read -r rule; do

@@ -112,6 +112,18 @@ bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-
 - 不可逆架构决策写入 `agent-flow/decisions/`。
 - 每个完成的 change 必须写 `EVOLUTION.md`。
 
+## ECC 能力集成（可选）
+
+如果本机已安装 ECC（`pi install npm:ecc-universal`），在执行 agent-flow 流程时可按需调用 ECC 技能加速。映射表见 `agent-flow/ecc-integration.md`。
+
+关键加速点：
+- **CODE_SCAN** → `@ecc-explorer` 快速扫描
+- **DESIGN** → `@ecc-architect` 架构设计 + ADR
+- **验证** → `/ecc-review` 审查 + `/ecc-quality` 质量门禁 + `/ecc-security` 安全扫描
+- **实现** → 语言/框架 skill 自动加载编码模式
+
+pi 中还有便捷命令：`/af-scan`、`/af-design`、`/af-verify`、`/af-go`。
+
 ## 禁止事项
 
 - 非平凡需求禁止直接写代码。

@@ -70,6 +70,22 @@ function Get-WriteFiles {
     return $files | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
 }
 
+function Invoke-GitNameList {
+    param([string[]]$Arguments)
+
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $output = & git @Arguments 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "git $($Arguments -join ' ') failed."
+        }
+        return $output
+    } finally {
+        $ErrorActionPreference = $oldErrorActionPreference
+    }
+}
+
 $projectRootPath = Resolve-ProjectPath -Path $ProjectRoot
 $changeDirPath = Resolve-ProjectPath -Path $ChangeDir
 if (-not (Test-Path -LiteralPath $changeDirPath)) {
@@ -89,9 +105,9 @@ try {
     }
 
     $changed = @()
-    $changed += git diff --name-only
-    $changed += git diff --cached --name-only
-    $changed += git ls-files --others --exclude-standard
+    $changed += Invoke-GitNameList -Arguments @("diff", "--name-only")
+    $changed += Invoke-GitNameList -Arguments @("diff", "--cached", "--name-only")
+    $changed += Invoke-GitNameList -Arguments @("ls-files", "--others", "--exclude-standard")
     $changed = $changed | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { Normalize-PathText $_ } | Sort-Object -Unique
 } finally {
     Pop-Location

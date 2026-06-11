@@ -18,6 +18,8 @@
 
 如果任务涉及前端，还要读取 `agent-flow/core/frontend-fit.md`。
 
+如果本机安装了 ECC（`pi install npm:ecc-universal`），建议同时阅读 `agent-flow/ecc-integration.md`——它提供了 ECC 技能与 agent-flow 步骤的详细映射，可在各步骤直接调用 ECC 能力加速。
+
 ## 第零步：紧急判断
 
 是否**生产事故 / 安全漏洞 / 数据丢失**且满足 `agent-flow/flows/emergency.md` 的全部条件？

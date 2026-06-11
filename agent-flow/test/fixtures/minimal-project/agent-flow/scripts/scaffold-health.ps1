@@ -1,3 +1,17 @@
+<#
+.SYNOPSIS
+Verify that required agent-flow scaffold files exist.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.NOTES
+This script does not accept parameters.
+
+.EXAMPLE
+agent-flow/scripts/scaffold-health.ps1
+#>
+
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -47,11 +61,16 @@ $required = @(
     "agent-flow/templates/INIT_CHECKLIST.md",
     "agent-flow/templates/CANCEL.md",
     "agent-flow/templates/ROLLBACK.md",
+    "agent-flow/knowledge/improvement-tracker.md",
     "agent-flow/knowledge/known-good-baselines.md",
+    "agent-flow/decisions/INDEX.md",
+    "agent-flow/decisions/README.md",
     "agent-flow/VERSION",
     "agent-flow/UPGRADE.md",
     "agent-flow/scripts/init-project.ps1",
     "agent-flow/scripts/init-project.sh",
+    "agent-flow/scripts/_common.ps1",
+    "agent-flow/scripts/_common.sh",
     "agent-flow/scripts/run-verify.ps1",
     "agent-flow/scripts/new-change.ps1",
     "agent-flow/scripts/next-step.ps1",
@@ -119,3 +138,5 @@ if ($missing.Count -gt 0) {
 }
 
 Write-Host "agent-flow scaffold health check passed."
+
+

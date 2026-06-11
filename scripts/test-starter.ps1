@@ -28,6 +28,25 @@ function Assert-Path {
     }
 }
 
+function Assert-Fails {
+    param(
+        [scriptblock]$Command,
+        [string]$Label,
+        [string]$ExpectedPattern = ""
+    )
+
+    $global:LASTEXITCODE = 0
+    $output = & $Command *>&1
+    $exitCode = if ($null -ne $LASTEXITCODE) { [int]$LASTEXITCODE } else { 0 }
+    $text = ($output | Out-String)
+    if ($exitCode -eq 0) {
+        throw "$Label was expected to fail, but passed. Output: $text"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedPattern) -and $text -notmatch $ExpectedPattern) {
+        throw "$Label failed, but output did not match '$ExpectedPattern'. Output: $text"
+    }
+}
+
 function Get-DemoDesign {
     param(
         [string]$Verdict = "aligned",
@@ -406,14 +425,58 @@ write_files:
         throw "alignment-check smoke test failed."
     }
 
-    $emptyEvidence = Join-Path $changeDir "empty-evidence"
-    New-Item -ItemType Directory -Force -Path $emptyEvidence | Out-Null
-    & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $emptyEvidence
-    if ($LASTEXITCODE -eq 0) {
-        throw "ac-check passed using REQUIREMENT.md as self-evidence."
+    $negativeScan = Join-Path $TargetRoot "agent-flow/changes/demo-negative-scan"
+    New-Item -ItemType Directory -Force -Path $negativeScan | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeScan "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeScan "CODE_SCAN.md") -Value "# Code Scan`n`nscan_time: 2026-06-10 10:00`nread_files: README.md"
+    Assert-Fails -Label "scan-check negative case" -ExpectedPattern "write_files" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/scan-check.ps1") -ChangeDir $negativeScan
     }
 
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value "# Verify`n`nAC-01 evidence: checked."
+    $negativeDesign = Join-Path $TargetRoot "agent-flow/changes/demo-negative-design"
+    New-Item -ItemType Directory -Force -Path $negativeDesign | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeDesign "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeDesign "DESIGN.md") -Value ((Get-DemoDesign) -replace "Decision Status: accepted", "Decision Status: pending")
+    Assert-Fails -Label "design-check negative case" -ExpectedPattern "Decision Status" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/design-check.ps1") -ChangeDir $negativeDesign
+    }
+
+    $negativeAlignment = Join-Path $TargetRoot "agent-flow/changes/demo-negative-alignment"
+    New-Item -ItemType Directory -Force -Path $negativeAlignment | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeAlignment "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeAlignment "DESIGN.md") -Value (Get-DemoDesign -Verdict "pending" -Source "pending" -OpenQuestions "pending" -Confirmation "pending")
+    Assert-Fails -Label "alignment-check negative case" -ExpectedPattern "Alignment Verdict" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $negativeAlignment
+    }
+
+    $emptyEvidence = Join-Path $changeDir "empty-evidence"
+    New-Item -ItemType Directory -Force -Path $emptyEvidence | Out-Null
+    Assert-Fails -Label "ac-check missing VERIFY negative case" -ExpectedPattern "VERIFY.md" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $emptyEvidence
+    }
+
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value @"
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | Demo criterion | manual | | pass | none |
+"@
+    Assert-Fails -Label "ac-check incomplete evidence negative case" -ExpectedPattern "Evidence Location" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $changeDir
+    }
+
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "VERIFY.md") -Value @"
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | Demo criterion | manual | VERIFY.md | pass | none |
+"@
     & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $changeDir
     if (-not $?) {
         throw "ac-check did not pass after VERIFY.md evidence was added."
@@ -427,6 +490,41 @@ write_files:
     & (Join-Path $TargetRoot "agent-flow/scripts/code-drift-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
     if (-not $?) {
         throw "code-drift-check smoke test failed."
+    }
+
+    $negativeDrift = Join-Path $TargetRoot "agent-flow/changes/demo-negative-drift"
+    New-Item -ItemType Directory -Force -Path $negativeDrift | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeDrift "DESIGN.md") -Value "# Design`n`nCREATE TABLE missing_agent_flow_demo (id int);"
+    New-Item -ItemType Directory -Force -Path (Join-Path $TargetRoot "schema") | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $TargetRoot "schema/existing.sql") -Value "CREATE TABLE existing_demo (id int);"
+    Assert-Fails -Label "code-drift-check negative case" -ExpectedPattern "SCHEMA_DRIFT" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/code-drift-check.ps1") -ChangeDir $negativeDrift -ProjectRoot $TargetRoot
+    }
+
+    $negativeBlocked = Join-Path $TargetRoot "agent-flow/changes/demo-negative-blocked"
+    New-Item -ItemType Directory -Force -Path $negativeBlocked | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeBlocked "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $negativeBlocked "DESIGN.md") -Value "# Design`n`nDELETE FROM users WHERE id = 1;"
+    Assert-Fails -Label "blocked-check negative case" -ExpectedPattern "hard_delete_without_approval" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/blocked-check.ps1") -ChangeDir $negativeBlocked -ProjectRoot $TargetRoot
+    }
+
+    $ruleIdOnly = Join-Path $TargetRoot "agent-flow/changes/demo-rule-id-only"
+    New-Item -ItemType Directory -Force -Path $ruleIdOnly | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $ruleIdOnly "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - README.md"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $ruleIdOnly "DESIGN.md") -Value "# Design`n`nThe manifest keeps a payment_bypass blocked rule."
+    & (Join-Path $TargetRoot "agent-flow/scripts/blocked-check.ps1") -ChangeDir $ruleIdOnly -ProjectRoot $TargetRoot
+    if (-not $?) {
+        throw "blocked-check should ignore blocked rule identifiers when scanning content."
+    }
+
+    $guardScriptOnly = Join-Path $TargetRoot "agent-flow/changes/demo-guard-script-only"
+    New-Item -ItemType Directory -Force -Path $guardScriptOnly | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $guardScriptOnly "TASKS.md") -Value "# Tasks`n`nwrite_files:`n  - agent-flow/scripts/blocked-check.ps1"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $guardScriptOnly "DESIGN.md") -Value "# Design`n`nUpdate blocked-check guard patterns."
+    & (Join-Path $TargetRoot "agent-flow/scripts/blocked-check.ps1") -ChangeDir $guardScriptOnly -ProjectRoot $TargetRoot
+    if (-not $?) {
+        throw "blocked-check should not self-trigger on its own guard pattern source."
     }
 
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value @"

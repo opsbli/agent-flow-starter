@@ -75,7 +75,8 @@ $starterOwned = @(
     "ADVANTAGES.md",
     "GO.md",
     "project-profiles.json",
-    "manifest.yaml"
+    "manifest.yaml",
+    "ecc-integration.md"
 )
 
 # --- Project-owned: skip if exist ---

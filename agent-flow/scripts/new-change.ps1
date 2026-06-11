@@ -29,6 +29,7 @@ param(
     [string]$Name,
     [ValidateSet("Light", "Standard", "Heavy", "Emergency")]
     [string]$Flow = "Standard",
+    [string]$Prefix = "",
     [string]$ChangesRoot = "agent-flow/changes",
     [string]$TemplateRoot = "agent-flow/templates",
     [switch]$Force
@@ -48,7 +49,18 @@ function Get-Slug {
     return $slug
 }
 
-$changeId = Get-Slug -Value $Name
+# Auto-prefix: detect from manifest.yaml if not provided
+if ([string]::IsNullOrWhiteSpace($Prefix)) {
+    $manifest = Join-Path (Split-Path (Split-Path $ChangesRoot -Parent) -Parent) "manifest.yaml"
+    if (Test-Path $manifest) {
+        $m = Get-Content $manifest -Raw -Encoding utf8 -ErrorAction SilentlyContinue
+        if ($m -match 'name:\s*(\S+)') { $Prefix = $Matches[1] }
+    }
+}
+
+$datePrefix = Get-Date -Format 'yyyyMMdd'
+$slugName = Get-Slug -Value $Name
+$changeId = if ($Prefix) { "$datePrefix-$Prefix-$slugName" } else { "$datePrefix-$slugName" }
 $changeDir = Join-Path $ChangesRoot $changeId
 
 if ((Test-Path -LiteralPath $changeDir) -and -not $Force) {

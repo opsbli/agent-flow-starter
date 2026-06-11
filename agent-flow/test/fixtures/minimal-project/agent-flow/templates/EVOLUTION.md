@@ -29,6 +29,14 @@ no_change_reason: reason-if-no-framework-change
 
 - 无 / 模板：
 
+## Improvement Tracker 更新
+
+- [ ] 不需要跟踪，原因：
+- [ ] 已新增或更新 `agent-flow/knowledge/improvement-tracker.md`
+
+| Item | Tracker ID | Status | Owner / Next Step |
+|---|---|---|---|
+
 ## 应调整的流程分级
 
 - 无 / 分级：

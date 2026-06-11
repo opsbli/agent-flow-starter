@@ -82,7 +82,13 @@ if [ -z "$slug" ]; then
   exit 2
 fi
 
-change_dir="$changes_root/$slug"
+change_id="$(date '+%Y%m%d')-$slug"
+# Auto prefix from manifest.yaml
+manifest="$(dirname "$changes_root")/manifest.yaml"
+[ -f "$manifest" ] && project_prefix=$(grep -E '^name:' "$manifest" 2>/dev/null | head -1 | sed 's/name:[[:space:]]*//' | sed 's/[^a-zA-Z0-9]//g')
+[ -n "$project_prefix" ] && change_id="$(date '+%Y%m%d')-${project_prefix}-${slug}"
+
+change_dir="$changes_root/$change_id"
 if [ -e "$change_dir" ] && [ "$force" = false ]; then
   echo "Change already exists: $change_dir. Use --force to overwrite template files." >&2
   exit 1

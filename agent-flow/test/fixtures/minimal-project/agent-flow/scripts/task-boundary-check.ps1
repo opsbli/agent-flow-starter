@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Run the task-boundary-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/task-boundary-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -53,6 +70,16 @@ function Get-WriteFiles {
     return $files | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
 }
 
+function Invoke-GitNameList {
+    param([string[]]$Arguments)
+
+    $output = & git @Arguments 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        throw "git $($Arguments -join ' ') failed."
+    }
+    return $output
+}
+
 $projectRootPath = Resolve-ProjectPath -Path $ProjectRoot
 $changeDirPath = Resolve-ProjectPath -Path $ChangeDir
 if (-not (Test-Path -LiteralPath $changeDirPath)) {
@@ -72,9 +99,9 @@ try {
     }
 
     $changed = @()
-    $changed += git diff --name-only
-    $changed += git diff --cached --name-only
-    $changed += git ls-files --others --exclude-standard
+    $changed += Invoke-GitNameList -Arguments @("diff", "--name-only")
+    $changed += Invoke-GitNameList -Arguments @("diff", "--cached", "--name-only")
+    $changed += Invoke-GitNameList -Arguments @("ls-files", "--others", "--exclude-standard")
     $changed = $changed | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { Normalize-PathText $_ } | Sort-Object -Unique
 } finally {
     Pop-Location
@@ -110,3 +137,6 @@ if ($violations.Count -gt 0) {
 }
 
 Write-Host "Task boundary check passed: changed files are within write_files or the change folder."
+
+
+

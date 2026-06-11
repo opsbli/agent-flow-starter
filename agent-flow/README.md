@@ -4,6 +4,19 @@
 
 `agent-flow` 的目标不是增加文档负担，而是让 AI 在老项目和复杂项目里更可控：先查代码，再写方案；先明确边界，再实现；先验证，再宣布完成；最后把经验沉淀回来。
 
+## 3 分钟快速开始
+
+1. 运行 `agent-flow/scripts/init-project.ps1` 或 `bash agent-flow/scripts/init-project.sh`。
+2. 运行 `agent-flow/scripts/manifest-check.*` 和 `agent-flow/scripts/scaffold-health.*`，按 TODO guidance 补齐项目上下文。
+3. 开始需求时，让 AI 先读 `agent-flow/GO.md`，完成 code-first 扫描并判断 Light / Standard / Heavy。
+
+常用开场：
+
+```text
+按 agent-flow 流程处理这个需求：<需求内容>。
+先做 code-first 扫描，判断 Light/Standard/Heavy，然后给我 CHANGE 和执行计划。
+```
+
 ## 每次需求的默认流程
 
 ```text
@@ -44,7 +57,7 @@ agent-flow/
 ├── templates/                    # change 工件模板（含 CANCEL.md / ROLLBACK.md）
 ├── changes/                      # 每个需求的工作目录
 ├── knowledge/                    # 长期知识沉淀
-├── decisions/                    # ADR 决策记录
+├── decisions/                    # ADR 决策记录和 INDEX.md
 ├── logs/                         # 日级过程日志
 ├── reports/                      # 交付报告
 ├── test/                         # scaffold 脚本测试资产
@@ -516,6 +529,7 @@ agent-flow/knowledge/reuse-map.md
 agent-flow/knowledge/pitfalls.md
 agent-flow/knowledge/verification.md
 agent-flow/knowledge/known-good-baselines.md
+agent-flow/knowledge/improvement-tracker.md
 ```
 
 建议：
@@ -526,6 +540,7 @@ agent-flow/knowledge/known-good-baselines.md
 - 踩坑写 pitfalls。
 - 验证方式写 verification。
 - 已确认可工作的健康状态写 known-good-baselines。
+- EVOLUTION.md 里需要后续处理的流程改进写 improvement-tracker。
 
 ## 决策记录
 
@@ -533,6 +548,12 @@ agent-flow/knowledge/known-good-baselines.md
 
 ```text
 agent-flow/decisions/
+```
+
+先更新：
+
+```text
+agent-flow/decisions/INDEX.md
 ```
 
 适合写 ADR 的情况：

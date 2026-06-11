@@ -89,6 +89,14 @@ if [ -f "$tasks_path" ]; then
   )
 fi
 
+# Rule identifiers such as payment_bypass are metadata, not risky code evidence.
+scan_text="$all_text"
+while IFS= read -r rule_id; do
+  [ -z "$rule_id" ] && continue
+  scan_text="${scan_text//$rule_id/blocked_rule_id}"
+done <<< "$blocked_rules"
+all_text="$scan_text"
+
 issues=()
 while IFS= read -r rule; do
   case "$rule" in

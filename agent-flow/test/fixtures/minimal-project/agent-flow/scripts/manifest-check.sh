@@ -32,6 +32,55 @@ fi
 
 issues=()
 warnings=()
+todo_placeholders=()
+todo_lines=()
+
+todo_category() {
+  case "$1" in
+    *_COMMAND) echo "verification commands" ;;
+    *_OR_NONE) echo "explicit none decisions" ;;
+    *_PATH|*_ENTRY|*_MODULE|*_BUILD_FILE|*_TEST_PATH|*_COMMON_CODE_PATH) echo "project map paths" ;;
+    *) echo "review manually" ;;
+  esac
+}
+
+collect_todos() {
+  local line_no=0 line placeholder
+  while IFS= read -r line || [ -n "$line" ]; do
+    line_no=$((line_no + 1))
+    while IFS= read -r placeholder; do
+      [ -n "$placeholder" ] || continue
+      todo_placeholders+=("$placeholder")
+      todo_lines+=("$line_no: ${line#"${line%%[![:space:]]*}"}")
+    done < <(printf '%s\n' "$line" | grep -Eo 'TODO_[A-Z0-9_]+' || true)
+  done < "$manifest_path"
+}
+
+write_todo_guidance() {
+  if [ "${#todo_placeholders[@]}" -eq 0 ]; then
+    return
+  fi
+
+  echo
+  echo "Manifest TODO guidance:"
+  local category i found
+  for category in "project map paths" "verification commands" "explicit none decisions" "review manually"; do
+    found=false
+    for i in "${!todo_placeholders[@]}"; do
+      if [ "$(todo_category "${todo_placeholders[$i]}")" = "$category" ]; then
+        if [ "$found" = false ]; then
+          echo " - $category:"
+          found=true
+        fi
+        echo "   * ${todo_placeholders[$i]} at line ${todo_lines[$i]}"
+      fi
+    done
+  done
+  echo "Next steps:"
+  echo "  1. Run init-project after the project skeleton and build files exist."
+  echo "  2. Replace TODO_* values with concrete paths, commands, or explicit none/N/A."
+  echo "  3. Use --strict-todo in CI only after project context is expected to be fully initialized."
+}
 
 require_text() {
   local label="$1" pattern="$2"
@@ -126,7 +175,8 @@ for gate in "${required_gates[@]}"; do
   fi
 done
 
-todo_count="$(grep -o 'TODO_' "$manifest_path" | wc -l | tr -d ' ')"
+collect_todos
+todo_count="${#todo_placeholders[@]}"
 if [ "$todo_count" -gt 0 ]; then
   message="Manifest has $todo_count unresolved TODO_ value(s)."
   if [ "$strict_todo" = true ]; then
@@ -144,7 +194,9 @@ fi
 if [ "${#issues[@]}" -gt 0 ]; then
   echo "Manifest check failed:"
   printf ' - %s\n' "${issues[@]}"
+  write_todo_guidance
   exit 2
 fi
 
+write_todo_guidance
 echo "Manifest check passed."

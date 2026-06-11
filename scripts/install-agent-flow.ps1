@@ -36,5 +36,19 @@ if ($Force) {
     & $installer -Target $Target -StarterRoot $starterRoot
 }
 
+# --- Post-install: ECC integration notice ---
+Write-Host ""
+Write-Host "=== ECC Integration (optional) ==="
+$hasEcc = Test-Path -LiteralPath "$env:USERPROFILE\.pi\agent\npm\node_modules\ecc-universal"
+if ($hasEcc) {
+    Write-Host "  ECC detected on this system. Skills included:"
+    Write-Host "  - agent-flow/ecc-integration.md (skill mapping table)"
+    Write-Host "  - Use /af-scan, /af-design, /af-verify, /af-go in pi"
+} else {
+    Write-Host "  ECC not detected. To enable ECC skills:"
+    Write-Host "    pi install npm:ecc-universal"
+    Write-Host "  Then re-run this installer to get ecc-integration.md"
+}
+
 
 

@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Run the blocked-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ChangeDir
+Parameter accepted by this script.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.PARAMETER Manifest
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/blocked-check.ps1
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ChangeDir,
@@ -97,31 +117,40 @@ foreach ($relativeFile in (Get-WriteFiles -TasksPath $tasksPath)) {
     }
 }
 
+# Rule identifiers such as payment_bypass are metadata, not risky code evidence.
+$scanText = $allText
+foreach ($rule in $blockedRules) {
+    if (-not [string]::IsNullOrWhiteSpace($rule)) {
+        $scanText = [regex]::Replace($scanText, "\b$([regex]::Escape($rule))\b", "blocked_rule_id", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    }
+}
+$allText = $scanText
+
 $issues = @()
 foreach ($rule in $blockedRules) {
     switch ($rule) {
         "hard_delete_without_approval" {
-            if ($allText -match '(?i)(DELETE\s+FROM|DROP\s+TABLE|TRUNCATE|DELETE\s+WHERE)') {
+            if ($scanText -match '(?i)(DELETE\s+FROM|DROP\s+TABLE|TRUNCATE|DELETE\s+WHERE)') {
                 if ($allText -notmatch '(?i)(approval|approved|reviewed|批准|确认|审核通过|#\s*CANCEL)') {
                     $issues += "BLOCKED: hard_delete_without_approval - Found destructive SQL/operation without explicit approval marker."
                 }
             }
         }
         "disable_security_filter" {
-            if ($allText -match '(?i)(\.disable\(\)|\.permitAll\(\)|SecurityConfig|security\.ignoring|disable.*security|security.*bypass)') {
+            if ($scanText -match '(?i)(\.disable\(\)|\.permitAll\(\)|SecurityConfig|security\.ignoring|disable.*security|security.*bypass)') {
                 if ($allText -notmatch '(?i)(#\s*EMERGENCY|#\s*APPROVED|approved.*security|security review|安全审核)') {
                     $issues += "BLOCKED: disable_security_filter - Found security filter disable/circumvention pattern without explicit approval."
                 }
             }
         }
         "bypass_auth_for_production" {
-            if ($allText -match '(?i)(permitAll\(\)|\.anonymous\(\)|skipAuth|withoutAuth|noAuth|bypassAuth|@Anonymous)' -and
+            if ($scanText -match '(?i)(permitAll\(\)|\.anonymous\(\)|skipAuth|withoutAuth|noAuth|bypassAuth|@Anonymous)' -and
                 $allText -match '(?i)(production|prod|live|public.?api|anonymous.*interface|生产|公开接口)') {
                 $issues += "BLOCKED: bypass_auth_for_production - Found auth bypass pattern combined with production/public route reference."
             }
         }
         "direct_production_data_mutation" {
-            if ($allText -match '(?i)(UPDATE\s+.*SET|INSERT\s+INTO)\s+\w+' -and
+            if ($scanText -match '(?i)(UPDATE\s+.*SET|INSERT\s+INTO)\s+\w+' -and
                 $allText -match '(?i)(production|prod|live|direct|execute|jdbcTemplate|Statement|native.*sql|生产|原生SQL)') {
                 $issues += "BLOCKED: direct_production_data_mutation - Found direct data mutation pattern combined with production/native execution."
             }
@@ -134,7 +163,7 @@ foreach ($rule in $blockedRules) {
         }
         default {
             $searchTerm = $rule -replace '_', ' '
-            if ($allText -match [regex]::Escape($searchTerm)) {
+            if ($scanText -match [regex]::Escape($searchTerm)) {
                 $issues += "BLOCKED: $rule - Rule triggered by text match in change artifacts."
             }
         }
@@ -150,3 +179,6 @@ if ($issues.Count -gt 0) {
 }
 
 Write-Host "Blocked-if check passed. No blocked operations detected."
+
+
+

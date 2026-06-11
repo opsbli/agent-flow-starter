@@ -1,3 +1,23 @@
+<#
+.SYNOPSIS
+Run the manifest-check agent-flow script.
+
+.DESCRIPTION
+Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.
+
+.PARAMETER ProjectRoot
+Parameter accepted by this script.
+
+.PARAMETER Manifest
+Parameter accepted by this script.
+
+.PARAMETER StrictTodo
+Parameter accepted by this script.
+
+.EXAMPLE
+agent-flow/scripts/manifest-check.ps1
+#>
+
 param(
     [string]$ProjectRoot = ".",
     [string]$Manifest = "agent-flow/manifest.yaml",
@@ -24,6 +44,54 @@ if (-not (Test-Path -LiteralPath $manifestPath)) {
 $text = Get-Content -Raw -Encoding utf8 -LiteralPath $manifestPath
 $issues = @()
 $warnings = @()
+
+function Get-TodoItems {
+    param([string]$Text)
+
+    $items = @()
+    $lines = $Text -split "\r?\n"
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        foreach ($match in [regex]::Matches($lines[$i], "TODO_[A-Z0-9_]+")) {
+            $items += [pscustomobject]@{
+                Placeholder = $match.Value
+                Line = $i + 1
+                Text = $lines[$i].Trim()
+            }
+        }
+    }
+    return $items
+}
+
+function Get-TodoCategory {
+    param([string]$Placeholder)
+
+    if ($Placeholder -match "_COMMAND$") { return "verification commands" }
+    if ($Placeholder -match "_OR_NONE$") { return "explicit none decisions" }
+    if ($Placeholder -match "(_PATH|_ENTRY|_MODULE|_BUILD_FILE|_TEST_PATH|_COMMON_CODE_PATH)$") { return "project map paths" }
+    return "review manually"
+}
+
+function Write-TodoGuidance {
+    param([object[]]$TodoItems)
+
+    if ($TodoItems.Count -eq 0) { return }
+
+    Write-Host ""
+    Write-Host "Manifest TODO guidance:"
+    foreach ($category in @("project map paths", "verification commands", "explicit none decisions", "review manually")) {
+        $group = @($TodoItems | Where-Object { (Get-TodoCategory -Placeholder $_.Placeholder) -eq $category })
+        if ($group.Count -eq 0) { continue }
+        Write-Host " - ${category}:"
+        foreach ($item in $group) {
+            Write-Host "   * $($item.Placeholder) at line $($item.Line): $($item.Text)"
+        }
+    }
+
+    Write-Host "Next steps:"
+    Write-Host "  1. Run init-project after the project skeleton and build files exist."
+    Write-Host "  2. Replace TODO_* values with concrete paths, commands, or explicit none/N/A."
+    Write-Host "  3. Use -StrictTodo in CI only after project context is expected to be fully initialized."
+}
 
 foreach ($section in @("project:", "code_map:", "change_storage:", "risk_rules:", "verification:", "gates:")) {
     if ($text -notmatch "(?m)^$([regex]::Escape($section))") {
@@ -123,7 +191,8 @@ foreach ($gate in $requiredGates) {
     }
 }
 
-$todoCount = ([regex]::Matches($text, "TODO_")).Count
+$todoItems = @(Get-TodoItems -Text $text)
+$todoCount = $todoItems.Count
 if ($todoCount -gt 0) {
     $message = "Manifest has $todoCount unresolved TODO_ value(s)."
     if ($StrictTodo) { $issues += $message } else { $warnings += $message }
@@ -137,7 +206,12 @@ if ($warnings.Count -gt 0) {
 if ($issues.Count -gt 0) {
     Write-Host "Manifest check failed:"
     $issues | ForEach-Object { Write-Host " - $_" }
+    Write-TodoGuidance -TodoItems $todoItems
     exit 2
 }
 
+Write-TodoGuidance -TodoItems $todoItems
 Write-Host "Manifest check passed."
+
+
+

@@ -4,6 +4,46 @@
 
 它解决的问题是：AI 可以写代码，但老项目里的真实风险往往不在“代码能不能生成”，而在于它有没有先查现有实现、有没有越界改文件、有没有碰权限/API/schema、有没有验证证据、有没有把经验沉淀下来。
 
+## 新电脑一键安装（含 ECC 技能）
+
+在全新电脑上，一步完成 pi + ECC 技能 + agent-flow 安装：
+
+```bash
+# Windows
+scripts/setup-new-pc.ps1 -Target D:\Projects\my-app
+
+# Linux/macOS
+bash scripts/setup-new-pc.sh --target /path/to/project
+```
+
+这将会安装：
+- **pi** — AI 编码助手
+- **ECC 轻量技能包** — 32 个核心技能（专为 agent-flow 精选，仅 335 KB）
+- **集成文件** — 8 个 Agent + 13 个 prompt 模板 + 扩展
+- **agent-flow** — 受控开发流程框架
+
+安装完成后在 pi 中：
+
+```text
+按 agent-flow 流程处理这个需求：<需求内容>
+```
+
+或使用快捷命令：`/af-go <需求>` 一站式执行完整流程。
+
+## 3 分钟快速开始（纯 agent-flow）
+
+如果只需要 agent-flow 而不需要 ECC 集成：
+
+1. 安装：运行 `scripts/install-agent-flow.ps1 -Target <project>` 或 `bash scripts/install-agent-flow.sh --target <project>`。
+2. 初始化：进入目标项目后运行 `agent-flow/scripts/init-project.ps1` 或 `bash agent-flow/scripts/init-project.sh`。
+3. 复核：运行 `agent-flow/scripts/manifest-check.*` 和 `agent-flow/scripts/scaffold-health.*`，按 TODO guidance 补齐项目上下文。
+
+开始第一个需求时，把这句给 AI：
+
+```text
+按 agent-flow 流程处理这个需求：<需求内容>。先做 code-first 扫描，判断 Light/Standard/Heavy，然后给我 CHANGE 和执行计划。
+```
+
 ## 适合什么场景
 
 适合：

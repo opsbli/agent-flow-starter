@@ -28,6 +28,25 @@ assert_path() {
   fi
 }
 
+expect_failure() {
+  local label="$1"
+  local pattern="$2"
+  shift 2
+  local output code
+  set +e
+  output="$("$@" 2>&1)"
+  code=$?
+  set -e
+  if [ "$code" -eq 0 ]; then
+    echo "$label was expected to fail, but passed. Output: $output" >&2
+    exit 1
+  fi
+  if [ -n "$pattern" ] && ! printf '%s' "$output" | grep -Eq "$pattern"; then
+    echo "$label failed, but output did not match '$pattern'. Output: $output" >&2
+    exit 1
+  fi
+}
+
 demo_design() {
   local verdict="${1:-aligned}"
   local source="${2:-mixed}"
@@ -370,16 +389,82 @@ EOF
   bash "$target_root/agent-flow/scripts/design-check.sh" --change-dir "$change_dir"
   bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$change_dir"
 
-  mkdir -p "$change_dir/empty-evidence"
-  if bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir/empty-evidence"; then
-    echo "ac-check passed using REQUIREMENT.md as self-evidence." >&2
-    exit 1
-  fi
+  local negative_scan="$target_root/agent-flow/changes/demo-negative-scan"
+  mkdir -p "$negative_scan"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$negative_scan/CHANGE.md"
+  printf '# Code Scan\n\nscan_time: 2026-06-10 10:00\nread_files: README.md\n' > "$negative_scan/CODE_SCAN.md"
+  expect_failure "scan-check negative case" "write_files" \
+    bash "$target_root/agent-flow/scripts/scan-check.sh" --change-dir "$negative_scan"
 
-  printf '# Verify\n\nAC-01 evidence: checked.\n' > "$change_dir/VERIFY.md"
+  local negative_design="$target_root/agent-flow/changes/demo-negative-design"
+  mkdir -p "$negative_design"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$negative_design/CHANGE.md"
+  demo_design | sed 's/Decision Status: accepted/Decision Status: pending/' > "$negative_design/DESIGN.md"
+  expect_failure "design-check negative case" "Decision Status" \
+    bash "$target_root/agent-flow/scripts/design-check.sh" --change-dir "$negative_design"
+
+  local negative_alignment="$target_root/agent-flow/changes/demo-negative-alignment"
+  mkdir -p "$negative_alignment"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$negative_alignment/CHANGE.md"
+  demo_design pending pending pending pending > "$negative_alignment/DESIGN.md"
+  expect_failure "alignment-check negative case" "Alignment Verdict" \
+    bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$negative_alignment"
+
+  mkdir -p "$change_dir/empty-evidence"
+  expect_failure "ac-check missing VERIFY negative case" "VERIFY.md" \
+    bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir/empty-evidence"
+
+  cat > "$change_dir/VERIFY.md" <<'EOF'
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | Demo criterion | manual | | pass | none |
+EOF
+  expect_failure "ac-check incomplete evidence negative case" "Evidence Location" \
+    bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"
+
+  cat > "$change_dir/VERIFY.md" <<'EOF'
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | Demo criterion | manual | VERIFY.md | pass | none |
+EOF
   bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"
   bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$change_dir" --project-root "$target_root"
   bash "$target_root/agent-flow/scripts/code-drift-check.sh" --change-dir "$change_dir" --project-root "$target_root"
+
+  local negative_drift="$target_root/agent-flow/changes/demo-negative-drift"
+  mkdir -p "$negative_drift" "$target_root/schema"
+  printf '# Design\n\nCREATE TABLE missing_agent_flow_demo (id int);\n' > "$negative_drift/DESIGN.md"
+  printf 'CREATE TABLE existing_demo (id int);\n' > "$target_root/schema/existing.sql"
+  expect_failure "code-drift-check negative case" "SCHEMA_DRIFT" \
+    bash "$target_root/agent-flow/scripts/code-drift-check.sh" --change-dir "$negative_drift" --project-root "$target_root"
+
+  local negative_blocked="$target_root/agent-flow/changes/demo-negative-blocked"
+  mkdir -p "$negative_blocked"
+  printf '# Tasks\n\nwrite_files:\n  - README.md\n' > "$negative_blocked/TASKS.md"
+  printf '# Design\n\nDELETE FROM users WHERE id = 1;\n' > "$negative_blocked/DESIGN.md"
+  expect_failure "blocked-check negative case" "hard_delete_without_approval" \
+    bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$negative_blocked" --project-root "$target_root"
+
+  local rule_id_only="$target_root/agent-flow/changes/demo-rule-id-only"
+  mkdir -p "$rule_id_only"
+  printf '# Tasks\n\nwrite_files:\n  - README.md\n' > "$rule_id_only/TASKS.md"
+  printf '# Design\n\nThe manifest keeps a payment_bypass blocked rule.\n' > "$rule_id_only/DESIGN.md"
+  bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$rule_id_only" --project-root "$target_root" >/dev/null
+
+  local guard_script_only="$target_root/agent-flow/changes/demo-guard-script-only"
+  mkdir -p "$guard_script_only"
+  printf '# Tasks\n\nwrite_files:\n  - agent-flow/scripts/blocked-check.sh\n' > "$guard_script_only/TASKS.md"
+  printf '# Design\n\nUpdate blocked-check guard patterns.\n' > "$guard_script_only/DESIGN.md"
+  bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$guard_script_only" --project-root "$target_root" >/dev/null
+
   cat > "$change_dir/EVOLUTION.md" <<'EOF'
 # Evolution
 
