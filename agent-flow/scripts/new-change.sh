@@ -85,7 +85,10 @@ fi
 change_id="$(date '+%Y%m%d')-$slug"
 # Auto prefix from manifest.yaml
 manifest="$(dirname "$changes_root")/manifest.yaml"
-[ -f "$manifest" ] && project_prefix=$(grep -E '^name:' "$manifest" 2>/dev/null | head -1 | sed 's/name:[[:space:]]*//' | sed 's/[^a-zA-Z0-9]//g')
+project_prefix=""
+if [ -f "$manifest" ]; then
+  project_prefix="$(awk '/^name:/ { print; exit }' "$manifest" | sed 's/name:[[:space:]]*//' | sed 's/[^a-zA-Z0-9]//g')"
+fi
 [ -n "$project_prefix" ] && change_id="$(date '+%Y%m%d')-${project_prefix}-${slug}"
 
 change_dir="$changes_root/$change_id"

@@ -20,6 +20,15 @@
 |---|---|---|---|---|---|
 | AC-01 | | test / command / code / manual / skipped | | pass / fail / conditional / skipped | |
 
+## Coverage Summary
+
+`coverage-check` 会自动计算 AC Evidence 覆盖率。测试覆盖率可以来自 lcov、pytest-cov、JaCoCo、内置覆盖率报告，或明确写明不适用原因。
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | `agent-flow/scripts/coverage-check.*` | auto | pass / fail / conditional / skipped | |
+| Test Coverage | lcov / coverage report / N/A | | pass / conditional / skipped | |
+
 ## Drift 检查
 
 | 类型 | 结果 | 说明 |
@@ -49,6 +58,7 @@
 | task-check | Standard / Heavy / Emergency with TASKS.md | pass / fail / skipped / conditional | | | | |
 | plan-check | Heavy | pass / fail / skipped / conditional | | | | |
 | ac-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
+| coverage-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |
 | code-drift-check | Heavy | pass / fail / skipped / conditional | | | | |
 | blocked-check | Heavy | pass / fail / skipped / conditional | | | | |
 | task-boundary-check | Standard / Heavy | pass / fail / skipped / conditional | | | | |

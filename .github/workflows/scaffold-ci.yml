@@ -29,6 +29,9 @@ jobs:
       - name: Run manifest-check.sh
         run: bash agent-flow/scripts/manifest-check.sh
 
+      - name: Run template-check.sh
+        run: bash agent-flow/scripts/template-check.sh
+
   smoke-test-ps1:
     name: Smoke Test (PowerShell)
     runs-on: windows-latest

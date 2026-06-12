@@ -105,7 +105,7 @@ Run task-check after updating TASKS.md, then run Plan Audit and plan-check befor
 ```text
 Continue agent-flow change: <change-id>.
 Complete VERIFY, REVIEW, REPORT, EVOLUTION, and Closure Audit.
-Run scan-check, design-check, alignment-check, task-check, plan-check, ac-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, scaffold-health, and relevant run-verify commands.
+Run scan-check, design-check, alignment-check, task-check, plan-check, ac-check, coverage-check, code-drift-check, blocked-check, task-boundary-check, manifest-check, emergency-check, evolution-check, scaffold-health, and relevant run-verify commands.
 Fill VERIFY.md Machine Gate Summary with Result, Command, Exit Code, When, and Evidence for every required gate.
 For Heavy changes, also run closure-check before saying the change is complete.
 If closure is conditional, list residual risks clearly.
@@ -123,11 +123,13 @@ Commands:
 ```powershell
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -Closure -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 ```bash
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --closure --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 ## Evolution

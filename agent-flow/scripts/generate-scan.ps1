@@ -134,7 +134,7 @@ $(if ($stack["node"]) { "Search: Get-ChildItem -Recurse -Filter '*service*' -Nam
 
 ### 3. Database Schema / Migrations
 
-$(if (Test-Path (Join-Path $ProjectRoot "migrations")) -or (Test-Path (Join-Path $ProjectRoot "prisma"))) { "- Migration directory found. Review existing schema." } else { "- (no migration directory detected)" })
+$(if ((Test-Path (Join-Path $ProjectRoot "migrations")) -or (Test-Path (Join-Path $ProjectRoot "prisma"))) { "- Migration directory found. Review existing schema." } else { "- (no migration directory detected)" })
 
 ### 4. API Routes / Endpoints
 

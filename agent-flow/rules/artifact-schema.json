@@ -20,8 +20,13 @@
       "requiresWriteFilesList": true
     },
     "VERIFY.md": {
-      "requiredSections": ["AC Evidence", "Machine Gate Summary"],
+      "requiredSections": ["AC Evidence", "Coverage Summary", "Machine Gate Summary"],
+      "coverageColumns": ["Metric", "Source", "Value", "Result", "Notes"],
       "machineGateColumns": ["Gate", "Required For", "Result", "Command", "Exit Code", "When", "Evidence"]
+    },
+    "REQUIREMENT_ALIGNED.md": {
+      "requiredSections": ["Confirmed Intent", "Confirmed Acceptance Criteria", "Human Confirmation"],
+      "alignmentColumns": ["AC", "Confirmed Requirement", "Verification Method", "Changed From Original?"]
     },
     "DESIGN.md": {
       "decisionStatus": ["accepted"],

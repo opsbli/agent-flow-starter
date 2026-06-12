@@ -139,6 +139,9 @@ agent-flow/scripts/scaffold-health.ps1   # 验证脚手架完整性
 | 创建 change | `new-change.ps1 -Name "my-change" -Flow Standard` |
 | 推进 change | `next-step.ps1 -ChangeDir agent-flow/changes/my-change` |
 | 验证 | `run-verify.ps1 -All` |
+| 覆盖率 | `coverage-check.ps1 -ChangeDir agent-flow/changes/my-change` |
+| 知识检索 | `knowledge-search.ps1 -Query "term"` |
+| 模板验证 | `template-check.ps1` |
 | 健康检查 | `scaffold-health.ps1` |
 
 完整的命令列表见 `agent-flow/manifest.yaml` 的 `gates` 部分。
@@ -165,7 +168,50 @@ bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/manifest-check.sh
 ```
 
-`check-change` 会串起状态、扫描、设计、对齐、计划、任务、AC、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查；项目业务验证仍由 `run-verify` 根据 `manifest.yaml` 执行。
+`check-change` 会串起状态、扫描、设计、对齐、计划、任务、AC、覆盖率、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查；项目业务验证仍由 `run-verify` 根据 `manifest.yaml` 执行。
+
+### coverage-check 失败
+
+常见原因：
+
+1. `REQUIREMENT.md` 有 AC 编号，但 `VERIFY.md` 的 `AC Evidence` 没有对应行。
+2. `VERIFY.md` 缺少 `Coverage Summary` 表。
+3. `Coverage Summary` 没有 `Test Coverage` 行。
+4. 测试覆盖率不适用，但没有写 `skipped` / `conditional` 的原因。
+
+修复：补齐 `VERIFY.md` 的 AC Evidence 和 Coverage Summary。自动覆盖率工具不适用时，明确记录不适用原因和残余风险。
+
+### 如何查已有知识或决策？
+
+Windows：
+
+```powershell
+agent-flow/scripts/knowledge-search.ps1 -Query "permission"
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/knowledge-search.sh --query "permission"
+```
+
+新增知识前先查 `agent-flow/knowledge/INDEX.md` 和检索结果，避免重复沉淀。
+
+### 修改模板后如何验证？
+
+Windows：
+
+```powershell
+agent-flow/scripts/template-check.ps1
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/template-check.sh
+```
+
+它会检查模板版本、关键模板文件、`artifact-schema.json` 和 gate 依赖的必填段落。
 
 ### run-verify 和 verify-backend 什么关系？
 

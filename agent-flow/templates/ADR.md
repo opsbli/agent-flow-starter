@@ -2,7 +2,15 @@
 
 ## 状态
 
-Proposed / Accepted / Superseded
+Proposed / Accepted / Deprecated / Superseded
+
+## Supersedes
+
+none
+
+## Superseded By
+
+none
 
 ## 背景
 
@@ -17,3 +25,8 @@ Proposed / Accepted / Superseded
 ## 触发 change
 
 ## 日期
+
+## 索引维护
+
+- [ ] 已更新 `agent-flow/decisions/INDEX.md`
+- [ ] Status / Supersedes / Superseded By 与索引一致

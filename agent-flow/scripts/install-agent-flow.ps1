@@ -182,7 +182,27 @@ Write-Host "=== Preserving project-owned files ==="
 foreach ($item in $projectOwned) {
     $path = Join-Path $targetAf $item
     if (Test-Path -LiteralPath $path) {
-        Write-Host "  PRESERVED: $item/"
+        $sourceOwnedPath = Join-Path $sourceAf $item
+        $seededCount = 0
+        if (Test-Path -LiteralPath $sourceOwnedPath) {
+            Get-ChildItem -LiteralPath $sourceOwnedPath -Recurse -File | ForEach-Object {
+                $relPath = $_.FullName.Substring($sourceOwnedPath.Length + 1)
+                $dest = Join-Path $path $relPath
+                if (-not (Test-Path -LiteralPath $dest)) {
+                    $destDir = Split-Path -Parent $dest
+                    if (-not (Test-Path -LiteralPath $destDir)) {
+                        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+                    }
+                    Copy-Item -LiteralPath $_.FullName -Destination $dest
+                    $seededCount++
+                }
+            }
+        }
+        if ($seededCount -gt 0) {
+            Write-Host "  PRESERVED: $item/; SEEDED $seededCount missing starter file(s)"
+        } else {
+            Write-Host "  PRESERVED: $item/"
+        }
     } elseif (Test-Path -LiteralPath (Join-Path $sourceAf $item)) {
         Copy-Item -LiteralPath (Join-Path $sourceAf $item) -Destination $path -Recurse -Force
         Write-Host "  SEEDED: $item/"

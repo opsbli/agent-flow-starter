@@ -6,6 +6,7 @@
 |---|---|---|
 | `agent-flow/scripts/run-verify.ps1 -Name frontend_test` | pass | status label tests passed |
 | `agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | pass | 2 AC ids have evidence |
+| `agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | pass | AC coverage 2/2 and test coverage recorded |
 | `agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | pass | no schema/API/permission drift |
 
 ## AC Evidence
@@ -14,6 +15,13 @@
 |---|---|---|---|---|---|
 | AC-01 | Archived items display `Archived` | test | `tests/status-label.test.ts` | pass | none |
 | AC-02 | Existing labels unchanged | test | `tests/status-label.test.ts` | pass | none |
+
+## Coverage Summary
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | `agent-flow/scripts/coverage-check.ps1` | 2/2 (100%) | pass | Both ACs have evidence rows |
+| Test Coverage | component/unit test suite | targeted | pass | Sample change demonstrates targeted coverage rather than numeric lcov |
 
 ## Machine Gate Summary
 
@@ -24,6 +32,7 @@
 | alignment-check | Standard | pass | `agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | design alignment confirmed |
 | task-check | Standard | pass | `agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | tasks mapped to AC ids |
 | ac-check | Standard | pass | `agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | 2 AC ids have evidence |
+| coverage-check | Standard | pass | `agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | AC coverage 2/2; targeted test coverage recorded |
 | code-drift-check | Standard | pass | `agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | no schema/API/permission drift |
 | blocked-check | Standard | pass | `agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/sample-status-label` | 0 | 2026-06-10 10:00 | no blocked operations |
 | task-boundary-check | Standard | pass | `agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/sample-status-label -ProjectRoot .` | 0 | 2026-06-10 10:00 | changed files within write_files |

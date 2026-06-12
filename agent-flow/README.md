@@ -259,7 +259,7 @@ Alignment Verdict 是 aligned，或我明确接受 skipped 且写明 Skip Reason
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION、AUDIT。
-运行 scan-check、design-check、alignment-check、task-check、plan-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health 和相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
+运行 scan-check、design-check、alignment-check、task-check、plan-check、ac-check、coverage-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health 和相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
 如果 Closure Audit 是 conditional，请列出残余风险。
 ```
 
@@ -309,6 +309,13 @@ bash agent-flow/scripts/next-step.sh --change-dir agent-flow/changes/<change-id>
 
 ```text
 docs/PROMPTS.md
+```
+
+故障排除：
+
+```text
+docs/TROUBLESHOOTING.md
+agent-flow/FAQ.md
 ```
 
 ## 验证命令
@@ -387,12 +394,14 @@ Windows：
 
 ```powershell
 agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 ```
 
 Linux/macOS：
 
 ```bash
 bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 要求 `REQUIREMENT.md` 中使用：
@@ -425,6 +434,52 @@ bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-
 ```
 
 它会检查设计中常见的 schema、API、权限决策漂移。
+
+### Coverage 检查
+
+Windows：
+
+```powershell
+agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
+```
+
+`coverage-check` 会计算 `REQUIREMENT.md` 中 AC 在 `VERIFY.md` 的证据覆盖率，并要求 `Coverage Summary` 记录测试覆盖率来源。没有适用的自动覆盖率工具时，可以写 `skipped` 或 `conditional`，但必须说明原因。
+
+### 知识检索
+
+Windows：
+
+```powershell
+agent-flow/scripts/knowledge-search.ps1 -Query "permission"
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/knowledge-search.sh --query "permission"
+```
+
+新增知识前先检索 `agent-flow/knowledge/` 和 `agent-flow/decisions/`，避免重复沉淀。
+
+### 模板验证
+
+修改 `agent-flow/templates/` 或 `agent-flow/rules/artifact-schema.json` 后运行：
+
+```powershell
+agent-flow/scripts/template-check.ps1
+```
+
+Linux/macOS：
+
+```bash
+bash agent-flow/scripts/template-check.sh
+```
 
 ## 工件怎么写
 
@@ -524,6 +579,7 @@ AC Evidence
 
 ```text
 agent-flow/knowledge/glossary.md
+agent-flow/knowledge/INDEX.md
 agent-flow/knowledge/module-map.md
 agent-flow/knowledge/reuse-map.md
 agent-flow/knowledge/pitfalls.md
@@ -596,7 +652,7 @@ agent-flow/UPGRADE.md
 - `REPORT.md` 已写交付摘要。
 - `VERIFY.md` 已写验证证据。
 - 所有 AC 有 Evidence 或明确 residual risk。
-- `ac-check`、`code-drift-check`、`blocked-check`、`task-boundary-check`、`manifest-check`、`emergency-check`、`closure-check`、`scaffold-health` 已执行或说明跳过原因。
+- `ac-check`、`coverage-check`、`code-drift-check`、`blocked-check`、`task-boundary-check`、`manifest-check`、`emergency-check`、`closure-check`、`scaffold-health` 已执行或说明跳过原因。
 - `scan-check`、`task-check`、`evolution-check`、`check-change` 已执行或说明跳过原因。
 - Heavy change 有 Closure Audit。
 - 新知识、坑点、决策已沉淀。

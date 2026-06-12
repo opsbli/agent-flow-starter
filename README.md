@@ -99,7 +99,8 @@ agent-flow-starter/
 ├── CHANGELOG.md                  # starter 版本变化
 ├── docs/
 │   ├── ADOPTION.md               # 团队采用指南
-│   └── PROMPTS.md                # 常用 prompt 菜谱
+│   ├── PROMPTS.md                # 常用 prompt 菜谱
+│   └── TROUBLESHOOTING.md        # 故障排除指南
 ├── examples/
 │   └── sample-change/            # 教学用 change 示例
 ├── agent-flow/                   # 会被复制到目标项目的工作流目录
@@ -397,7 +398,7 @@ Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TAS
 ```text
 继续 agent-flow change：<change-id>。
 补全 VERIFY、REVIEW、REPORT、EVOLUTION 和 Closure Audit。
-运行 scan-check、design-check、alignment-check、task-check、plan-check、ac-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health，以及 manifest 中相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
+运行 scan-check、design-check、alignment-check、task-check、plan-check、ac-check、coverage-check、code-drift-check、blocked-check、task-boundary-check、manifest-check、emergency-check、evolution-check、scaffold-health，以及 manifest 中相关 run-verify 命令。需要机器汇总时，用 check-change 生成 `CHECK_RESULT.json`。
 如果 Closure Audit 是 conditional，请明确残余风险和后续处理建议。
 ```
 
@@ -425,6 +426,7 @@ agent-flow/scripts/run-verify.ps1 -All
 agent-flow/scripts/run-verify.ps1 -Name backend_test
 agent-flow/scripts/run-verify.ps1 -Name module_test -Module <module>
 agent-flow/scripts/ac-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/code-drift-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/blocked-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
@@ -452,6 +454,7 @@ bash agent-flow/scripts/run-verify.sh --all
 bash agent-flow/scripts/run-verify.sh --name backend_test
 bash agent-flow/scripts/run-verify.sh --name module_test --module <module>
 bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/blocked-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
@@ -512,12 +515,21 @@ AC-1
 - 数据库验证 SQL。
 - 明确记录的 skipped/conditional。
 
+`VERIFY.md` 还必须写 Coverage Summary：
+
+```text
+| Metric | Source | Value | Result | Notes |
+```
+
+`coverage-check` 会自动统计 AC Evidence 覆盖率，并检查测试覆盖率是否有来源或明确的不适用原因。
+
 ## 知识沉淀
 
 每次需求结束后，AI 应该判断是否要更新：
 
 ```text
 agent-flow/knowledge/glossary.md
+agent-flow/knowledge/INDEX.md
 agent-flow/knowledge/module-map.md
 agent-flow/knowledge/reuse-map.md
 agent-flow/knowledge/pitfalls.md
@@ -657,6 +669,13 @@ examples/sample-change/
 
 ```text
 docs/PROMPTS.md
+```
+
+故障排除指南在：
+
+```text
+docs/TROUBLESHOOTING.md
+agent-flow/FAQ.md
 ```
 
 团队采用建议在：

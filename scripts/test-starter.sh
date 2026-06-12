@@ -306,7 +306,9 @@ assert_new_change_and_alignment() {
     --changes-root "$change_root" \
     --template-root "$target_root/agent-flow/templates"
 
-  local change_dir="$change_root/demo-heavy-change"
+  local change_dir
+  change_dir="$(find "$change_root" -maxdepth 1 -type d -name '*demo-heavy-change' | sort | tail -n 1)"
+  [ -n "$change_dir" ] || fail "new-change did not create a demo-heavy-change directory."
   assert_path "$change_dir/STATE.md"
   assert_path "$change_dir/CHANGE.md"
   assert_path "$change_dir/REVIEW.md"
@@ -434,8 +436,16 @@ EOF
 | AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
 |---|---|---|---|---|---|
 | AC-01 | Demo criterion | manual | VERIFY.md | pass | none |
+
+## Coverage Summary
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | coverage-check | auto | pass | self-test |
+| Test Coverage | N/A | N/A | skipped | self-test has no product coverage target |
 EOF
   bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir"
+  bash "$target_root/agent-flow/scripts/coverage-check.sh" --change-dir "$change_dir"
   bash "$target_root/agent-flow/scripts/blocked-check.sh" --change-dir "$change_dir" --project-root "$target_root"
   bash "$target_root/agent-flow/scripts/code-drift-check.sh" --change-dir "$change_dir" --project-root "$target_root"
 
@@ -603,6 +613,13 @@ EOF
 |---|---|---|---|---|---|
 | AC-01 | Demo | manual | VERIFY.md | pass | none |
 
+## Coverage Summary
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | coverage-check.sh | auto | pass | AC-01 has evidence |
+| Test Coverage | N/A | N/A | skipped | self-test has no product coverage target |
+
 ## Machine Gate Summary
 
 | Gate | Required For | Result | Command | Exit Code | When | Evidence |
@@ -613,6 +630,7 @@ EOF
 | task-check | Heavy | pass | task-check.sh | 0 | 2026-06-10 10:00 | T001 maps to AC-01 |
 | plan-check | Heavy | pass | plan-check.sh | 0 | 2026-06-10 10:00 | plan audit accepted |
 | ac-check | Heavy | pass | ac-check.sh | 0 | 2026-06-10 10:00 | AC-01 evidence present |
+| coverage-check | Heavy | pass | coverage-check.sh | 0 | 2026-06-10 10:00 | AC coverage 1/1; Test Coverage skipped with reason |
 | code-drift-check | Heavy | pass | code-drift-check.sh | 0 | 2026-06-10 10:00 | no drift |
 | blocked-check | Heavy | pass | blocked-check.sh | 0 | 2026-06-10 10:00 | no blocked operations |
 | task-boundary-check | Heavy | pass | task-boundary-check.sh | 0 | 2026-06-10 10:00 | only change folder modified |
@@ -661,8 +679,10 @@ EOF
 
 echo "== scaffold health =="
 bash "$starter_root/agent-flow/scripts/scaffold-health.sh"
+bash "$starter_root/agent-flow/scripts/template-check.sh"
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoProfile -File "$starter_root/agent-flow/scripts/scaffold-health.ps1"
+  pwsh -NoProfile -File "$starter_root/agent-flow/scripts/template-check.ps1"
 fi
 
 echo "== syntax =="
@@ -695,6 +715,12 @@ assert_path "$empty_target/agent-flow/scripts/closure-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/closure-check.sh"
 assert_path "$empty_target/agent-flow/scripts/check-change.ps1"
 assert_path "$empty_target/agent-flow/scripts/check-change.sh"
+assert_path "$empty_target/agent-flow/scripts/coverage-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/coverage-check.sh"
+assert_path "$empty_target/agent-flow/scripts/template-check.ps1"
+assert_path "$empty_target/agent-flow/scripts/template-check.sh"
+assert_path "$empty_target/agent-flow/scripts/knowledge-search.ps1"
+assert_path "$empty_target/agent-flow/scripts/knowledge-search.sh"
 assert_path "$empty_target/agent-flow/scripts/new-change.ps1"
 assert_path "$empty_target/agent-flow/scripts/new-change.sh"
 assert_path "$empty_target/agent-flow/scripts/alignment-check.ps1"
@@ -737,6 +763,7 @@ fi
 echo "== docs/examples =="
 assert_path "$starter_root/docs/ADOPTION.md"
 assert_path "$starter_root/docs/PROMPTS.md"
+assert_path "$starter_root/docs/TROUBLESHOOTING.md"
 assert_path "$starter_root/examples/sample-change/VERIFY.md"
 assert_path "$starter_root/.github/workflows/scaffold-ci.yml"
 assert_path "$starter_root/.github/workflows/agent-flow-starter-check.yml"

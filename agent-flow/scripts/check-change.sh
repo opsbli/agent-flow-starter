@@ -156,8 +156,10 @@ fi
 
 if has_file REQUIREMENT.md && has_file VERIFY.md; then
   run_gate ac-check bash "$script_dir/ac-check.sh" --change-dir "$change_dir"
+  run_gate coverage-check bash "$script_dir/coverage-check.sh" --change-dir "$change_dir"
 else
   skip_gate ac-check "REQUIREMENT.md or VERIFY.md not present"
+  skip_gate coverage-check "REQUIREMENT.md or VERIFY.md not present"
 fi
 
 if has_file DESIGN.md; then

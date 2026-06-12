@@ -125,6 +125,7 @@ AUDIT.md
 - Heavy change 没有 Closure Audit，不标记完成。
 - Heavy change 必须运行 `code-drift-check`（设计声明 vs 实际代码的漂移检查），通过后才能收口。
 - `drift-check` 已废弃，请使用 `code-drift-check` 代替。
+- Standard / Heavy change 收口前必须运行 `coverage-check`，确认 AC Evidence 覆盖率和测试覆盖率记录。
 - Heavy change 必须运行 `blocked-check`（检查是否触碰 manifest.yaml 中 `blocked_if` 规则）。
 - Standard / Heavy change 收口前必须运行 `task-boundary-check`，确认实际改动没有超出 `TASKS.md write_files`。
 - Emergency change 必须运行 `emergency-check`，确认 P0/P1、批准人、bypass 理由和回填状态完整。
@@ -144,7 +145,9 @@ AUDIT.md
 
 ```text
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
+agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
 ```
 
 收口阶段加 closure 模式：

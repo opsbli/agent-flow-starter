@@ -4,6 +4,7 @@ alignment-check
 task-check
 plan-check
 ac-check
+coverage-check
 code-drift-check
 blocked-check
 task-boundary-check

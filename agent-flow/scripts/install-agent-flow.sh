@@ -177,7 +177,23 @@ echo "=== Preserving project-owned files ==="
 for item in "${project_owned[@]}"; do
   path="$target_af/$item"
   if [ -d "$path" ]; then
-    echo "  PRESERVED: $item/"
+    seeded_count=0
+    if [ -d "$source_af/$item" ]; then
+      while IFS= read -r src_file; do
+        rel="${src_file#$source_af/$item/}"
+        dest_file="$path/$rel"
+        if [ ! -e "$dest_file" ]; then
+          mkdir -p "$(dirname "$dest_file")"
+          cp "$src_file" "$dest_file"
+          seeded_count=$((seeded_count + 1))
+        fi
+      done < <(find "$source_af/$item" -type f)
+    fi
+    if [ "$seeded_count" -gt 0 ]; then
+      echo "  PRESERVED: $item/; SEEDED $seeded_count missing starter file(s)"
+    else
+      echo "  PRESERVED: $item/"
+    fi
   elif [ -d "$source_af/$item" ]; then
     cp -R "$source_af/$item" "$path"
     echo "  SEEDED: $item/"

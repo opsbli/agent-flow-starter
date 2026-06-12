@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### ✨ New
+
+- `coverage-check.ps1/.sh` computes AC Evidence coverage and requires test coverage evidence or an explicit skip reason.
+- `template-check.ps1/.sh` validates required templates, template version metadata, and `artifact-schema.json`.
+- `knowledge-search.ps1/.sh` searches `agent-flow/knowledge/` and `agent-flow/decisions/` before adding new long-term facts.
+- `knowledge/INDEX.md`, `templates/VERSION`, and `templates/REQUIREMENT_ALIGNED.md` strengthen knowledge indexing and template lifecycle management.
+
+### 🔧 Updated
+
+- `check-change` now runs `coverage-check` after `ac-check` when `REQUIREMENT.md` and `VERIFY.md` are present.
+- Heavy closure gate rules and `VERIFY.md` now include `coverage-check` and `Coverage Summary`.
+- Installers seed missing starter-owned files inside preserved `knowledge/` and `decisions/` directories without overwriting project-owned content.
+
 ## 0.2.0 (2026-06-10)
 
 > Semantic versioning: MAJOR.MINOR.PATCH

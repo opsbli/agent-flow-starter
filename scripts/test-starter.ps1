@@ -320,7 +320,12 @@ function Assert-NewChangeAndAlignment {
     $changeRoot = Join-Path $TargetRoot "agent-flow/changes"
     & (Join-Path $TargetRoot "agent-flow/scripts/new-change.ps1") -Name "Demo Heavy Change" -Flow Heavy -ChangesRoot $changeRoot -TemplateRoot (Join-Path $TargetRoot "agent-flow/templates")
 
-    $changeDir = Join-Path $changeRoot "demo-heavy-change"
+    $changeDir = Get-ChildItem -LiteralPath $changeRoot -Directory -Filter "*demo-heavy-change" |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1 -ExpandProperty FullName
+    if ([string]::IsNullOrWhiteSpace($changeDir)) {
+        throw "new-change did not create a demo-heavy-change directory."
+    }
     Assert-Path (Join-Path $changeDir "STATE.md")
     Assert-Path (Join-Path $changeDir "CHANGE.md")
     Assert-Path (Join-Path $changeDir "REVIEW.md")
@@ -476,10 +481,21 @@ write_files:
 | AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
 |---|---|---|---|---|---|
 | AC-01 | Demo criterion | manual | VERIFY.md | pass | none |
+
+## Coverage Summary
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | coverage-check | auto | pass | self-test |
+| Test Coverage | N/A | N/A | skipped | self-test has no product coverage target |
 "@
     & (Join-Path $TargetRoot "agent-flow/scripts/ac-check.ps1") -ChangeDir $changeDir -TestRoot $changeDir
     if (-not $?) {
         throw "ac-check did not pass after VERIFY.md evidence was added."
+    }
+    & (Join-Path $TargetRoot "agent-flow/scripts/coverage-check.ps1") -ChangeDir $changeDir
+    if (-not $?) {
+        throw "coverage-check did not pass after VERIFY.md coverage was added."
     }
 
     & (Join-Path $TargetRoot "agent-flow/scripts/blocked-check.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
@@ -678,6 +694,13 @@ write_files:
 |---|---|---|---|---|---|
 | AC-01 | Demo | manual | VERIFY.md | pass | none |
 
+## Coverage Summary
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | coverage-check.ps1 | auto | pass | AC-01 has evidence |
+| Test Coverage | N/A | N/A | skipped | self-test has no product coverage target |
+
 ## Machine Gate Summary
 
 | Gate | Required For | Result | Command | Exit Code | When | Evidence |
@@ -688,6 +711,7 @@ write_files:
 | task-check | Heavy | pass | task-check.ps1 | 0 | 2026-06-10 10:00 | T001 maps to AC-01 |
 | plan-check | Heavy | pass | plan-check.ps1 | 0 | 2026-06-10 10:00 | plan audit accepted |
 | ac-check | Heavy | pass | ac-check.ps1 | 0 | 2026-06-10 10:00 | AC-01 evidence present |
+| coverage-check | Heavy | pass | coverage-check.ps1 | 0 | 2026-06-10 10:00 | AC coverage 1/1; Test Coverage skipped with reason |
 | code-drift-check | Heavy | pass | code-drift-check.ps1 | 0 | 2026-06-10 10:00 | no drift |
 | blocked-check | Heavy | pass | blocked-check.ps1 | 0 | 2026-06-10 10:00 | no blocked operations |
 | task-boundary-check | Heavy | pass | task-boundary-check.ps1 | 0 | 2026-06-10 10:00 | only change folder modified |
@@ -750,9 +774,11 @@ no_change_reason: no change needed
 try {
     Write-Host "== scaffold health =="
     & (Join-Path $starterRoot "agent-flow/scripts/scaffold-health.ps1")
+    & (Join-Path $starterRoot "agent-flow/scripts/template-check.ps1")
     Push-Location $starterRoot
     try {
         bash agent-flow/scripts/scaffold-health.sh
+        bash agent-flow/scripts/template-check.sh
     } finally {
         Pop-Location
     }
@@ -796,6 +822,12 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/closure-check.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/check-change.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/check-change.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/coverage-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/coverage-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/template-check.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/template-check.sh")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/knowledge-search.ps1")
+    Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/knowledge-search.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.ps1")
@@ -839,6 +871,7 @@ old block
     Write-Host "== docs/examples =="
     Assert-Path (Join-Path $starterRoot "docs/ADOPTION.md")
     Assert-Path (Join-Path $starterRoot "docs/PROMPTS.md")
+    Assert-Path (Join-Path $starterRoot "docs/TROUBLESHOOTING.md")
     Assert-Path (Join-Path $starterRoot "examples/sample-change/VERIFY.md")
     Assert-Path (Join-Path $starterRoot ".github/workflows/scaffold-ci.yml")
     Assert-Path (Join-Path $starterRoot ".github/workflows/agent-flow-starter-check.yml")

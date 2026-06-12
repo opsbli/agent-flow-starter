@@ -22,8 +22,10 @@ Windows:
 ~~~powershell
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/manifest-check.ps1
+agent-flow/scripts/template-check.ps1
 agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
 agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/coverage-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
 agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
@@ -35,8 +37,10 @@ Linux/macOS:
 ~~~bash
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/manifest-check.sh
+bash agent-flow/scripts/template-check.sh
 bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
@@ -45,4 +49,4 @@ bash agent-flow/scripts/run-verify.sh --all
 
 ## Evidence Requirement
 
-VERIFY.md must record commands, results, failure summaries, skipped checks, AC evidence, and Machine Gate Summary rows with Result, Command, Exit Code, When, and Evidence.
+VERIFY.md must record commands, results, failure summaries, skipped checks, AC evidence, Coverage Summary rows, and Machine Gate Summary rows with Result, Command, Exit Code, When, and Evidence.
