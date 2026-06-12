@@ -44,6 +44,33 @@ bash scripts/setup-new-pc.sh --target /path/to/project
 按 agent-flow 流程处理这个需求：<需求内容>。先做 code-first 扫描，判断 Light/Standard/Heavy，然后给我 CHANGE 和执行计划。
 ```
 
+## 跨平台兼容性
+
+| 能力 | pi | Claude Code | Codex |
+|------|----|-------------|-------|
+| agent-flow 流程框架 | ✅ 完整支持 | ✅ AGENTS.md + bash 脚本 | ✅ AGENTS.md + bash 脚本 |
+| ECC 技能（32 核心） | ✅ `pi-package/` 一键安装 | ✅ `/plugin install ecc@ecc` | ✅ `npm i ecc-universal` + sync |
+| 安全扩展（4 类钩子） | ✅ ecc-bridge.ts | ❌ 需 ECC 原生插件 | ❌ 需 ECC 原生安装 |
+| 快捷命令（/af-* /ecc-*） | ✅ 21 个 prompt 模板 | ❌ 格式不兼容 | ❌ 格式不兼容 |
+| Agent（@ecc-*） | ✅ 8 个 pi agent | ❌ 需 ECC 原生 agent | ❌ 需 ECC 原生 agent |
+
+**agent-flow 流程**三平台通用；**ECC 深度集成**（安全钩子、快捷命令、agent）目前 pi 体验最完整。
+
+Claude Code 用户安装 ECC：
+
+```bash
+# 在 Claude Code 中
+/plugin marketplace add https://github.com/affaan-m/ECC
+/plugin install ecc@ecc
+```
+
+Codex 用户安装 ECC：
+
+```bash
+npm install ecc-universal
+bash scripts/sync-ecc-to-codex.sh
+```
+
 ## 适合什么场景
 
 适合：
