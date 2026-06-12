@@ -8,7 +8,9 @@
 
 ### 从 GitHub 安装（推荐）
 
-无需下载仓库，一行命令从 GitHub 直接装到目标项目：
+### 一行命令安装
+
+无需下载仓库，一条命令从 GitHub 直装到目标项目：
 
 ```bash
 # Windows
@@ -17,6 +19,31 @@ powershell -c "git clone --depth 1 https://github.com/opsbli/agent-flow-starter.
 # Linux/macOS
 git clone --depth 1 https://github.com/opsbli/agent-flow-starter.git /tmp/af && bash /tmp/af/scripts/setup-new-pc.sh --target /path/to/project
 ```
+
+### 告诉 AI，让 AI 帮你装
+
+如果你已经在 pi 或 Claude Code 中，把下面这段话发过去即可自动安装：
+
+```text
+请帮我从 https://github.com/opsbli/agent-flow-starter.git 安装
+agent-flow-starter 到目标项目。
+
+步骤：
+1. git clone --depth 1 这个仓库到临时目录
+2. 运行 scripts/setup-new-pc.ps1（Windows）或 setup-new-pc.sh（Linux/macOS）
+   指向我的项目目录
+3. 如果已安装 pi，它会自动装好 ECC 技能包 + 集成文件
+4. 完成后告诉我可用的命令
+```
+
+或者更简洁的版本：
+
+```text
+从 https://github.com/opsbli/agent-flow-starter.git 一键安装到
+D:\Projects\my-app（Windows）或 /path/to/project（Linux/macOS）
+```
+
+AI 会自动执行：`git clone` → `setup-new-pc` → 安装 pi + ECC + agent-flow。
 
 ### 从本地仓库安装
 
