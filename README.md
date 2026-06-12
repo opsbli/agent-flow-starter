@@ -60,6 +60,98 @@ bash scripts/setup-new-pc.sh --target /path/to/project
 - 非常小的脚本仓库，所有改动都能人工一眼看完。
 - 不愿意给高风险变更加人工确认点的团队。
 
+## 实战场景
+
+### 场景一：修个小 Bug
+
+安装后在 pi 中输入：
+
+```text
+修复登录页验证码不显示的问题
+```
+
+pi 自动走 Light 流程，建 change、扫代码、修复、审查、验证、收口。
+
+### 场景二：开发新模块
+
+```text
+/af-go 开发一个用户反馈模块，用户可以提交反馈，管理员后台查看
+```
+
+pi 自动走 Heavy 流程，完整执行 10 步：建 change → 扫描 → 设计 → 审计 → 实现 → 验证 → 报告 → 复盘。
+
+### 场景三：紧急修复线上事故
+
+```text
+/af-emergency 订单支付回调重复处理
+```
+
+Emergency 通道 bypass 标准流程，`generate-emergency` 自动回填 CANCEL.md / ROLLBACK.md，事后 24h 补审计。
+
+### 场景四：日常增量检查
+
+改代码后随时运行：
+
+```text
+/af-incverify
+```
+
+自动检测改了哪些文件，只跑相关检查（.ts → tsc，.go → go vet，所有文件扫密钥）。
+
+或装一次 pre-commit 钩子：
+
+```bash
+# Windows
+agent-flow/scripts/install-git-hooks.ps1
+
+# Linux/macOS
+bash agent-flow/scripts/install-git-hooks.sh
+```
+
+之后每次 `git commit` 自动验证，失败了不让提交。
+
+## 命令速查
+
+安装 ECC 后（`scripts/setup-new-pc.ps1` 自动完成），以下命令可在 pi 中使用：
+
+### 工作流命令
+
+| 命令 | 用途 |
+|------|------|
+| `/af-go <需求>` | 完整流程一站式执行 |
+| `/af-new <名称> [级别]` | 新建 change |
+| `/af-scan <需求>` | 代码优先扫描 |
+| `/af-design-auto <change-id>` | 自动设计 + 任务分解 |
+| `/af-audit <change-id>` | 审计 |
+| `/af-verify [change-id]` | 验证门禁 |
+| `/af-incverify` | 增量验证（只检查改动文件） |
+| `/af-report <change-id>` | 自动报告 |
+| `/af-evolve [change-id]` | 数据驱动演进 |
+| `/af-emergency <change-id>` | 紧急通道 |
+| `/af-cleanup` | 清理扫描 |
+
+### 能力命令
+
+| 命令 | 用途 |
+|------|------|
+| `/ecc-review [PR]` | 代码审查 |
+| `/ecc-security [路径]` | 安全扫描 |
+| `/ecc-quality [路径]` | 质量门禁 |
+| `/ecc-plan <需求>` | 生成计划 |
+| `/ecc-tdd <功能>` | TDD 工作流 |
+| `/ecc-build [错误]` | 修复构建 |
+| `/ecc-refactor [路径]` | 重构 |
+| `/ecc-docs [路径]` | 文档更新 |
+| `/ecc-route <任务>` | 模型路由建议 |
+
+### Agent 命令
+
+| 命令 | 用途 |
+|------|------|
+| `@ecc-explorer` | 代码探索 |
+| `@ecc-architect` | 架构设计 |
+| `/skill:<名称>` | 调用 ECC 技能 |
+
 ## 核心思想
 
 `agent-flow` 的工作方式可以概括为：
