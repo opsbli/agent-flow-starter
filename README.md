@@ -6,15 +6,33 @@
 
 ## 新电脑一键安装（含 ECC 技能）
 
-在全新电脑上，一步完成 pi + ECC 技能 + agent-flow 安装：
+### 从 GitHub 安装（推荐）
+
+无需下载仓库，一行命令从 GitHub 直接装到目标项目：
 
 ```bash
+# Windows
+powershell -c "git clone --depth 1 https://github.com/opsbli/agent-flow-starter.git $env:TMP\af; & $env:TMP\af\scripts\setup-new-pc.ps1 -Target D:\Projects\my-app"
+
+# Linux/macOS
+git clone --depth 1 https://github.com/opsbli/agent-flow-starter.git /tmp/af && bash /tmp/af/scripts/setup-new-pc.sh --target /path/to/project
+```
+
+### 从本地仓库安装
+
+```bash
+# 先克隆
+cd /tmp
+git clone --depth 1 https://github.com/opsbli/agent-flow-starter.git
+
 # Windows
 scripts/setup-new-pc.ps1 -Target D:\Projects\my-app
 
 # Linux/macOS
 bash scripts/setup-new-pc.sh --target /path/to/project
 ```
+
+### 安装内容
 
 这将会安装：
 - **pi** — AI 编码助手
