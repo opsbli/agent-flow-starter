@@ -1,7 +1,12 @@
-# agent-flow-starter Agent 规则
+﻿# agent-flow-starter Agent 规则
 
 > 本仓库是 `agent-flow` AI 开发流程的通用 starter。
 > 保持通用，不要写入具体业务项目的历史、需求或领域规则。
+
+## 入口指令
+
+收到任何开发需求后，必须先读取 `agent-flow/GO.md` 并按路由执行。
+不允许直接进入编码、设计或分析。
 
 ## 默认取向
 
@@ -107,3 +112,4 @@ starter 必须支持：
 - 在目标项目创建或更新 `AGENTS.md` 中的 `agent-flow` 区块。
 - 在目标项目创建或更新 `agent-flow/ecc-integration.md`（可选集成）。
 - 除非显式强制覆盖，否则保留目标项目的 `agent-flow/changes`、`agent-flow/logs`、`agent-flow/reports`。
+
