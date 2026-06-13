@@ -25,13 +25,16 @@
 
 产物：更新 `REQUIREMENT.md` 和必要知识文件。
 
-用 `grill-with-docs` 的方式追问：
+直接引用 `grill-with-docs` 技能执行结构化追问：
 
-- 每个业务名词的精确定义是什么？
+- 每个业务名词的精确定义是什么？与 `agent-flow/knowledge/` 中已有术语是否冲突？
 - 哪些状态、权限、数据归属必须明确？
 - 哪些场景不能做？
 - 失败后系统应该如何恢复？
 - 旧代码是否支持用户的说法？
+- 每次只问一个关键问题，给出 AI 推荐答案。
+- 术语一旦明确，立即更新 `agent-flow/knowledge/`。
+- 遇到不可逆取舍，创建 ADR 到 `agent-flow/decisions/`。
 
 验收标准必须使用 `AC-01`、`AC-02` 这种两位数字编号，并在后续 `TASKS.md`、`VERIFY.md`、`REPORT.md` 中保持一致。
 

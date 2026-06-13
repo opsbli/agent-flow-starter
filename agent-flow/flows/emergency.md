@@ -19,7 +19,7 @@
 Emergency 通道绕过了以下安全门：
 
 - ❌ CODE_SCAN.md（完整版）
-- ❌ Design Alignment / Grill
+- ❌ Design Alignment / Grill（完整版，阶段 0.5 保留最简版）
 - ❌ Plan Audit
 - ❌ Closure Audit
 - ❌ REVIEW.md
@@ -37,6 +37,14 @@ Emergency 通道绕过了以下安全门：
    - 记录批准人
    - 设定回填截止时间（默认 24h）
 3. 在 `CHANGE.md` 的「风险」中记录 bypass 的理由。
+
+### 阶段 0.5：最小 Grill
+
+在阶段 0 和阶段 1 之间，执行最小化 `grill-with-docs`：
+
+- 只问 1-2 个最关键的问题（确认修复方向正确、术语一致）。
+- 如果问题可以通过读代码回答，先读代码，不要问用户。
+- 记录关键假设和术语到 `CHANGE.md`。
 
 ### 阶段 1：最小扫描 + 实现
 
@@ -90,6 +98,7 @@ Emergency 通道绕过了以下安全门：
 | 阶段 | 必须 | 可选 |
 |---|---|---|
 | 0-确认 | `STATE.md` `CHANGE.md` | — |
+| 0.5-Grill | `CHANGE.md`（更新） | 术语记录 |
 | 1-实现 | `CODE_SCAN.md`(最小) `TASKS.md` | — |
 | 2-验证 | `VERIFY.md` | 回滚 SQL |
 | 3-部署 | 部署记录 | 监控确认 |
