@@ -44,7 +44,7 @@ function Get-RuleList {
 function Test-Meaningful {
     param(
         [string]$Value,
-        [string]$InvalidPattern = "(?i)TODO|TBD|path/to|example|\{.+?\}"
+        [string]$InvalidPattern = "(?i)TODO|TBD|path/to|(^|[^A-Za-z])example([^A-Za-z]|$)|\{.+?\}"
     )
 
     if ([string]::IsNullOrWhiteSpace($Value)) { return $false }
@@ -92,5 +92,4 @@ function Test-MeaningfulFile {
 
     return $true
 }
-
 

@@ -100,7 +100,7 @@ fi
 mkdir -p "$change_dir"
 
 echo ""
-echo "📋 Created change: $change_id"
+echo "Created change: $change_id"
 echo "   Flow level: $flow"
 echo ""
 

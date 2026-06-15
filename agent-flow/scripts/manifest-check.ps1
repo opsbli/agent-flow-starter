@@ -113,7 +113,7 @@ $requiredBlocked = @(
     "payment_bypass"
 )
 foreach ($rule in $requiredBlocked) {
-    if ($text -notmatch "(?m)^\s+-\s+$([regex]::Escape($rule))\s*$") {
+    if ($text -notmatch "(?m)^\s+-\s+$([regex]::Escape($rule))(\s+#.*)?\s*$") {
         $issues += "Missing blocked_if rule: $rule"
     }
 }

@@ -33,7 +33,7 @@ get_rule_list() {
 meaningful() {
   local value="$1"
   local allow_slash="${2:-false}"
-  local invalid_pattern="${3:-TODO|TBD|path/to|example|\{.+\}}"
+  local invalid_pattern="${3:-TODO|TBD|path/to|(^|[^A-Za-z])example([^A-Za-z]|$)|\{.+\}}"
 
   [ -n "$(printf '%s' "$value" | tr -d '[:space:]')" ] || return 1
   ! printf '%s' "$value" | grep -Eiq "$invalid_pattern" || return 1

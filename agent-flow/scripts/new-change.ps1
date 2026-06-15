@@ -51,7 +51,11 @@ function Get-Slug {
 
 # Auto-prefix: detect from manifest.yaml if not provided
 if ([string]::IsNullOrWhiteSpace($Prefix)) {
-    $manifest = Join-Path (Split-Path (Split-Path $ChangesRoot -Parent) -Parent) "manifest.yaml"
+    $flowRoot = Split-Path $ChangesRoot -Parent
+    if ([string]::IsNullOrWhiteSpace($flowRoot)) {
+        $flowRoot = "agent-flow"
+    }
+    $manifest = Join-Path $flowRoot "manifest.yaml"
     if (Test-Path $manifest) {
         $m = Get-Content $manifest -Raw -Encoding utf8 -ErrorAction SilentlyContinue
         if ($m -match 'name:\s*(\S+)') { $Prefix = $Matches[1] }
@@ -70,7 +74,7 @@ if ((Test-Path -LiteralPath $changeDir) -and -not $Force) {
 New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
 
 Write-Host ""
-Write-Host "📋 Created change: $changeId"
+Write-Host "Created change: $changeId"
 Write-Host "   Flow level: $Flow"
 Write-Host ""
 

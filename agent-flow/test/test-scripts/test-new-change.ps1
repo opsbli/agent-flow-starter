@@ -23,15 +23,32 @@ if (-not (Test-Path -LiteralPath $fixtureAf)) {
     & (Join-Path $scriptsDir "install-agent-flow.ps1") -Target $fixtureDir -StarterRoot (Resolve-Path (Join-Path $scriptsDir "..\..")) -Force
 }
 
+function Get-ChangeDirBySuffix {
+    param(
+        [string]$ChangesRoot,
+        [string]$Suffix
+    )
+    $match = Get-ChildItem -LiteralPath $ChangesRoot -Directory |
+        Where-Object { $_.Name -like "*$Suffix" } |
+        Sort-Object LastWriteTimeUtc |
+        Select-Object -Last 1
+    if (-not $match) {
+        Write-Host "FAIL: Change directory with suffix '$Suffix' was not created."
+        exit 1
+    }
+    return $match.FullName
+}
+
 # === Test 1: Light change ===
 Write-Host ""
 Write-Host "Test 1: Light change"
-$changeDir = Join-Path $fixtureAf "changes/test-light"
+$changesRoot = Join-Path $fixtureAf "changes"
 
 # Clean up any previous test
-if (Test-Path -LiteralPath $changeDir) { Remove-Item -Recurse -Force -LiteralPath $changeDir }
+Get-ChildItem -LiteralPath $changesRoot -Directory | Where-Object { $_.Name -like "*test-light" } | Remove-Item -Recurse -Force
 
-& (Join-Path $scriptsDir "new-change.ps1") -Name "test-light" -Flow Light -ChangesRoot (Join-Path $fixtureAf "changes") -Force
+& (Join-Path $scriptsDir "new-change.ps1") -Name "test-light" -Flow Light -ChangesRoot $changesRoot -Force
+$changeDir = Get-ChangeDirBySuffix -ChangesRoot $changesRoot -Suffix "test-light"
 
 $expectedLight = @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")
 $missing = $expectedLight | Where-Object { -not (Test-Path -LiteralPath (Join-Path $changeDir $_)) }
@@ -54,11 +71,11 @@ Remove-Item -Recurse -Force -LiteralPath $changeDir
 # === Test 2: Standard change ===
 Write-Host ""
 Write-Host "Test 2: Standard change"
-$changeDir = Join-Path $fixtureAf "changes/test-standard"
 
-if (Test-Path -LiteralPath $changeDir) { Remove-Item -Recurse -Force -LiteralPath $changeDir }
+Get-ChildItem -LiteralPath $changesRoot -Directory | Where-Object { $_.Name -like "*test-standard" } | Remove-Item -Recurse -Force
 
-& (Join-Path $scriptsDir "new-change.ps1") -Name "test-standard" -Flow Standard -ChangesRoot (Join-Path $fixtureAf "changes") -Force
+& (Join-Path $scriptsDir "new-change.ps1") -Name "test-standard" -Flow Standard -ChangesRoot $changesRoot -Force
+$changeDir = Get-ChangeDirBySuffix -ChangesRoot $changesRoot -Suffix "test-standard"
 
 $expectedStd = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
 $missing = $expectedStd | Where-Object { -not (Test-Path -LiteralPath (Join-Path $changeDir $_)) }
@@ -78,11 +95,11 @@ Remove-Item -Recurse -Force -LiteralPath $changeDir
 # === Test 3: Heavy change ===
 Write-Host ""
 Write-Host "Test 3: Heavy change"
-$changeDir = Join-Path $fixtureAf "changes/test-heavy"
 
-if (Test-Path -LiteralPath $changeDir) { Remove-Item -Recurse -Force -LiteralPath $changeDir }
+Get-ChildItem -LiteralPath $changesRoot -Directory | Where-Object { $_.Name -like "*test-heavy" } | Remove-Item -Recurse -Force
 
-& (Join-Path $scriptsDir "new-change.ps1") -Name "test-heavy" -Flow Heavy -ChangesRoot (Join-Path $fixtureAf "changes") -Force
+& (Join-Path $scriptsDir "new-change.ps1") -Name "test-heavy" -Flow Heavy -ChangesRoot $changesRoot -Force
+$changeDir = Get-ChangeDirBySuffix -ChangesRoot $changesRoot -Suffix "test-heavy"
 
 $expectedHeavy = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "PLAN.md", "TASKS.md", "VERIFY.md", "REVIEW.md", "REPORT.md", "AUDIT.md", "EVOLUTION.md")
 $missing = $expectedHeavy | Where-Object { -not (Test-Path -LiteralPath (Join-Path $changeDir $_)) }
@@ -102,10 +119,10 @@ Remove-Item -Recurse -Force -LiteralPath $changeDir
 # === Test 4: Slug generation ===
 Write-Host ""
 Write-Host "Test 4: Slug generation from name"
-$changeDir = Join-Path $fixtureAf "changes/anonymous-conversation"
-if (Test-Path -LiteralPath $changeDir) { Remove-Item -Recurse -Force -LiteralPath $changeDir }
+Get-ChildItem -LiteralPath $changesRoot -Directory | Where-Object { $_.Name -like "*anonymous-conversation" } | Remove-Item -Recurse -Force
 
-& (Join-Path $scriptsDir "new-change.ps1") -Name "Anonymous Conversation" -Flow Light -ChangesRoot (Join-Path $fixtureAf "changes") -Force
+& (Join-Path $scriptsDir "new-change.ps1") -Name "Anonymous Conversation" -Flow Light -ChangesRoot $changesRoot -Force
+$changeDir = Get-ChangeDirBySuffix -ChangesRoot $changesRoot -Suffix "anonymous-conversation"
 
 if (-not (Test-Path -LiteralPath (Join-Path $changeDir "CHANGE.md"))) {
     Write-Host "FAIL: Change not created for name 'Anonymous Conversation'"

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 change_dir=""
@@ -156,10 +156,11 @@ fi
 
 if has_file REQUIREMENT.md && has_file VERIFY.md; then
   run_gate ac-check bash "$script_dir/ac-check.sh" --change-dir "$change_dir"
-  run_gate ac-traceability-check bash "\/ac-traceability-check.sh" --change-dir "\"
+  run_gate ac-traceability-check bash "$script_dir/ac-traceability-check.sh" --change-dir "$change_dir"
   run_gate coverage-check bash "$script_dir/coverage-check.sh" --change-dir "$change_dir"
 else
   skip_gate ac-check "REQUIREMENT.md or VERIFY.md not present"
+  skip_gate ac-traceability-check "REQUIREMENT.md or VERIFY.md not present"
   skip_gate coverage-check "REQUIREMENT.md or VERIFY.md not present"
 fi
 

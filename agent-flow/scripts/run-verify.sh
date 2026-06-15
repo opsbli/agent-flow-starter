@@ -74,10 +74,13 @@ get_command() {
   local key="$1"
   local command
   command="$(sed -nE "s/^[[:space:]]+$key:[[:space:]]*(.*)$/\1/p" "$manifest" | head -n 1)"
-  command="${command#\"}"
-  command="${command%\"}"
-  command="${command#\'}"
-  command="${command%\'}"
+  if [ "${#command}" -ge 2 ]; then
+    first="${command:0:1}"
+    last="${command: -1}"
+    if { [ "$first" = '"' ] && [ "$last" = '"' ]; } || { [ "$first" = "'" ] && [ "$last" = "'" ]; }; then
+      command="${command:1:${#command}-2}"
+    fi
+  fi
 
   if [ -z "$command" ]; then
     return 1
@@ -118,4 +121,3 @@ if [ "$all" = true ]; then
 else
   run_key "$name"
 fi
-

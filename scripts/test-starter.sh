@@ -89,6 +89,12 @@ Open Questions: $open_questions
 Alignment Verdict: $verdict
 
 Skip Reason:
+
+## AC Trace
+
+| AC | Coverage |
+|---|---|
+| AC-01 | Demo design covers the README-only change. |
 EOF
 }
 
@@ -639,7 +645,7 @@ EOF
 | evolution-check | Heavy | pass | evolution-check.sh | 0 | 2026-06-10 10:00 | no change needed recorded |
 EOF
   printf '# Review\n\nReviewed.\n' > "$change_dir/REVIEW.md"
-  printf '# Report\n\nDone.\n' > "$change_dir/REPORT.md"
+  printf '# Report\n\nDone. AC-01 is covered by the demo closure evidence.\n' > "$change_dir/REPORT.md"
   cat > "$change_dir/EVOLUTION.md" <<'EOF'
 # Evolution
 

@@ -169,12 +169,12 @@ if ((Test-File "PLAN.md") -or (Test-File "AUDIT.md")) {
 }
 
 if ((Test-File "REQUIREMENT.md") -and (Test-File "VERIFY.md")) {
-    Invoke-Gate -GateName "ac-check"
-    Invoke-Gate -GateName "ac-traceability-check" -GatePath (Join-Path $scriptDir "ac-traceability-check.ps1") -NamedArgs @{ ChangeDir = $ChangeDir } -GatePath (Join-Path $scriptDir "ac-check.ps1") -GateArgs @($ChangeDir)
+    Invoke-Gate -GateName "ac-check" -GatePath (Join-Path $scriptDir "ac-check.ps1") -GateArgs @($ChangeDir)
+    Invoke-Gate -GateName "ac-traceability-check" -GatePath (Join-Path $scriptDir "ac-traceability-check.ps1") -NamedArgs @{ ChangeDir = $ChangeDir }
     Invoke-Gate -GateName "coverage-check" -GatePath (Join-Path $scriptDir "coverage-check.ps1") -GateArgs @($ChangeDir)
 } else {
     Skip-Gate -GateName "ac-check" -Reason "REQUIREMENT.md or VERIFY.md not present"
-        Skip-Gate -GateName "ac-traceability-check" -Reason "REQUIREMENT.md or VERIFY.md not present"
+    Skip-Gate -GateName "ac-traceability-check" -Reason "REQUIREMENT.md or VERIFY.md not present"
     Skip-Gate -GateName "coverage-check" -Reason "REQUIREMENT.md or VERIFY.md not present"
 }
 

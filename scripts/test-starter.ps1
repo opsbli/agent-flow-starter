@@ -92,6 +92,12 @@ Open Questions: $OpenQuestions
 Alignment Verdict: $Verdict
 
 Skip Reason:
+
+## AC Trace
+
+| AC | Coverage |
+|---|---|
+| AC-01 | Demo design covers the README-only change. |
 "@
 }
 
@@ -720,7 +726,7 @@ write_files:
 | evolution-check | Heavy | pass | evolution-check.ps1 | 0 | 2026-06-10 10:00 | no change needed recorded |
 "@
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REVIEW.md") -Value "# Review`n`nReviewed."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REPORT.md") -Value "# Report`n`nDone."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "REPORT.md") -Value "# Report`n`nDone. AC-01 is covered by the demo closure evidence."
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "EVOLUTION.md") -Value @"
 # Evolution
 

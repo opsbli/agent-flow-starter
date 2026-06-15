@@ -80,8 +80,14 @@ foreach ($line in ($manifestText -split "`n")) {
         $inBlocked = $true
         continue
     }
+    if ($inBlocked -and ($line.Trim() -eq "" -or $line.Trim() -match '^#')) {
+        continue
+    }
     if ($inBlocked -and $line.Trim() -match '^-\s+(.+)$') {
-        $blockedRules += $matches[1].Trim()
+        $value = ($matches[1] -replace '\s+#.*$', '').Trim()
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $blockedRules += $value
+        }
         continue
     }
     if ($inBlocked -and -not [string]::IsNullOrWhiteSpace($line)) {

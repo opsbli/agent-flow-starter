@@ -42,9 +42,11 @@ blocked_rules="$(
     /^[[:space:]]*blocked_if:[[:space:]]*$/ { in_section = 1; next }
     in_section && /^[[:space:]]*-/ {
       sub(/^[[:space:]]*-[[:space:]]*/, "")
+      sub(/[[:space:]]+#.*$/, "")
       print
       next
     }
+    in_section && /^[[:space:]]*(#|$)/ { next }
     in_section && /^[^[:space:]]/ { in_section = 0 }
     in_section && /^[[:space:]]{2}[A-Za-z0-9_-]+:[[:space:]]*$/ { in_section = 0 }
   ' "$manifest_path"

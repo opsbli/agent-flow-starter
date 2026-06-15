@@ -105,7 +105,7 @@ required_blocked=(
   payment_bypass
 )
 for rule in "${required_blocked[@]}"; do
-  require_text "blocked_if rule: $rule" "^[[:space:]]*-[[:space:]]+$rule[[:space:]]*$"
+  require_text "blocked_if rule: $rule" "^[[:space:]]*-[[:space:]]+$rule([[:space:]]+#.*)?[[:space:]]*$"
 done
 
 required_gates=(

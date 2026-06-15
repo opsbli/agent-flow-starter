@@ -48,6 +48,20 @@ if (-not (Test-Path -LiteralPath $Manifest)) {
 
 $manifestText = Get-Content -Raw -Encoding utf8 -LiteralPath $Manifest
 
+function Remove-YamlWrappingQuotes {
+    param([string]$Value)
+
+    $trimmed = $Value.Trim()
+    if ($trimmed.Length -ge 2) {
+        $first = $trimmed[0]
+        $last = $trimmed[$trimmed.Length - 1]
+        if (($first -eq '"' -and $last -eq '"') -or ($first -eq "'" -and $last -eq "'")) {
+            return $trimmed.Substring(1, $trimmed.Length - 2)
+        }
+    }
+    return $trimmed
+}
+
 function Get-VerificationCommand {
     param([string]$Key)
 
@@ -57,7 +71,7 @@ function Get-VerificationCommand {
         return $null
     }
 
-    $command = $match.Groups[1].Value.Trim().Trim("'").Trim('"')
+    $command = Remove-YamlWrappingQuotes -Value $match.Groups[1].Value
     if ([string]::IsNullOrWhiteSpace($command)) {
         return $null
     }

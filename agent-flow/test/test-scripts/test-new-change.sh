@@ -25,13 +25,20 @@ pass() {
   echo "PASS: $1"
 }
 
+change_dir_by_suffix() {
+  local suffix="$1" match
+  match="$(find "$fixture_af/changes" -maxdepth 1 -type d -name "*$suffix" | sort | tail -n 1)"
+  [ -n "$match" ] || fail "Change directory with suffix '$suffix' was not created"
+  printf '%s' "$match"
+}
+
 # --- Test 1: Light change ---
 echo ""
 echo "Test 1: Light change"
-change_dir="$fixture_af/changes/test-light"
-rm -rf "$change_dir"
+find "$fixture_af/changes" -maxdepth 1 -type d -name "*test-light" -exec rm -rf {} +
 
 bash "$scripts_dir/new-change.sh" --name "test-light" --flow Light --changes-root "$fixture_af/changes" --force
+change_dir="$(change_dir_by_suffix test-light)"
 
 for f in "STATE.md" "CHANGE.md" "CODE_SCAN.md" "VERIFY.md" "REPORT.md"; do
   [ -f "$change_dir/$f" ] || fail "Light change missing $f"
@@ -44,10 +51,10 @@ rm -rf "$change_dir"
 # --- Test 2: Standard change ---
 echo ""
 echo "Test 2: Standard change"
-change_dir="$fixture_af/changes/test-standard"
-rm -rf "$change_dir"
+find "$fixture_af/changes" -maxdepth 1 -type d -name "*test-standard" -exec rm -rf {} +
 
 bash "$scripts_dir/new-change.sh" --name "test-standard" --flow Standard --changes-root "$fixture_af/changes" --force
+change_dir="$(change_dir_by_suffix test-standard)"
 
 for f in "STATE.md" "CHANGE.md" "REQUIREMENT.md" "CODE_SCAN.md" "DESIGN.md" "TASKS.md" "VERIFY.md" "REPORT.md" "EVOLUTION.md"; do
   [ -f "$change_dir/$f" ] || fail "Standard change missing $f"
@@ -60,10 +67,10 @@ rm -rf "$change_dir"
 # --- Test 3: Heavy change ---
 echo ""
 echo "Test 3: Heavy change"
-change_dir="$fixture_af/changes/test-heavy"
-rm -rf "$change_dir"
+find "$fixture_af/changes" -maxdepth 1 -type d -name "*test-heavy" -exec rm -rf {} +
 
 bash "$scripts_dir/new-change.sh" --name "test-heavy" --flow Heavy --changes-root "$fixture_af/changes" --force
+change_dir="$(change_dir_by_suffix test-heavy)"
 
 for f in "STATE.md" "CHANGE.md" "REQUIREMENT.md" "CODE_SCAN.md" "DESIGN.md" "PLAN.md" "TASKS.md" "VERIFY.md" "REVIEW.md" "REPORT.md" "AUDIT.md" "EVOLUTION.md"; do
   [ -f "$change_dir/$f" ] || fail "Heavy change missing $f"
@@ -76,10 +83,10 @@ rm -rf "$change_dir"
 # --- Test 4: Slug generation ---
 echo ""
 echo "Test 4: Slug generation"
-change_dir="$fixture_af/changes/anonymous-conversation"
-rm -rf "$change_dir"
+find "$fixture_af/changes" -maxdepth 1 -type d -name "*anonymous-conversation" -exec rm -rf {} +
 
 bash "$scripts_dir/new-change.sh" --name "Anonymous Conversation" --flow Light --changes-root "$fixture_af/changes" --force
+change_dir="$(change_dir_by_suffix anonymous-conversation)"
 
 [ -f "$change_dir/CHANGE.md" ] || fail "Change not created for 'Anonymous Conversation'"
 pass "Slug generation correct: anonymous-conversation"
