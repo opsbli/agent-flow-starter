@@ -93,6 +93,20 @@ function Write-TodoGuidance {
     Write-Host "  3. Use -StrictTodo in CI only after project context is expected to be fully initialized."
 }
 
+function Get-PublicScriptEntries {
+    param([string]$Root)
+
+    $scriptsDir = Join-Path $Root "agent-flow/scripts"
+    if (-not (Test-Path -LiteralPath $scriptsDir)) { return @() }
+
+    return @(
+        Get-ChildItem -LiteralPath $scriptsDir -File |
+            Where-Object { $_.Extension -in @(".ps1", ".sh") -and -not $_.BaseName.StartsWith("_") } |
+            Sort-Object Name |
+            ForEach-Object { "agent-flow/scripts/$($_.Name)" }
+    )
+}
+
 foreach ($section in @("project:", "code_map:", "change_storage:", "risk_rules:", "verification:", "gates:")) {
     if ($text -notmatch "(?m)^$([regex]::Escape($section))") {
         $issues += "Missing required section: $section"
@@ -118,66 +132,8 @@ foreach ($rule in $requiredBlocked) {
     }
 }
 
-$requiredGates = @(
-    "agent-flow/scripts/init-project.ps1",
-    "agent-flow/scripts/init-project.sh",
-    "agent-flow/scripts/install-agent-flow.ps1",
-    "agent-flow/scripts/install-agent-flow.sh",
-    "agent-flow/scripts/new-change.ps1",
-    "agent-flow/scripts/new-change.sh",
-    "agent-flow/scripts/next-step.ps1",
-    "agent-flow/scripts/next-step.sh",
-    "agent-flow/scripts/sync-state.ps1",
-    "agent-flow/scripts/sync-state.sh",
-    "agent-flow/scripts/state-check.ps1",
-    "agent-flow/scripts/state-check.sh",
-    "agent-flow/scripts/design-check.ps1",
-    "agent-flow/scripts/design-check.sh",
-    "agent-flow/scripts/alignment-check.ps1",
-    "agent-flow/scripts/alignment-check.sh",
-    "agent-flow/scripts/plan-check.ps1",
-    "agent-flow/scripts/plan-check.sh",
-    "agent-flow/scripts/scan-check.ps1",
-    "agent-flow/scripts/scan-check.sh",
-    "agent-flow/scripts/task-check.ps1",
-    "agent-flow/scripts/task-check.sh",
-    "agent-flow/scripts/task-boundary-check.ps1",
-    "agent-flow/scripts/task-boundary-check.sh",
-    "agent-flow/scripts/manifest-check.ps1",
-    "agent-flow/scripts/manifest-check.sh",
-    "agent-flow/scripts/emergency-check.ps1",
-    "agent-flow/scripts/emergency-check.sh",
-    "agent-flow/scripts/evolution-check.ps1",
-    "agent-flow/scripts/evolution-check.sh",
-    "agent-flow/scripts/closure-check.ps1",
-    "agent-flow/scripts/closure-check.sh",
-    "agent-flow/scripts/check-change.ps1",
-    "agent-flow/scripts/check-change.sh",
-    "agent-flow/scripts/run-verify.ps1",
-    "agent-flow/scripts/run-verify.sh",
-    "agent-flow/scripts/verify-backend.ps1",
-    "agent-flow/scripts/verify-backend.sh",
-    "agent-flow/scripts/verify-module.ps1",
-    "agent-flow/scripts/verify-module.sh",
-    "agent-flow/scripts/ac-check.ps1",
-    "agent-flow/scripts/ac-check.sh",
-    "agent-flow/scripts/coverage-check.ps1",
-    "agent-flow/scripts/coverage-check.sh",
-    "agent-flow/scripts/code-drift-check.ps1",
-    "agent-flow/scripts/code-drift-check.sh",
-    "agent-flow/scripts/blocked-check.ps1",
-    "agent-flow/scripts/blocked-check.sh",
-    "agent-flow/scripts/template-check.ps1",
-    "agent-flow/scripts/template-check.sh",
-    "agent-flow/scripts/knowledge-search.ps1",
-    "agent-flow/scripts/knowledge-search.sh",
-    "agent-flow/scripts/drift-check.ps1",
-    "agent-flow/scripts/drift-check.sh",
-    "agent-flow/scripts/scaffold-health.ps1",
-    "agent-flow/scripts/scaffold-health.sh"
-)
-
 $gateRulesPath = Join-Path $projectRootPath "agent-flow/rules/gates.txt"
+$gateRulesFound = Test-Path -LiteralPath $gateRulesPath
 if (Test-Path -LiteralPath $gateRulesPath) {
     $requiredGates = @(
         Get-Content -Encoding utf8 -LiteralPath $gateRulesPath |
@@ -185,7 +141,32 @@ if (Test-Path -LiteralPath $gateRulesPath) {
             Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") }
     )
 } else {
-    $warnings += "agent-flow/rules/gates.txt not found; using built-in gate list."
+    $warnings += "agent-flow/rules/gates.txt not found; deriving public scripts from agent-flow/scripts."
+    $requiredGates = @(Get-PublicScriptEntries -Root $projectRootPath)
+}
+
+$publicScripts = @(Get-PublicScriptEntries -Root $projectRootPath)
+$registered = @{}
+foreach ($gate in $requiredGates) {
+    $registered[$gate] = $true
+}
+if ($gateRulesFound) {
+    foreach ($script in $publicScripts) {
+        if (-not $registered.ContainsKey($script)) {
+            $issues += "Public script missing from gate registry: $script"
+        }
+    }
+}
+
+$manifestGateEntries = @(
+    [regex]::Matches($text, "(?m)^\s+-\s+(agent-flow/scripts/[^\s#]+)\s*$") |
+        ForEach-Object { $_.Groups[1].Value } |
+        Sort-Object -Unique
+)
+foreach ($entry in $manifestGateEntries) {
+    if (-not $registered.ContainsKey($entry)) {
+        $issues += "Manifest gate entry missing from gate registry: $entry"
+    }
 }
 
 foreach ($gate in $requiredGates) {

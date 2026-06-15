@@ -840,6 +840,14 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.sh")
     & (Join-Path $emptyTarget "agent-flow/scripts/init-project.ps1") -Target $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1") -ProjectRoot $emptyTarget
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.ps1") -Value "Write-Host 'unregistered'"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.sh") -Value "#!/usr/bin/env bash`necho unregistered"
+    Assert-Fails -Label "manifest-check public script registry negative case" -ExpectedPattern "Public script missing from gate registry" -Command {
+        & (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1") -ProjectRoot $emptyTarget
+    }
+    Remove-Item -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.ps1") -Force
+    Remove-Item -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.sh") -Force
+    & (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1") -ProjectRoot $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/run-verify.ps1") -All
     Assert-NextStage -TargetRoot $emptyTarget -ExpectedStage "requirement"
     Assert-DesignAlignmentStage -TargetRoot $emptyTarget
@@ -872,6 +880,24 @@ old block
     }
     if ($LASTEXITCODE -ne 1) {
         exit $LASTEXITCODE
+    }
+
+    $allowedHistory = @(
+        "agent-flow/changes/.gitkeep",
+        "agent-flow/logs/.gitkeep",
+        "agent-flow/reports/.gitkeep"
+    )
+    $trackedHistory = @(& git -C $starterRoot ls-files -- agent-flow/changes agent-flow/logs agent-flow/reports)
+    $unexpectedHistory = @(
+        $trackedHistory |
+            Where-Object {
+                -not [string]::IsNullOrWhiteSpace($_) -and
+                $_ -notin $allowedHistory -and
+                (Test-Path -LiteralPath (Join-Path $starterRoot $_))
+            }
+    )
+    if ($unexpectedHistory.Count -gt 0) {
+        throw "Starter must not track run-history files outside .gitkeep:`n$($unexpectedHistory -join "`n")"
     }
 
     Write-Host "== docs/examples =="

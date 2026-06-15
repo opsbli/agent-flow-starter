@@ -82,6 +82,26 @@ write_todo_guidance() {
   echo "  3. Use --strict-todo in CI only after project context is expected to be fully initialized."
 }
 
+public_script_entries() {
+  local scripts_dir="$project_root/agent-flow/scripts"
+  local entries=()
+  local script base
+  if [ ! -d "$scripts_dir" ]; then
+    return
+  fi
+  for script in "$scripts_dir"/*.ps1 "$scripts_dir"/*.sh; do
+    [ -f "$script" ] || continue
+    base="$(basename "$script")"
+    case "$base" in
+      _*) continue ;;
+    esac
+    entries+=("agent-flow/scripts/$base")
+  done
+  if [ "${#entries[@]}" -gt 0 ]; then
+    printf '%s\n' "${entries[@]}" | sort -u
+  fi
+}
+
 require_text() {
   local label="$1" pattern="$2"
   if ! grep -Eq "$pattern" "$manifest_path"; then
@@ -108,71 +128,49 @@ for rule in "${required_blocked[@]}"; do
   require_text "blocked_if rule: $rule" "^[[:space:]]*-[[:space:]]+$rule([[:space:]]+#.*)?[[:space:]]*$"
 done
 
-required_gates=(
-  agent-flow/scripts/init-project.ps1
-  agent-flow/scripts/init-project.sh
-  agent-flow/scripts/install-agent-flow.ps1
-  agent-flow/scripts/install-agent-flow.sh
-  agent-flow/scripts/new-change.ps1
-  agent-flow/scripts/new-change.sh
-  agent-flow/scripts/next-step.ps1
-  agent-flow/scripts/next-step.sh
-  agent-flow/scripts/sync-state.ps1
-  agent-flow/scripts/sync-state.sh
-  agent-flow/scripts/state-check.ps1
-  agent-flow/scripts/state-check.sh
-  agent-flow/scripts/design-check.ps1
-  agent-flow/scripts/design-check.sh
-  agent-flow/scripts/alignment-check.ps1
-  agent-flow/scripts/alignment-check.sh
-  agent-flow/scripts/plan-check.ps1
-  agent-flow/scripts/plan-check.sh
-  agent-flow/scripts/scan-check.ps1
-  agent-flow/scripts/scan-check.sh
-  agent-flow/scripts/task-check.ps1
-  agent-flow/scripts/task-check.sh
-  agent-flow/scripts/task-boundary-check.ps1
-  agent-flow/scripts/task-boundary-check.sh
-  agent-flow/scripts/manifest-check.ps1
-  agent-flow/scripts/manifest-check.sh
-  agent-flow/scripts/emergency-check.ps1
-  agent-flow/scripts/emergency-check.sh
-  agent-flow/scripts/evolution-check.ps1
-  agent-flow/scripts/evolution-check.sh
-  agent-flow/scripts/closure-check.ps1
-  agent-flow/scripts/closure-check.sh
-  agent-flow/scripts/check-change.ps1
-  agent-flow/scripts/check-change.sh
-  agent-flow/scripts/run-verify.ps1
-  agent-flow/scripts/run-verify.sh
-  agent-flow/scripts/verify-backend.ps1
-  agent-flow/scripts/verify-backend.sh
-  agent-flow/scripts/verify-module.ps1
-  agent-flow/scripts/verify-module.sh
-  agent-flow/scripts/ac-check.ps1
-  agent-flow/scripts/ac-check.sh
-  agent-flow/scripts/coverage-check.ps1
-  agent-flow/scripts/coverage-check.sh
-  agent-flow/scripts/code-drift-check.ps1
-  agent-flow/scripts/code-drift-check.sh
-  agent-flow/scripts/blocked-check.ps1
-  agent-flow/scripts/blocked-check.sh
-  agent-flow/scripts/template-check.ps1
-  agent-flow/scripts/template-check.sh
-  agent-flow/scripts/knowledge-search.ps1
-  agent-flow/scripts/knowledge-search.sh
-  agent-flow/scripts/drift-check.ps1
-  agent-flow/scripts/drift-check.sh
-  agent-flow/scripts/scaffold-health.ps1
-  agent-flow/scripts/scaffold-health.sh
-)
-
 gate_rules_path="$project_root/agent-flow/rules/gates.txt"
+gate_rules_found=false
 if [ -f "$gate_rules_path" ]; then
-  mapfile -t required_gates < <(grep -Ev '^[[:space:]]*(#|$)' "$gate_rules_path")
+  gate_rules_found=true
+  mapfile -t required_gates < <(grep -Ev '^[[:space:]]*(#|$)' "$gate_rules_path" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)
 else
-  warnings+=("agent-flow/rules/gates.txt not found; using built-in gate list.")
+  warnings+=("agent-flow/rules/gates.txt not found; deriving public scripts from agent-flow/scripts.")
+  mapfile -t required_gates < <(public_script_entries)
 fi
+
+mapfile -t public_scripts < <(public_script_entries)
+if [ "$gate_rules_found" = true ]; then
+  for script in "${public_scripts[@]}"; do
+    found=false
+    for gate in "${required_gates[@]}"; do
+      if [ "$gate" = "$script" ]; then
+        found=true
+        break
+      fi
+    done
+    if [ "$found" = false ]; then
+      issues+=("Public script missing from gate registry: $script")
+    fi
+  done
+fi
+
+mapfile -t manifest_gates < <(
+  grep -E '^[[:space:]]*-[[:space:]]+agent-flow/scripts/[^[:space:]#]+[[:space:]]*$' "$manifest_path" |
+    sed -E 's/^[[:space:]]*-[[:space:]]+//;s/[[:space:]]*$//' |
+    sort -u
+)
+for entry in "${manifest_gates[@]}"; do
+  found=false
+  for gate in "${required_gates[@]}"; do
+    if [ "$gate" = "$entry" ]; then
+      found=true
+      break
+    fi
+  done
+  if [ "$found" = false ]; then
+    issues+=("Manifest gate entry missing from gate registry: $entry")
+  fi
+done
 
 for gate in "${required_gates[@]}"; do
   require_text "gate entry: $gate" "^[[:space:]]*-[[:space:]]+$gate[[:space:]]*$"

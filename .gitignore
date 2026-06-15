@@ -16,7 +16,14 @@ target/
 nul
 .pi/
 !.pi/APPEND_SYSTEM.md
-agent-flow/changes/
+
+agent-flow/changes/*
+!agent-flow/changes/.gitkeep
+agent-flow/logs/*
+!agent-flow/logs/.gitkeep
+agent-flow/reports/*
+!agent-flow/reports/.gitkeep
+
 ECC-pi-安装报告.md
 ECC-vs-agent-flow-对比报告.md
 ECC-集成评分报告.md

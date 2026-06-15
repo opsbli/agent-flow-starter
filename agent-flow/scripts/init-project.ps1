@@ -193,6 +193,17 @@ function YamlList([string[]]$Items, [string]$Indent = "    ") {
     ($Items | ForEach-Object { "$Indent- $_" }) -join "`n"
 }
 
+$gateRulesPath = Join-Path $root "agent-flow/rules/gates.txt"
+if (-not (Test-Path -LiteralPath $gateRulesPath)) {
+    throw "Gate registry not found: $gateRulesPath"
+}
+$gateLines = (
+    Get-Content -Encoding utf8 -LiteralPath $gateRulesPath |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") } |
+        ForEach-Object { "  - $_" }
+) -join "`n"
+
 $manifest = @"
 project:
   name: $projectName
@@ -268,62 +279,7 @@ verification:
   frontend_lint: $frontendLint
 
 gates:
-  - agent-flow/scripts/init-project.ps1
-  - agent-flow/scripts/init-project.sh
-  - agent-flow/scripts/install-agent-flow.ps1
-  - agent-flow/scripts/install-agent-flow.sh
-  - agent-flow/scripts/new-change.ps1
-  - agent-flow/scripts/new-change.sh
-  - agent-flow/scripts/next-step.ps1
-  - agent-flow/scripts/next-step.sh
-  - agent-flow/scripts/sync-state.ps1
-  - agent-flow/scripts/sync-state.sh
-  - agent-flow/scripts/state-check.ps1
-  - agent-flow/scripts/state-check.sh
-  - agent-flow/scripts/design-check.ps1
-  - agent-flow/scripts/design-check.sh
-  - agent-flow/scripts/alignment-check.ps1
-  - agent-flow/scripts/alignment-check.sh
-  - agent-flow/scripts/plan-check.ps1
-  - agent-flow/scripts/plan-check.sh
-  - agent-flow/scripts/scan-check.ps1
-  - agent-flow/scripts/scan-check.sh
-  - agent-flow/scripts/task-check.ps1
-  - agent-flow/scripts/task-check.sh
-  - agent-flow/scripts/task-boundary-check.ps1
-  - agent-flow/scripts/task-boundary-check.sh
-  - agent-flow/scripts/manifest-check.ps1
-  - agent-flow/scripts/manifest-check.sh
-  - agent-flow/scripts/emergency-check.ps1
-  - agent-flow/scripts/emergency-check.sh
-  - agent-flow/scripts/evolution-check.ps1
-  - agent-flow/scripts/evolution-check.sh
-  - agent-flow/scripts/closure-check.ps1
-  - agent-flow/scripts/closure-check.sh
-  - agent-flow/scripts/check-change.ps1
-  - agent-flow/scripts/check-change.sh
-  - agent-flow/scripts/run-verify.ps1
-  - agent-flow/scripts/run-verify.sh
-  - agent-flow/scripts/verify-backend.ps1
-  - agent-flow/scripts/verify-backend.sh
-  - agent-flow/scripts/verify-module.ps1
-  - agent-flow/scripts/verify-module.sh
-  - agent-flow/scripts/ac-check.ps1
-  - agent-flow/scripts/ac-check.sh
-  - agent-flow/scripts/coverage-check.ps1
-  - agent-flow/scripts/coverage-check.sh
-  - agent-flow/scripts/code-drift-check.ps1
-  - agent-flow/scripts/code-drift-check.sh
-  - agent-flow/scripts/blocked-check.ps1
-  - agent-flow/scripts/blocked-check.sh
-  - agent-flow/scripts/template-check.ps1
-  - agent-flow/scripts/template-check.sh
-  - agent-flow/scripts/knowledge-search.ps1
-  - agent-flow/scripts/knowledge-search.sh
-  - agent-flow/scripts/drift-check.ps1
-  - agent-flow/scripts/drift-check.sh
-  - agent-flow/scripts/scaffold-health.ps1
-  - agent-flow/scripts/scaffold-health.sh
+$gateLines
 "@
 
 Set-Content -Encoding utf8 -LiteralPath (Join-Path $root "agent-flow/manifest.yaml") -Value $manifest

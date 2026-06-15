@@ -733,6 +733,12 @@ assert_path "$empty_target/agent-flow/scripts/alignment-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/alignment-check.sh"
 bash "$empty_target/agent-flow/scripts/init-project.sh" --target "$empty_target"
 bash "$empty_target/agent-flow/scripts/manifest-check.sh" --project-root "$empty_target"
+printf "Write-Host 'unregistered'\n" > "$empty_target/agent-flow/scripts/unregistered-demo.ps1"
+printf '#!/usr/bin/env bash\necho unregistered\n' > "$empty_target/agent-flow/scripts/unregistered-demo.sh"
+expect_failure "manifest-check public script registry negative case" "Public script missing from gate registry" \
+  bash "$empty_target/agent-flow/scripts/manifest-check.sh" --project-root "$empty_target"
+rm -f "$empty_target/agent-flow/scripts/unregistered-demo.ps1" "$empty_target/agent-flow/scripts/unregistered-demo.sh"
+bash "$empty_target/agent-flow/scripts/manifest-check.sh" --project-root "$empty_target"
 bash "$empty_target/agent-flow/scripts/run-verify.sh" --all
 assert_next_stage "$empty_target" "requirement"
 assert_design_alignment_stage "$empty_target"
@@ -763,6 +769,26 @@ grep -q "agent-flow/GO.md" "$update_target/AGENTS.md"
 echo "== residue scan =="
 if rg -n "ops-pilot|RuoYi|ruoyi|ops-ai|ops-flow|ops-asset|ops-monitor|ops-workflow|inbound|入库|BusinessStatusEnum|wf_business_status" "$starter_root" --glob "!scripts/test-starter.*"; then
   echo "Project-specific residue found." >&2
+  exit 1
+fi
+
+tracked_history="$(git -C "$starter_root" ls-files -- agent-flow/changes agent-flow/logs agent-flow/reports)"
+unexpected_history="$(
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    case "$path" in
+      agent-flow/changes/.gitkeep|agent-flow/logs/.gitkeep|agent-flow/reports/.gitkeep) continue ;;
+    esac
+    if [ -e "$starter_root/$path" ]; then
+      printf '%s\n' "$path"
+    fi
+  done <<EOF
+$tracked_history
+EOF
+)"
+if [ -n "$unexpected_history" ]; then
+  echo "Starter must not track run-history files outside .gitkeep:" >&2
+  printf '%s\n' "$unexpected_history" >&2
   exit 1
 fi
 

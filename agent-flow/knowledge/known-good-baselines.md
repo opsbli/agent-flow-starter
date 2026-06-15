@@ -1,39 +1,32 @@
 # Known-Good Baselines
 
-> Records verification points that define "working" for future AI sessions.
-> When a baseline is confirmed, subsequent changes can trust these commands produce green results.
+> Reusable template for target projects. Record real verification baselines in the target project after installation, not in the starter.
 
 ## Purpose
 
 - Avoid re-verifying the same invariant across changes.
-- Detect regression early: if a baseline gate fails without explanation, something broke.
-- Provide a confidence anchor for new AI sessions joining mid-project.
+- Detect regressions early when a known-good command fails without explanation.
+- Give future AI sessions a concrete confidence anchor.
 
-## Baselines
+## Scaffold Health Baseline Template
 
-### Scaffold Health Baseline
-
-Recorded: 2026-06-15
-
-Used to verify the agent-flow scaffold itself is intact after installation, upgrade, or self-modification.
+Use this table after installing agent-flow into a target project or after modifying the scaffold itself.
 
 | Check | Script | Expected Result | Verified |
 |---|---|---|---|
-| manifest integrity | `manifest-check` | All gates present, no TODO errors | ☐ |
-| scaffold structure | `scaffold-health` | All required dirs and files exist | ☐ |
-| cross-platform parity | `scaffold-health` (both OS) | .ps1 and .sh script counts match | ☐ |
-| change lifecycle | `new-change` smoketest | Creates change dir with templates | ☐ |
-| template freshness | `template-check` | All templates have correct VERSION | ☐ |
+| Manifest integrity | `manifest-check` | Required sections, gate registry, and risk rules are valid | ☐ |
+| Scaffold structure | `scaffold-health` | Required dirs and files exist | ☐ |
+| Template freshness | `template-check` | Templates match the current scaffold expectations | ☐ |
+| Change lifecycle | `new-change` smoke test | Creates change dir with expected artifacts | ☐ |
+| Closure chain | `check-change -Closure` | Required gates pass or have explicit skip evidence | ☐ |
 
-### Known-Good Baseline Table
+## Project Baseline Table
 
 | Date | Change | Backend Compile | Backend Tests | Frontend Checks | Module | Notes |
 |---|---|---|---|---|---|---|
-| 2026-06-15 | (scaffold-self) | n/a (starter) | n/a (starter) | n/a | n/a | agent-flow-starter v0.2.0 scaffold baseline established |
+| YYYY-MM-DD | change-id | command/result | command/result | command/result | module/path | release notes or drift notes |
 
 ## Conventions for Target Projects
-
-When running agent-flow in a real project, replace the Scaffold Health Baseline with project-specific commands:
 
 | Check Type | Example Command | Frequency |
 |---|---|---|
@@ -42,19 +35,15 @@ When running agent-flow in a real project, replace the Scaffold Health Baseline 
 | Integration tests | `mvn verify -P integration` | Heavy changes |
 | Lint | `npm run lint` | Every change |
 | Type check | `npm run typecheck` | Every change |
-| Security scan | `npm audit` | Weekly or Heavy |
+| Security scan | `npm audit` or project equivalent | Weekly or Heavy |
 
 ## Baseline Update Triggers
 
-- Major dependency version bump (Spring Boot, Node, etc.)
-- Toolchain change (JDK version, npm registry, etc.)
-- After first full scaffold-health pass post-installation
-- After a verified change that redefined "working"
+- Major dependency version bump.
+- Toolchain change.
+- First full scaffold-health pass after installation.
+- A verified change redefines what "working" means.
 
-## Baseline Template
+## Starter Rule
 
-To add a new baseline entry, copy and fill:
-
-```markdown
-| {date} | {change-id} | ✅/❌/n/a | ✅/❌/n/a | ✅/❌/n/a | {module} | {release notes or drift notes} |
-```
+Do not commit target-project baseline results into `agent-flow-starter`. Keep this file generic so installed projects can own their own evidence.
