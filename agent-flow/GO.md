@@ -2,23 +2,78 @@
 
 你是当前项目的 AI 开发协作者。收到需求后，必须按本文件路由，不允许直接进入编码。
 
-## 固定读取顺序
+```text
+┌─────────────┐
+│   需求进入   │
+└──────┬──────┘
+       ▼
+┌──────────────┐     YES     ┌──────────────────┐
+│ P0/P1 事故？ ├───────────►│ Emergency 通道   │
+└──────┬───────┘             │ (bypass, 24h回填)│
+       │ NO                  └──────────────────┘
+       ▼
+┌──────────────────┐
+│ 建立 Change 工件  │
+└──────┬───────────┘
+       ▼
+┌──────────────────┐
+│Code-First 代码扫描│
+└──────┬───────────┘
+       ▼
+┌────────────────────────────┐
+│ 路由分级 (Light/Std/Heavy) │
+└──────┬─────────────────────┘
+       │
+       ├── Light ──────► Light 流程 (5 工件)
+       │
+       ├── Standard ──► Requirements Grill
+       │                   │ Code Scan → DESIGN
+       │                   │ Design Alignment
+       │                   │ TASKS → 实现 → VERIFY
+       │
+       └── Heavy ──────► Requirements Grill
+                           │ Code Scan → DESIGN
+                           │ Design Alignment
+                           │ Plan Audit
+                           │ TASKS → 实现 (分阶段)
+                           │ VERIFY → Closure Audit
 
-1. `agent-flow/manifest.yaml`
-2. `agent-flow/core/principles.md`
-3. `agent-flow/core/source-of-truth.md`
-4. `agent-flow/core/autonomy-policy.md`
-5. `agent-flow/core/router.md`
-6. `agent-flow/core/code-first-context.md`
-7. `agent-flow/core/memory.md`
-8. `agent-flow/core/plan-guide.md`
-9. `agent-flow/core/audit.md`
-10. `agent-flow/core/logging.md`
-11. `agent-flow/core/evolution.md`
+所有路径的完成线：VERIFY.md + REPORT.md + EVOLUTION.md
+```
 
-如果任务涉及前端，还要读取 `agent-flow/core/frontend-fit.md`。
+## 读取策略
 
-如果本机安装了 ECC（`pi install npm:ecc-universal`），建议同时阅读 `agent-flow/ecc-integration.md`——它提供了 ECC 技能与 agent-flow 步骤的详细映射，可在各步骤直接调用 ECC 能力加速。
+根据路由分级选择读取路径。**读完 router.md 确定分级后，再决定是否继续读其余文件。**
+
+### 轻量路径（Standard 及以下）
+
+```text
+1. agent-flow/manifest.yaml           ← 项目配置
+2. agent-flow/core/router.md          ← 分级判定
+3. agent-flow/core/code-first-context.md  ← 扫描指引
+4. agent-flow/core/frontend-fit.md    ← 仅前端任务
+5. agent-flow/ecc-integration.md      ← 可选，有 ECC 时
+```
+
+### 完整路径（Heavy）
+
+```text
+1. agent-flow/manifest.yaml
+2. agent-flow/core/principles.md
+3. agent-flow/core/source-of-truth.md
+4. agent-flow/core/autonomy-policy.md
+5. agent-flow/core/router.md
+6. agent-flow/core/code-first-context.md
+7. agent-flow/core/memory.md
+8. agent-flow/core/plan-guide.md
+9. agent-flow/core/audit.md
+10. agent-flow/core/logging.md
+11. agent-flow/core/evolution.md
+12. agent-flow/core/frontend-fit.md   ← 仅前端任务
+13. agent-flow/ecc-integration.md     ← 可选，有 ECC 时
+```
+
+> ⚠️ 如果分级后确定为 Heavy，但已经按轻量路径开始，**必须回退到完整路径重读**。
 
 ## 第零步：紧急判断
 

@@ -40,3 +40,36 @@ Write a log entry when:
 - Closure audit passes or fails.
 - Known-good baseline changes.
 - A protected area decision is made.
+- Scaffold itself is modified (upgrade, improvement batch, structure change).
+- A session starts that spans multiple changes or requires context carry-over.
+
+## Personal Observability (Optional but Recommended)
+
+After each significant work session (not per change, but per work episode), write a brief 3-5 line log entry:
+
+```markdown
+### HH:mm - {change-id}
+
+- What happened:
+- Key decision:
+- Verification:
+- Next:
+```
+
+This gives future sessions **time-based memory** even when they don't read every change directory.
+
+## Automated Stats
+
+Periodically (or after Heavy changes), run:
+
+Windows:
+```powershell
+agent-flow/scripts/evolution-stats.ps1 -UpdateIndex
+```
+
+Linux/macOS:
+```bash
+bash agent-flow/scripts/evolution-stats.sh --update-index
+```
+
+This updates the `INDEX.md` Process Statistics table, giving a dashboard view of scaffold health over time.

@@ -69,6 +69,11 @@ if ((Test-Path -LiteralPath $changeDir) -and -not $Force) {
 
 New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
 
+Write-Host ""
+Write-Host "📋 Created change: $changeId"
+Write-Host "   Flow level: $Flow"
+Write-Host ""
+
 $filesByFlow = @{
     Light = @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")
     Standard = @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")

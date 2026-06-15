@@ -124,3 +124,33 @@ Emergency 通道绕过了以下安全门：
 - **不允许**把 Emergency 通道用于常规紧急需求。
 - **不允许**回填超时不补充说明。
 - **不允许**连续两次使用 Emergency 而不做根本原因分析。
+
+## 防滥用规则
+
+### 时间锁：同模块 7 天冷却期
+
+同一业务模块（由 `CHANGE.md` 中的模块名决定）在 7 天内不得第二次使用 Emergency 通道。
+
+例外：如果第二次 Emergency 的根本原因与第一次**完全不同**且有 record，可以由 incident commander 批准豁免，并在 `CHANGE.md` 中记录豁免理由。
+
+### 时间锁——检查方法
+
+```bash
+# 检查最近7天内该模块是否有 Emergency change
+# 如果存在，自动拒绝 Emergency 通道并退回 Heavy 流程
+grep -l "Emergency" agent-flow/changes/*/CHANGE.md 2>/dev/null | while read f; do
+  module=$(grep "module_name:" "$f" 2>/dev/null | head -1)
+  # ... compare module and date
+  if same_module_and_within_7days; then
+    echo "⛔ Time lock active for this module. Use Heavy process instead."
+  fi
+done
+```
+
+### 滥用触发升级
+
+如果在一个月内某个模块用了 3 次以上 Emergency：
+
+1. 自动将该模块标记为 `hard-locked`（禁止未来 30 天内使用 Emergency）
+2. 需要架构评审会议才能解除锁定
+3. 创建 ADR 记录根因分析和改进措施

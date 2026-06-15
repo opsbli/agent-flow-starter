@@ -1,29 +1,104 @@
 #!/usr/bin/env bash
-# Collect agent-flow usage statistics
-# Usage: bash agent-flow/scripts/evolution-stats.sh [--project-root <path>]
+# Collect agent-flow usage statistics for data-driven evolution
+# Usage: bash agent-flow/scripts/evolution-stats.sh [--project-root <path>] [--update-index]
+#   --update-index    Automatically refresh the Process Statistics table in knowledge/INDEX.md
 set -euo pipefail
-project_root="${1:-.}"
-af_dir="$project_root/agent-flow"
-changes_dir="$af_dir/changes"
-# Count changes
+
+# Parse arguments
+PROJECT_ROOT="."
+UPDATE_INDEX=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --project-root) PROJECT_ROOT="$2"; shift 2 ;;
+    --update-index) UPDATE_INDEX=true; shift ;;
+    *) echo "Unknown option: $1"; exit 1 ;;
+  esac
+done
+
+AF_DIR="$PROJECT_ROOT/agent-flow"
+CHANGES_DIR="$AF_DIR/changes"
+SCRIPTS_DIR="$AF_DIR/scripts"
+KNOWLEDGE_DIR="$AF_DIR/knowledge"
+DECISIONS_DIR="$AF_DIR/decisions"
+INDEX_FILE="$KNOWLEDGE_DIR/INDEX.md"
+
+# --- Count changes ---
 total_changes=0
 completed_changes=0
+active_changes=0
+heavy_changes=0
+standard_changes=0
+light_changes=0
+emergency_changes=0
+blocked_changes=0
 ac_total=0
-if [ -d "$changes_dir" ]; then
-  for d in "$changes_dir"/*/; do
-    [ "$(basename "$d")" = ".gitkeep" ] && continue
+ac_pass=0
+
+if [ -d "$CHANGES_DIR" ]; then
+  for d in "$CHANGES_DIR"/*/; do
+    base="$(basename "$d")"
+    [ "$base" = ".gitkeep" ] || [ "$base" = "__pycache__" ] && continue
     [ ! -d "$d" ] && continue
     total_changes=$((total_changes + 1))
+
+    # Detect completion state
     [ -f "$d/REPORT.md" ] && completed_changes=$((completed_changes + 1))
-    [ -f "$d/TASKS.md" ] && ac_total=$((ac_total + $(grep -c 'AC-[0-9]' "$d/TASKS.md" 2>/dev/null || echo 0)))
+    [ -f "$d/VERIFY.md" ] && [ ! -f "$d/REPORT.md" ] && active_changes=$((active_changes + 1))
+
+    # Detect change level from CHANGE.md
+    if [ -f "$d/CHANGE.md" ]; then
+      if grep -qi 'process_level.*[Ll]ight' "$d/CHANGE.md" 2>/dev/null; then
+        light_changes=$((light_changes + 1))
+      elif grep -qi 'process_level.*[Ss]tandard' "$d/CHANGE.md" 2>/dev/null; then
+        standard_changes=$((standard_changes + 1))
+      elif grep -qi 'process_level.*[Hh]eavy' "$d/CHANGE.md" 2>/dev/null; then
+        heavy_changes=$((heavy_changes + 1))
+      elif grep -qiE '(Emergency|hotfix)' "$d/CHANGE.md" 2>/dev/null; then
+        emergency_changes=$((emergency_changes + 1))
+      fi
+    fi
+
+    # Detect blocked (AUDIT.md with reject verdict)
+    if [ -f "$d/AUDIT.md" ] && grep -qi 'verdict.*reject' "$d/AUDIT.md" 2>/dev/null; then
+      blocked_changes=$((blocked_changes + 1))
+    fi
+
+    # Count ACs and verification
+    if [ -f "$d/TASKS.md" ]; then
+      task_acs=$(grep -c 'AC-[0-9]' "$d/TASKS.md" 2>/dev/null || echo 0)
+      ac_total=$((ac_total + task_acs))
+      if [ -f "$d/VERIFY.md" ] && [ "$task_acs" -gt 0 ]; then
+        for ac_num in $(grep -o 'AC-[0-9]' "$d/TASKS.md" 2>/dev/null); do
+          grep -q "$ac_num" "$d/VERIFY.md" 2>/dev/null && ac_pass=$((ac_pass + 1))
+        done
+      fi
+    fi
   done
 fi
+
+# Count scripts
+total_scripts=0
+[ -d "$SCRIPTS_DIR" ] && total_scripts=$(find "$SCRIPTS_DIR" -maxdepth 1 -name '*.sh' ! -name '_*' 2>/dev/null | wc -l)
+
 # Count knowledge files
 k_count=0
-[ -d "$af_dir/knowledge" ] && k_count=$(find "$af_dir/knowledge" -maxdepth 1 -type f ! -name '.gitkeep' 2>/dev/null | wc -l)
+[ -d "$KNOWLEDGE_DIR" ] && k_count=$(find "$KNOWLEDGE_DIR" -maxdepth 1 -type f ! -name '.gitkeep' 2>/dev/null | wc -l)
+
 # Count ADRs
 adr_count=0
-[ -d "$af_dir/decisions" ] && adr_count=$(find "$af_dir/decisions" -name 'ADR-*' 2>/dev/null | wc -l)
+[ -d "$DECISIONS_DIR" ] && adr_count=$(find "$DECISIONS_DIR" -name 'ADR-*' 2>/dev/null | wc -l)
+
+# Calculus
+active_now=$((total_changes - completed_changes))
+completion_rate="N/A"
+[ "$total_changes" -gt 0 ] && completion_rate="$((completed_changes * 100 / total_changes))%"
+block_rate="N/A"
+[ "$total_changes" -gt 0 ] && block_rate="$((blocked_changes * 100 / total_changes))%"
+ac_fail=$((ac_total - ac_pass))
+ac_pass_rate="N/A"
+[ "$ac_total" -gt 0 ] && ac_pass_rate="$(echo "scale=1; $ac_pass * 100 / $ac_total" | bc 2>/dev/null || echo "$((ac_pass * 100 / ac_total))%")"
+
+# --- Generate report ---
 cat << STATSEOF
 # Evolution Stats
 
@@ -35,17 +110,76 @@ Generated: $(date '+%Y-%m-%d %H:%M')
 |--------|-------|
 | Total Changes | $total_changes |
 | Completed | $completed_changes |
-| Active | $((total_changes - completed_changes)) |
-| Completion Rate | $( [ "$total_changes" -gt 0 ] && echo "$((completed_changes * 100 / total_changes))%" || echo "N/A" ) |
+| Active | $active_now |
+| Completion Rate | $completion_rate |
+| Blocked Rate | $block_rate |
 
-## Knowledge & Decisions
+## Change Level Distribution
+
+| Level | Count |
+|-------|-------|
+| Heavy | $heavy_changes |
+| Standard | $standard_changes |
+| Light | $light_changes |
+| Emergency | $emergency_changes |
+
+## Code Quality
 
 | Metric | Value |
 |--------|-------|
-| Knowledge Files | $k_count |
-| ADRs | $adr_count |
 | Total ACs | $ac_total |
+| AC Verified | $ac_pass |
+| AC Not Verified | $ac_fail |
+| AC Pass Rate | $ac_pass_rate |
+| Check Scripts | $total_scripts |
+| Decisions (ADRs) | $adr_count |
+
+## Knowledge Base
+
+| Count | $k_count files |
 
 ---
 *Generated by evolution-stats.sh*
 STATSEOF
+
+# --- Update INDEX.md if requested ---
+if [ "$UPDATE_INDEX" = true ] && [ -f "$INDEX_FILE" ]; then
+  today=$(date '+%Y-%m-%d')
+  qtr=$(date '+%Y-Q%q')
+
+  # Build the stats section as a heredoc
+  stats_block=$(cat << STATSEOF
+
+## Process Statistics (cumulative)
+
+> Tracks aggregate health across changes. Auto-updated by evolution-stats.sh --update-index.
+
+| Metric | Value | As Of |
+|--------|-------|-------|
+| Total changes completed | $completed_changes | $today |
+| Heavy changes | $heavy_changes | $today |
+| Standard changes | $standard_changes | $today |
+| Light changes | $light_changes | $today |
+| Emergency changes | $emergency_changes | $today |
+| Active / blocked changes | $active_now / $blocked_changes | $today |
+| AC pass rate | $ac_pass_rate | $today |
+| Knowledge files | $k_count | $today |
+| ADRs | $adr_count | $today |
+| Current scaffold version | 0.2.0 | $today |
+STATSEOF
+)
+
+  # Use sed to replace existing Process Statistics section (between ## Process Statistics and next ## or EOF)
+  if grep -q '## Process Statistics' "$INDEX_FILE" 2>/dev/null; then
+    # Replace from ## Process Statistics to next ## or end, with the new block
+    awk -v block="$stats_block" '
+      /^## Process Statistics/ { in_block=1; print block; next }
+      in_block && /^## / { in_block=0; print; next }
+      !in_block { print }
+    ' "$INDEX_FILE" > "${INDEX_FILE}.tmp" && mv "${INDEX_FILE}.tmp" "$INDEX_FILE"
+  else
+    echo "$stats_block" >> "$INDEX_FILE"
+  fi
+
+  echo "[evolution-stats] Updated INDEX.md Process Statistics section." >&2
+fi

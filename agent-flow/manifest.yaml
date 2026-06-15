@@ -11,25 +11,27 @@ project:
     language: none
     repo: none
   database:
-    engine: TODO_DATABASE_OR_NONE
+    engine: none (starter)
     sql_paths:
-      - TODO_SQL_PATH
+      - (none)
   cache:
-    engine: TODO_CACHE_OR_NONE
+    engine: none (starter)
   auth:
-    engine: TODO_AUTH_OR_NONE
+    engine: none (starter)
 
 code_map:
   backend_entry:
-    - TODO_BACKEND_ENTRY
+    - (none - agent-flow-starter has no application code)
   common:
-    - TODO_COMMON_CODE_PATH
+    - agent-flow/scripts/
+    - agent-flow/core/
+    - agent-flow/rules/
   business_modules:
-    - TODO_BUSINESS_MODULE_PATH
+    - agent-flow/changes/
   build_files:
-    - TODO_BUILD_FILE
+    - (none - scaffold-only repo)
   tests:
-    - tests
+    - agent-flow/test/
 
 change_storage:
   root: agent-flow/changes
@@ -56,20 +58,21 @@ risk_rules:
     build_file_change: true
     schema_change: true
   blocked_if:
-    - hard_delete_without_approval
-    - disable_security_filter
-    - bypass_auth_for_production
-    - direct_production_data_mutation
-    - payment_bypass
+    # Auto-detectable: static analysis can detect these in TASKS.md write_files or code changes
+    - hard_delete_without_approval              # auto: grep for DELETE / DROP / TRUNCATE in SQL
+    - disable_security_filter                   # auto: grep for security filter disable calls
+    - bypass_auth_for_production                # manual: requires human review
+    - direct_production_data_mutation           # manual: requires human review
+    - payment_bypass                            # manual: requires human review
 
 verification:
-  backend_compile: TODO_BACKEND_COMPILE_COMMAND
-  backend_test: TODO_BACKEND_TEST_COMMAND
-  module_compile: TODO_MODULE_COMPILE_COMMAND
-  module_test: TODO_MODULE_TEST_COMMAND
-  frontend_typecheck: TODO_FRONTEND_TYPECHECK_COMMAND
-  frontend_test: TODO_FRONTEND_TEST_COMMAND
-  frontend_lint: TODO_FRONTEND_LINT_COMMAND
+  backend_compile: echo "scaffold-only repo; no backend to compile"
+  backend_test: echo "scaffold-only repo; no backend tests"
+  module_compile: echo "scaffold-only repo; no modules to compile"
+  module_test: echo "scaffold-only repo; no module tests"
+  frontend_typecheck: echo "scaffold-only repo; no frontend"
+  frontend_test: echo "scaffold-only repo; no frontend tests"
+  frontend_lint: echo "scaffold-only repo; no frontend lint"
 
 gates:
   - agent-flow/scripts/init-project.ps1

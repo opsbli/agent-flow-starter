@@ -16,19 +16,34 @@
 
 只要有 `agent-flow/GO.md`，默认就走入口流程。用户不需要在需求里提"走流程"。
 
-### Standard / Heavy 必须 Grill
+### Standard / Heavy 必须 Design Alignment
 
-Standard 和 Heavy change 的 **Design Alignment / Grill** 不可跳过。
+Standard 和 Heavy change 的 **Design Alignment**（设计对齐）不可跳过。
+
+> ⚠️ 不要混淆：**Requirements Grill**（步骤 2，需求对齐）和 **Design Alignment**（步骤 7，设计正确性确认）是两次独立的检查点。
 
 具体做法：
 1. 写完 `DESIGN.md` 后停下来
 2. 逐条拷问设计假设：为什么选 A 不选 B？取舍是什么？风险是否接受？
-3. 等用户给出 `aligned` 或 `skipped (with reason)` 的 verdict
-4. 拿到 verdict 后才能进入 `TASKS.md` 和实现
+3. alignment-check 要求至少 **3 个问题**的 Confirmation 列标记为 `user-confirmed`
+4. 等用户给出 `aligned` 或 `skipped (with reason)` 的 verdict
+5. 拿到 verdict 后才能进入 `TASKS.md` 和实现
 
 Light 任务涉及用户可见交互变更时同样要走 Grill。
 
 **不得以"需求小"为理由跳过。**分级由 `router.md` 判定，不由 Agent 凭感觉决定。
+
+### 违规召回关键词
+
+如果 Agent 跳过了流程（直接写代码、没有 Grill 就进入实现等），用户只需回复以下关键词之一，Agent 必须立即停止当前动作并回退：
+
+| 关键词 | 含义 | Agent 行动 |
+|---|---|---|
+| `[流程违规]` | 跳过了入口路由或任何流程步骤 | 停下来，确认违规了什么步骤，回退到正确的步骤重新执行 |
+| `[缺少Grill]` | Design Alignment 或 Requirements Grill 未完成就进入了实现 | 停在原地，重新打开 DESIGN.md，按模板逐条发起 Design Alignment 对话 |
+| `[越界修改]` | 修改了 `write_files` 以外的文件 | 回退越界修改，只保留 `write_files` 内的变更 |
+
+Agent 不得以"已完成"或"需求太小"为由拒绝回退。
 
 ## 默认取向
 

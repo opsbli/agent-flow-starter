@@ -24,22 +24,36 @@
 13. 写 `EVOLUTION.md`，运行 `evolution-check`。
 14. 更新 `STATE.md`。
 
-## Grill 环节说明
+## 两次对齐环节说明
 
-Standard 需求有两次 Grill 环节：
+Standard 需求有两个明确的检查点，不要混淆：
 
-1. **步骤 2（前置 Grill）** — 在需求澄清前，用 `grill-with-docs` 对齐术语、挑战假设、沉淀知识。产物写回 `REQUIREMENT.md` 或 `agent-flow/knowledge/`。
-2. **步骤 7（Design Alignment）** — 在设计完成后，做一次轻量对齐确认设计正确。产物写回 `DESIGN.md`。
+### 检查点 1 — Requirements Grill（步骤 2）
 
-### Design Alignment / Grill
+- **时机**：写 REQUIREMENT.md 之前
+- **目的**：对齐术语、挑战需求假设、沉淀领域知识
+- **工具**：`grill-with-docs` 技能
+- **产物更新**：`REQUIREMENT.md` 或 `agent-flow/knowledge/`
+- **核心问题**：
+  - "这个术语在代码中是什么意思？"
+  - "这个假设当前代码支持吗？"
+  - "哪些场景明确不做？"
+  - （每次只问一个关键问题，给出AI推荐答案）
 
-Standard 需求也必须做一次轻量对齐：
+### 检查点 2 — Design Alignment（步骤 7）
 
-- 一次只问一个关键问题。
-- 如果问题可以通过读代码回答，先读代码。
-- 每个问题给出 AI 推荐答案。
-- 用户确认后，把结论写回 `DESIGN.md`。
-- `Alignment Verdict` 必须是 `aligned`，或用户明确接受 `skipped` 且填写 `Skip Reason`。
+> **意图**：在设计方案写完、进入实现前，做一次设计正确性的轻量确认。
+
+- **时机**：DESIGN.md 完成、implement 之前
+- **目的**：确保设计方案与用户意图一致
+- **工具**：`alignment-check` gate
+- **产物更新**：`DESIGN.md` 的 `Design Alignment / Grill` 小节
+- **核心约束**：
+  - 一次只问一个关键问题
+  - 如果问题能通过读代码回答，先读代码
+  - 每个问题给出 AI 推荐答案
+  - 用户确认后，把结论写回 `DESIGN.md`
+  - `Alignment Verdict` 必须是 `aligned`，或用户明确接受 `skipped` 且填写 `Skip Reason`
 
 ## 标准完成线
 

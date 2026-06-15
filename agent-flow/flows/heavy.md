@@ -21,11 +21,24 @@
 - 是否触碰 protected areas
 - 当前阶段和下一步，写入 `STATE.md`
 
-## 阶段 1：Grill
+## 阶段 1：Requirements Grill
+
+> **意图**：在写需求文档前，确保 AI 和用户对业务术语、边界、假设达成一致理解。
 
 产物：更新 `REQUIREMENT.md` 和必要知识文件。
 
 直接引用 `grill-with-docs` 技能执行结构化追问：
+
+- 每个业务名词的精确定义是什么？与 `agent-flow/knowledge/` 中已有术语是否冲突？
+- 哪些状态、权限、数据归属必须明确？
+- 哪些场景不能做？
+- 失败后系统应该如何恢复？
+- 旧代码是否支持用户的说法？
+- 每次只问一个关键问题，给出 AI 推荐答案。
+- 术语一旦明确，立即更新 `agent-flow/knowledge/`。
+- 遇到不可逆取舍，创建 ADR 到 `agent-flow/decisions/`。
+
+验收标准必须使用 `AC-01`、`AC-02` 这种两位数字编号，并在后续 `TASKS.md`、`VERIFY.md`、`REPORT.md` 中保持一致。
 
 - 每个业务名词的精确定义是什么？与 `agent-flow/knowledge/` 中已有术语是否冲突？
 - 哪些状态、权限、数据归属必须明确？
@@ -78,7 +91,9 @@
 
 普通 CRUD 不强制填写 workflow/status 条件小节，可明确写“不涉及状态机”。
 
-## 阶段 3.5：Design Alignment / Grill
+## 阶段 3.5：Design Alignment
+
+> **注意**：不要和阶段 1 的 Requirements Grill 混淆。Grill 是需求对齐，Design Alignment 是设计正确性确认。
 
 产物：更新 `DESIGN.md` 的 `Design Alignment / Grill` 小节。
 
@@ -91,6 +106,7 @@
 - 每个问题给出 AI 推荐答案。
 - 用户确认后，把结论写回 `DESIGN.md`。
 - `Alignment Verdict` 必须是 `aligned`，或用户明确接受 `skipped` 且填写 `Skip Reason`。
+- alignment-check 要求至少 **3 个问题** 的 Confirmation 标记为 `user-confirmed`（纯 `code-confirmed` 不能通过）。
 
 先运行 `design-check`。如果 `Decision Status` 不是 `accepted`，不得进入 Design Alignment。
 

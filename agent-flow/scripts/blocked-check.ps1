@@ -1,6 +1,10 @@
-<#
+﻿<#
 .SYNOPSIS
 Run the blocked-check agent-flow script.
+.DESCRIPTION
+Detects if the change violates manifest.yaml blocked_if rules.
+Detection modes: auto (static analysis) + manual (requires human review).
+Auto-detected violations: hard_delete_without_approval, disable_security_filter.
 
 .DESCRIPTION
 Part of the agent-flow scaffold toolchain. Run from the project root unless a path parameter says otherwise.

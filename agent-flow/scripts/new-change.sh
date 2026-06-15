@@ -99,6 +99,11 @@ fi
 
 mkdir -p "$change_dir"
 
+echo ""
+echo "📋 Created change: $change_id"
+echo "   Flow level: $flow"
+echo ""
+
 case "$flow" in
   Light)
     files=(STATE.md CHANGE.md CODE_SCAN.md VERIFY.md REPORT.md)
