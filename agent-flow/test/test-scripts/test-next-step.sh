@@ -4,8 +4,11 @@
 set -euo pipefail
 
 test_root="$(cd "$(dirname "$0")/.." && pwd)"
-fixture_dir="$test_root/fixtures/next-step-tests"
-rm -rf "$fixture_dir"
+fixture_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$fixture_dir"
+}
+trap cleanup EXIT
 
 passed=0
 failed=0

@@ -13,15 +13,27 @@ via a temporary extraction, or by creating minimal change fixtures.
 $ErrorActionPreference = "Stop"
 
 $testRoot = Split-Path -Parent $PSScriptRoot
-$fixtureDir = Join-Path $testRoot "fixtures/next-step-tests"
+$fixtureDir = Join-Path ([System.IO.Path]::GetTempPath()) ("agent-flow-next-step-tests-" + [guid]::NewGuid().ToString("N"))
 
 # Ensure clean state
 if (Test-Path -LiteralPath $fixtureDir) {
     Remove-Item -Recurse -Force -LiteralPath $fixtureDir
 }
+New-Item -ItemType Directory -Force -Path $fixtureDir | Out-Null
 
 $passed = 0
 $failed = 0
+
+function Cleanup-FixtureDir {
+    if (Test-Path -LiteralPath $fixtureDir) {
+        Remove-Item -Recurse -Force -LiteralPath $fixtureDir -ErrorAction SilentlyContinue
+    }
+}
+
+trap {
+    Cleanup-FixtureDir
+    throw
+}
 
 function Assert-Equal {
     param(
@@ -193,8 +205,10 @@ Write-Host "============================================"
 Write-Host "Results: $passed passed, $failed failed"
 if ($failed -gt 0) {
     Write-Host "SOME TESTS FAILED"
+    Cleanup-FixtureDir
     exit 1
 } else {
     Write-Host "All tests passed."
+    Cleanup-FixtureDir
     exit 0
 }

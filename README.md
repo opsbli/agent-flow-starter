@@ -256,8 +256,7 @@ bash agent-flow/scripts/install-git-hooks.sh
 ```text
 agent-flow-starter/
 ├── .github/workflows/
-│   ├── scaffold-ci.yml              # scaffold 健康检查 CI
-│   └── agent-flow-starter-check.yml # starter 自测 CI
+│   └── scaffold-ci.yml              # scaffold 健康检查和 starter 自测 CI
 ├── AGENTS.md                     # starter 仓库自己的规则
 ├── README.md                     # 当前文件
 ├── CHANGELOG.md                  # starter 版本变化
@@ -789,17 +788,13 @@ Linux/macOS：
 bash scripts/test-starter.sh
 ```
 
-GitHub Actions 也会在 push / pull request 时运行同一套 bash 自测：
+GitHub Actions 也会在 push / pull request 时运行同一套自测：
 
 ```text
-.github/workflows/agent-flow-starter-check.yml
 .github/workflows/scaffold-ci.yml
 ```
 
-两个 workflow 的分工：
-
-- `scaffold-ci.yml` 是完整 scaffold CI：运行 scaffold-health、manifest-check、脚本语法、ps1/sh 配对检查、轻量单元测试和 starter 自测。
-- `agent-flow-starter-check.yml` 是 starter 自测入口：直接运行根级 `scripts/test-starter.*`，便于保留最小回归链路。
+`scaffold-ci.yml` 是完整 scaffold CI：运行 scaffold-health、manifest-check、脚本语法、ps1/sh 配对检查、轻量单元测试和 starter 自测。
 
 自测覆盖：
 
