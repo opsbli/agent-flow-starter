@@ -23,6 +23,7 @@
 12. 写 `REPORT.md`。
 13. 写 `EVOLUTION.md`，运行 `evolution-check`。
 14. 更新 `STATE.md`。
+15. 调用 `manage_plan clear` 清空计划面板，避免残留到下一轮对话。
 
 ## 两次对齐环节说明
 

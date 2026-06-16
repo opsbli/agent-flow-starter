@@ -17,6 +17,7 @@
 8. 写 `REPORT.md`。
 9. 更新 `STATE.md`。
 10. 如有新坑，更新 `agent-flow/knowledge/pitfalls.md`。
+11. 调用 `manage_plan clear` 清空计划面板，避免残留到下一轮对话。
 
 ## 禁止
 

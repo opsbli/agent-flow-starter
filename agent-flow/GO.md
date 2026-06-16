@@ -193,6 +193,9 @@ AUDIT.md
 - 验证通过后，如形成新的健康状态，更新 `agent-flow/knowledge/known-good-baselines.md`。
 - Heavy change 必须写入 `agent-flow/logs/YYYY/MM-DD.md`。
 - 每次完成后必须写 `EVOLUTION.md`，判断脚手架是否应升级。
+- **每次 change 完成后必须调用 `manage_plan clear` 清空计划面板**，避免残留到下一轮对话。
+
+> `manage_plan clear` 是收口的标准最后一步，各 flow 文件已明确写入完成步骤中。
 
 ## 运行所有门禁
 

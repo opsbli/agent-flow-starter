@@ -241,3 +241,7 @@ Verdict: accept
 - 验证命令和结果。
 - 下一个可执行工作。
 - `STATE.md` 的最终状态。
+
+## 阶段 10：Clear Plan Panel
+
+调用 `manage_plan clear` 清空计划面板，避免残留到下一轮对话。
