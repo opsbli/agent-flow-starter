@@ -35,6 +35,7 @@ param(
 
 $ErrorActionPreference = "Continue"
 $scriptDir = $PSScriptRoot
+. (Join-Path $scriptDir "_common.ps1")
 $failed = 0
 $results = @()
 
@@ -111,6 +112,57 @@ function Test-File {
     return (Test-Path -LiteralPath (Join-Path $ChangeDir $Path))
 }
 
+function Get-RequiredClosureArtifacts {
+    param([string]$Flow)
+
+    switch ($Flow) {
+        "Light" {
+            return @("STATE.md", "CHANGE.md", "CODE_SCAN.md", "VERIFY.md", "REPORT.md")
+        }
+        "Standard" {
+            return @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
+        }
+        "Heavy" {
+            return @("STATE.md", "CHANGE.md", "REQUIREMENT.md", "CODE_SCAN.md", "DESIGN.md", "PLAN.md", "TASKS.md", "VERIFY.md", "REVIEW.md", "REPORT.md", "AUDIT.md", "EVOLUTION.md")
+        }
+        "Emergency" {
+            return @("STATE.md", "CHANGE.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")
+        }
+        default {
+            return @()
+        }
+    }
+}
+
+function Invoke-ClosureRequiredArtifacts {
+    if (-not $Closure) { return }
+
+    Write-Host "== closure-required-artifacts =="
+    $flow = Get-FlowLevel -Dir $ChangeDir
+    $issues = @()
+    if ($flow -eq "Unknown") {
+        $issues += "Cannot determine flow level from CHANGE.md."
+    }
+
+    $placeholders = @("Status: not started", "No implementation verification has run yet", "YYYY-MM-DD", "path/to", "{name}")
+    foreach ($artifact in (Get-RequiredClosureArtifacts -Flow $flow)) {
+        $path = Join-Path $ChangeDir $artifact
+        if (-not (Test-MeaningfulFile -Path $path -Placeholders $placeholders)) {
+            $issues += "Missing or placeholder closure artifact: $artifact"
+        }
+    }
+
+    if ($issues.Count -gt 0) {
+        $issues | ForEach-Object { Write-Host " - $_" }
+        Add-Result -GateName "closure-required-artifacts" -Status "fail" -Required $true -ExitCode 2 -Reason "missing required closure artifacts"
+        $script:failed = 1
+        return
+    }
+
+    Write-Host "closure-required-artifacts passed for $flow change."
+    Add-Result -GateName "closure-required-artifacts" -Status "pass" -Required $true -ExitCode 0
+}
+
 function Write-Summary {
     $summary = [pscustomobject]@{
         schema_version = "1.0"
@@ -133,6 +185,7 @@ function Write-Summary {
 
 Invoke-Gate -GateName "sync-state" -GatePath (Join-Path $scriptDir "sync-state.ps1") -GateArgs @($ChangeDir)
 Invoke-Gate -GateName "state-check" -GatePath (Join-Path $scriptDir "state-check.ps1") -GateArgs @($ChangeDir)
+Invoke-ClosureRequiredArtifacts
 
 if (Test-File "CODE_SCAN.md") {
     Invoke-Gate -GateName "scan-check" -GatePath (Join-Path $scriptDir "scan-check.ps1") -NamedArgs @{ ChangeDir = $ChangeDir; ProjectRoot = $ProjectRoot; Strict = $true }

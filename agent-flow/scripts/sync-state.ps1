@@ -40,7 +40,7 @@ if (Test-Path -LiteralPath $statePath) {
     $existing = Get-Content -Raw -Encoding utf8 -LiteralPath $statePath
     $match = [regex]::Match($existing, '(?s)## Stage History.*$')
     if ($match.Success) {
-        $tail = $match.Value.TrimEnd()
+        $tail = (($match.Value.TrimEnd() -split "\r?\n") | Where-Object { $_ -notmatch "YYYY-MM-DD" }) -join "`n"
     }
 }
 
@@ -59,7 +59,21 @@ if ([string]::IsNullOrWhiteSpace($tail)) {
 - If `STATE.md` conflicts with the artifacts, update it after checking `next-step`.
 "@
 } elseif ($tail -notmatch [regex]::Escape("| $date | $($result.stage) | sync-state | Synced from next-step. |")) {
-    $tail = $tail -replace '(\|---\|---\|---\|---\|\s*)', "`$1`n| $date | $($result.stage) | sync-state | Synced from next-step. |"
+    $row = "| $date | $($result.stage) | sync-state | Synced from next-step. |"
+    $lines = @($tail -split "\r?\n")
+    $updated = New-Object System.Collections.Generic.List[string]
+    $inserted = $false
+    foreach ($line in $lines) {
+        $updated.Add($line)
+        if (-not $inserted -and $line.Trim() -eq "|---|---|---|---|") {
+            $updated.Add($row)
+            $inserted = $true
+        }
+    }
+    if (-not $inserted) {
+        $updated.Add($row)
+    }
+    $tail = $updated -join "`n"
 }
 
 $content = @"

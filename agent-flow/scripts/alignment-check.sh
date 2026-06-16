@@ -116,22 +116,36 @@ if [ "$verdict" = "aligned" ]; then
     issues+=("Open Questions must be 'none' before Alignment Verdict is aligned.")
   fi
 
+  user_confirmed_count=0
   while IFS= read -r question; do
     question="$(printf '%s' "$question" | xargs)"
     [ -n "$question" ] || continue
     line="$(printf '%s\n' "$section" | grep -F "| $question |" | head -n 1 || true)"
     if [ -z "$line" ]; then
       issues+=("Missing alignment question row: $question")
-    elif ! printf '%s\n' "$line" | grep -Eiq '\|[[:space:]]*confirmed[[:space:]]*\|'; then
-      issues+=("Alignment question is not confirmed: $question")
+      continue
+    fi
+
+    confirmation="$(
+      printf '%s\n' "$line" |
+        awk -F'|' '{ value=$4; gsub(/^[[:space:]]+|[[:space:]]+$/, "", value); print tolower(value) }'
+    )"
+    if [ "$confirmation" = "user-confirmed" ]; then
+      user_confirmed_count=$((user_confirmed_count + 1))
+    elif [ "$confirmation" != "code-confirmed" ]; then
+      issues+=("Alignment question confirmation must be user-confirmed or code-confirmed: $question")
     fi
   done < <(get_rule_list "design-alignment.questions")
+
+  if [ "$user_confirmed_count" -lt 3 ]; then
+    issues+=("Alignment requires at least 3 user-confirmed questions; found $user_confirmed_count.")
+  fi
 fi
 
 if [ "${#issues[@]}" -gt 0 ]; then
   echo "alignment-check failed:" >&2
   for issue in "${issues[@]}"; do echo " - $issue" >&2; done
-  echo "Use 'Alignment Verdict: aligned' after required questions are confirmed, or 'Alignment Verdict: skipped' with Skip Reason." >&2
+  echo "Use 'Alignment Verdict: aligned' after at least 3 required questions are user-confirmed, or 'Alignment Verdict: skipped' with Skip Reason." >&2
   exit 2
 fi
 

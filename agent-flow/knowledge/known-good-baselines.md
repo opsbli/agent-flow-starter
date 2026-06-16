@@ -26,6 +26,12 @@ Use this table after installing agent-flow into a target project or after modify
 |---|---|---|---|---|---|---|
 | YYYY-MM-DD | change-id | command/result | command/result | command/result | module/path | release notes or drift notes |
 
+## Starter Scaffold Baselines
+
+| Date | Change | Windows Self-Test | Bash Self-Test | Gates | Notes |
+|---|---|---|---|---|---|
+| 2026-06-16 | 20260616-agent-flow-starter-agent-flow-9-0-hardening | `scripts/test-starter.ps1` pass | `bash scripts/test-starter.sh` pass | `scaffold-health`, `manifest-check`, `template-check` pass on Windows and bash | 9.0 hardening baseline: clean history install, user-confirmed alignment, bash init parity, closure-required artifacts, single CI workflow |
+
 ## Conventions for Target Projects
 
 | Check Type | Example Command | Frequency |

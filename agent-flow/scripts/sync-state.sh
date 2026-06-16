@@ -44,7 +44,7 @@ fi
 
 tail=""
 if [ -f "$change_dir/STATE.md" ]; then
-  tail="$(awk 'found { print } /^## Stage History/ { found = 1; print }' "$change_dir/STATE.md" || true)"
+  tail="$(awk 'found { print } /^## Stage History/ { found = 1; print }' "$change_dir/STATE.md" | grep -vF 'YYYY-MM-DD' || true)"
 fi
 
 if [ -z "${tail//[[:space:]]/}" ]; then

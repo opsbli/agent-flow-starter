@@ -97,26 +97,41 @@ if ($verdict -eq "aligned") {
     if ($section -notmatch "(?im)^\s*Open Questions:\s*none\s*$") {
         $issues += "Open Questions must be 'none' before Alignment Verdict is aligned."
     }
+    $userConfirmedCount = 0
     foreach ($question in Get-RuleList -Name "design-alignment.questions") {
         $line = ($section -split "\r?\n") |
             Where-Object { $_ -match "^\s*\|" -and $_ -match "\|\s*$([regex]::Escape($question))\s*\|" } |
             Select-Object -First 1
         if ([string]::IsNullOrWhiteSpace($line)) {
             $issues += "Missing alignment question row: $question"
-        } elseif ($line -notmatch "(?i)\|\s*confirmed\s*\|") {
-            $issues += "Alignment question is not confirmed: $question"
+            continue
         }
+
+        $cells = @($line.Trim().Trim("|").Split("|") | ForEach-Object { $_.Trim().ToLowerInvariant() })
+        if ($cells.Count -lt 4) {
+            $issues += "Alignment question row must have four columns: $question"
+            continue
+        }
+
+        $confirmation = $cells[2]
+        if ($confirmation -eq "user-confirmed") {
+            $userConfirmedCount++
+        } elseif ($confirmation -ne "code-confirmed") {
+            $issues += "Alignment question confirmation must be user-confirmed or code-confirmed: $question"
+        }
+    }
+    if ($userConfirmedCount -lt 3) {
+        $issues += "Alignment requires at least 3 user-confirmed questions; found $userConfirmedCount."
     }
 }
 
 if ($issues.Count -gt 0) {
     Write-Host "alignment-check failed:"
     $issues | ForEach-Object { Write-Host " - $_" }
-    Write-Host "Use 'Alignment Verdict: aligned' after required questions are confirmed, or 'Alignment Verdict: skipped' with Skip Reason."
+    Write-Host "Use 'Alignment Verdict: aligned' after at least 3 required questions are user-confirmed, or 'Alignment Verdict: skipped' with Skip Reason."
     exit 2
 }
 
 Write-Host "alignment-check passed."
-
 
 

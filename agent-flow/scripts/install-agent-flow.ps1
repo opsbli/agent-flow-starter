@@ -88,6 +88,15 @@ $projectOwned = @(
     "decisions"
 )
 
+# History directories are project-owned runtime evidence. New target projects
+# should get clean directories only; starter-local ignored histories must never
+# be distributed into business projects.
+$historyOwned = @(
+    "changes",
+    "logs",
+    "reports"
+)
+
 # --- Merge manifest.yaml ---
 function Merge-Manifest {
     param(
@@ -168,7 +177,17 @@ Write-Host ""
 Write-Host "=== Preserving project-owned files ==="
 foreach ($item in $projectOwned) {
     $path = Join-Path $targetAf $item
+    $isHistoryOwned = $historyOwned -contains $item
     if (Test-Path -LiteralPath $path) {
+        if ($isHistoryOwned) {
+            $gitkeep = Join-Path $path ".gitkeep"
+            if (-not (Test-Path -LiteralPath $gitkeep)) {
+                Set-Content -LiteralPath $gitkeep -Value "" -Encoding utf8
+            }
+            Write-Host "  PRESERVED: $item/ (history directory; no starter files seeded)"
+            continue
+        }
+
         $sourceOwnedPath = Join-Path $sourceAf $item
         $seededCount = 0
         if (Test-Path -LiteralPath $sourceOwnedPath) {
@@ -190,6 +209,11 @@ foreach ($item in $projectOwned) {
         } else {
             Write-Host "  PRESERVED: $item/"
         }
+    } elseif ($isHistoryOwned) {
+        New-Item -ItemType Directory -Force -Path $path | Out-Null
+        $gitkeep = Join-Path $path ".gitkeep"
+        Set-Content -LiteralPath $gitkeep -Value "" -Encoding utf8
+        Write-Host "  CREATED: $item/ (clean history directory)"
     } elseif (Test-Path -LiteralPath (Join-Path $sourceAf $item)) {
         Copy-Item -LiteralPath (Join-Path $sourceAf $item) -Destination $path -Recurse -Force
         Write-Host "  SEEDED: $item/"

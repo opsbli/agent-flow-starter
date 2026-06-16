@@ -28,6 +28,24 @@ assert_path() {
   fi
 }
 
+assert_clean_history_dirs() {
+  local target_root="$1"
+  local name dir unexpected
+  for name in changes logs reports; do
+    dir="$target_root/agent-flow/$name"
+    assert_path "$dir"
+    assert_path "$dir/.gitkeep"
+    unexpected="$(
+      find "$dir" -mindepth 1 -maxdepth 1 ! -name .gitkeep -print
+    )"
+    if [ -n "$unexpected" ]; then
+      echo "Installed $name directory contains starter history:" >&2
+      printf '%s\n' "$unexpected" >&2
+      exit 1
+    fi
+  done
+}
+
 expect_failure() {
   local label="$1"
   local pattern="$2"
@@ -51,7 +69,7 @@ demo_design() {
   local verdict="${1:-aligned}"
   local source="${2:-mixed}"
   local open_questions="${3:-none}"
-  local confirmation="${4:-confirmed}"
+  local confirmation="${4:-user-confirmed}"
   cat <<EOF
 # Design
 
@@ -418,6 +436,20 @@ EOF
   expect_failure "alignment-check negative case" "Alignment Verdict" \
     bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$negative_alignment"
 
+  local legacy_alignment="$target_root/agent-flow/changes/demo-legacy-alignment"
+  mkdir -p "$legacy_alignment"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$legacy_alignment/CHANGE.md"
+  demo_design aligned mixed none confirmed > "$legacy_alignment/DESIGN.md"
+  expect_failure "alignment-check legacy confirmation negative case" "user-confirmed" \
+    bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$legacy_alignment"
+
+  local code_only_alignment="$target_root/agent-flow/changes/demo-code-only-alignment"
+  mkdir -p "$code_only_alignment"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$code_only_alignment/CHANGE.md"
+  demo_design aligned code-confirmed none code-confirmed > "$code_only_alignment/DESIGN.md"
+  expect_failure "alignment-check code-only negative case" "at least 3 user-confirmed" \
+    bash "$target_root/agent-flow/scripts/alignment-check.sh" --change-dir "$code_only_alignment"
+
   mkdir -p "$change_dir/empty-evidence"
   expect_failure "ac-check missing VERIFY negative case" "VERIFY.md" \
     bash "$target_root/agent-flow/scripts/ac-check.sh" --change-dir "$change_dir" --test-root "$change_dir/empty-evidence"
@@ -681,6 +713,16 @@ EOF
   bash "$target_root/agent-flow/scripts/check-change.sh" --change-dir "$change_dir" --project-root "$target_root" --closure --output "$check_result"
   grep -q '"passed": true' "$check_result"
   grep -q '"gate":"emergency-check"' "$check_result"
+
+  local missing_closure="$target_root/agent-flow/changes/demo-missing-closure"
+  mkdir -p "$missing_closure"
+  printf '# Change\n\n- [ ] Light\n- [ ] Standard\n- [x] Heavy\n' > "$missing_closure/CHANGE.md"
+  printf '# State\n\nchange_id: demo-missing-closure\nflow: Heavy\ncurrent_stage: closure-audit\nblocked: false\nnext_action: Run Closure Audit.\n' > "$missing_closure/STATE.md"
+  printf '# Code Scan\n\nscan_time: 2026-06-10 10:00\nrelated_modules: README.md\nsimilar_implementations: README.md\nreusable_abstractions: README.md\ntest_baseline: manual\nread_files: README.md\nwrite_files: README.md\nopen_questions: none\n' > "$missing_closure/CODE_SCAN.md"
+  printf '# Verify\n\n## AC Evidence\n' > "$missing_closure/VERIFY.md"
+  printf '# Report\n' > "$missing_closure/REPORT.md"
+  expect_failure "check-change closure required artifact negative case" "closure-required-artifacts" \
+    bash "$target_root/agent-flow/scripts/check-change.sh" --change-dir "$missing_closure" --project-root "$target_root" --closure
 }
 
 echo "== scaffold health =="
@@ -731,8 +773,15 @@ assert_path "$empty_target/agent-flow/scripts/new-change.ps1"
 assert_path "$empty_target/agent-flow/scripts/new-change.sh"
 assert_path "$empty_target/agent-flow/scripts/alignment-check.ps1"
 assert_path "$empty_target/agent-flow/scripts/alignment-check.sh"
+assert_clean_history_dirs "$empty_target"
 bash "$empty_target/agent-flow/scripts/init-project.sh" --target "$empty_target"
 bash "$empty_target/agent-flow/scripts/manifest-check.sh" --project-root "$empty_target"
+for placeholder in TODO_BACKEND_ENTRY TODO_COMMON_CODE_PATH TODO_BUSINESS_MODULE_PATH TODO_TEST_PATH TODO_SQL_PATH; do
+  if ! grep -q "$placeholder" "$empty_target/agent-flow/manifest.yaml"; then
+    echo "Expected bash init manifest placeholder missing: $placeholder" >&2
+    exit 1
+  fi
+done
 printf "Write-Host 'unregistered'\n" > "$empty_target/agent-flow/scripts/unregistered-demo.ps1"
 printf '#!/usr/bin/env bash\necho unregistered\n' > "$empty_target/agent-flow/scripts/unregistered-demo.sh"
 expect_failure "manifest-check public script registry negative case" "Public script missing from gate registry" \
@@ -798,6 +847,9 @@ assert_path "$starter_root/docs/PROMPTS.md"
 assert_path "$starter_root/docs/TROUBLESHOOTING.md"
 assert_path "$starter_root/examples/sample-change/VERIFY.md"
 assert_path "$starter_root/.github/workflows/scaffold-ci.yml"
-assert_path "$starter_root/.github/workflows/agent-flow-starter-check.yml"
+if [ -e "$starter_root/.github/workflows/agent-flow-starter-check.yml" ]; then
+  echo "Duplicate starter self-test workflow should not exist." >&2
+  exit 1
+fi
 
 echo "agent-flow starter self-test passed."

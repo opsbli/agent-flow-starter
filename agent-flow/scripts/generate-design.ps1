@@ -125,12 +125,23 @@ $hasReq = Test-Path $reqMd
 ## Design Alignment / Grill
 
 > 待 AI 与用户对齐后填写
+> `Alignment Verdict: aligned` requires at least 3 rows with `user-confirmed`.
 
-| 问题 | AI 推荐 | 用户确认 | 结论 |
+Alignment Source: pending
+
+Open Questions: pending
+
+| Question | AI Recommended Answer | Confirmation (`user-confirmed` / `code-confirmed` / `pending`) | Final Decision |
 |------|---------|---------|------|
-| | | | |
+| Intent Risk | | pending | |
+| Existing Code Fit | | pending | |
+| Unnecessary Abstraction | | pending | |
+| Protected Areas | | pending | |
+| Boundary And Failure Modes | | pending | |
 
-**Alignment Verdict**: `pending`
+Alignment Verdict: pending
+
+Skip Reason:
 
 ---
 

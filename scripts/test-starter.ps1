@@ -28,6 +28,24 @@ function Assert-Path {
     }
 }
 
+function Assert-CleanHistoryDirs {
+    param([string]$TargetRoot)
+
+    foreach ($name in @("changes", "logs", "reports")) {
+        $dir = Join-Path $TargetRoot "agent-flow/$name"
+        Assert-Path $dir
+        Assert-Path (Join-Path $dir ".gitkeep")
+        $unexpected = @(
+            Get-ChildItem -LiteralPath $dir -Force |
+                Where-Object { $_.Name -ne ".gitkeep" }
+        )
+        if ($unexpected.Count -gt 0) {
+            $names = ($unexpected | Select-Object -ExpandProperty Name) -join ", "
+            throw "Installed $name directory contains starter history: $names"
+        }
+    }
+}
+
 function Assert-Fails {
     param(
         [scriptblock]$Command,
@@ -52,7 +70,7 @@ function Get-DemoDesign {
         [string]$Verdict = "aligned",
         [string]$Source = "mixed",
         [string]$OpenQuestions = "none",
-        [string]$Confirmation = "confirmed"
+        [string]$Confirmation = "user-confirmed"
     )
 
 @"
@@ -460,6 +478,22 @@ write_files:
         & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $negativeAlignment
     }
 
+    $legacyAlignment = Join-Path $TargetRoot "agent-flow/changes/demo-legacy-alignment"
+    New-Item -ItemType Directory -Force -Path $legacyAlignment | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $legacyAlignment "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $legacyAlignment "DESIGN.md") -Value (Get-DemoDesign -Confirmation "confirmed")
+    Assert-Fails -Label "alignment-check legacy confirmation negative case" -ExpectedPattern "user-confirmed" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $legacyAlignment
+    }
+
+    $codeOnlyAlignment = Join-Path $TargetRoot "agent-flow/changes/demo-code-only-alignment"
+    New-Item -ItemType Directory -Force -Path $codeOnlyAlignment | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $codeOnlyAlignment "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $codeOnlyAlignment "DESIGN.md") -Value (Get-DemoDesign -Source "code-confirmed" -Confirmation "code-confirmed")
+    Assert-Fails -Label "alignment-check code-only negative case" -ExpectedPattern "at least 3 user-confirmed" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/alignment-check.ps1") -ChangeDir $codeOnlyAlignment
+    }
+
     $emptyEvidence = Join-Path $changeDir "empty-evidence"
     New-Item -ItemType Directory -Force -Path $emptyEvidence | Out-Null
     Assert-Fails -Label "ac-check missing VERIFY negative case" -ExpectedPattern "VERIFY.md" -Command {
@@ -775,6 +809,17 @@ no_change_reason: no change needed
     if (-not ($result.gates | Where-Object { $_.gate -eq "emergency-check" })) {
         throw "check-change JSON summary missing emergency-check gate."
     }
+
+    $missingClosure = Join-Path $TargetRoot "agent-flow/changes/demo-missing-closure"
+    New-Item -ItemType Directory -Force -Path $missingClosure | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [ ] Standard`n- [x] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "STATE.md") -Value "# State`n`nchange_id: demo-missing-closure`nflow: Heavy`ncurrent_stage: closure-audit`nblocked: false`nnext_action: Run Closure Audit."
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "CODE_SCAN.md") -Value "# Code Scan`n`nscan_time: 2026-06-10 10:00`nrelated_modules: README.md`nsimilar_implementations: README.md`nreusable_abstractions: README.md`ntest_baseline: manual`nread_files: README.md`nwrite_files: README.md`nopen_questions: none"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "VERIFY.md") -Value "# Verify`n`n## AC Evidence`n"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "REPORT.md") -Value "# Report`n"
+    Assert-Fails -Label "check-change closure required artifact negative case" -ExpectedPattern "closure-required-artifacts" -Command {
+        & (Join-Path $TargetRoot "agent-flow/scripts/check-change.ps1") -ChangeDir $missingClosure -ProjectRoot $TargetRoot -Closure
+    }
 }
 
 try {
@@ -838,6 +883,7 @@ try {
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/new-change.sh")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.ps1")
     Assert-Path (Join-Path $emptyTarget "agent-flow/scripts/alignment-check.sh")
+    Assert-CleanHistoryDirs -TargetRoot $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/init-project.ps1") -Target $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1") -ProjectRoot $emptyTarget
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.ps1") -Value "Write-Host 'unregistered'"
@@ -906,7 +952,9 @@ old block
     Assert-Path (Join-Path $starterRoot "docs/TROUBLESHOOTING.md")
     Assert-Path (Join-Path $starterRoot "examples/sample-change/VERIFY.md")
     Assert-Path (Join-Path $starterRoot ".github/workflows/scaffold-ci.yml")
-    Assert-Path (Join-Path $starterRoot ".github/workflows/agent-flow-starter-check.yml")
+    if (Test-Path -LiteralPath (Join-Path $starterRoot ".github/workflows/agent-flow-starter-check.yml")) {
+        throw "Duplicate starter self-test workflow should not exist."
+    }
 
     Write-Host "agent-flow starter self-test passed."
 } finally {

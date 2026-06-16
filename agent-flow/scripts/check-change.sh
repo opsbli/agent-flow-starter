@@ -36,6 +36,7 @@ if [ -z "$change_dir" ] || [ ! -d "$change_dir" ]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/_common.sh"
 failed=0
 results=()
 
@@ -80,6 +81,54 @@ has_file() {
   [ -f "$change_dir/$1" ]
 }
 
+required_closure_artifacts() {
+  local flow="$1"
+  case "$flow" in
+    Light)
+      printf '%s\n' STATE.md CHANGE.md CODE_SCAN.md VERIFY.md REPORT.md
+      ;;
+    Standard)
+      printf '%s\n' STATE.md CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md
+      ;;
+    Heavy)
+      printf '%s\n' STATE.md CHANGE.md REQUIREMENT.md CODE_SCAN.md DESIGN.md PLAN.md TASKS.md VERIFY.md REVIEW.md REPORT.md AUDIT.md EVOLUTION.md
+      ;;
+    Emergency)
+      printf '%s\n' STATE.md CHANGE.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md
+      ;;
+  esac
+}
+
+run_closure_required_artifacts() {
+  [ "$closure" = true ] || return 0
+
+  echo "== closure-required-artifacts =="
+  local flow
+  flow="$(flow_level "$change_dir")"
+  local issues=()
+  if [ "$flow" = "Unknown" ]; then
+    issues+=("Cannot determine flow level from CHANGE.md.")
+  fi
+
+  local artifact
+  while IFS= read -r artifact; do
+    [ -n "$artifact" ] || continue
+    if ! meaningful_file "$change_dir/$artifact" "Status: not started" "No implementation verification has run yet" "YYYY-MM-DD" "path/to" "{name}"; then
+      issues+=("Missing or placeholder closure artifact: $artifact")
+    fi
+  done < <(required_closure_artifacts "$flow")
+
+  if [ "${#issues[@]}" -gt 0 ]; then
+    for issue in "${issues[@]}"; do echo " - $issue"; done
+    add_result closure-required-artifacts fail true 2 "missing required closure artifacts"
+    failed=1
+    return 0
+  fi
+
+  echo "closure-required-artifacts passed for $flow change."
+  add_result closure-required-artifacts pass true 0 ""
+}
+
 write_summary() {
   local passed="false"
   [ "$failed" -eq 0 ] && passed="true"
@@ -119,6 +168,7 @@ write_summary() {
 
 run_gate sync-state bash "$script_dir/sync-state.sh" --change-dir "$change_dir"
 run_gate state-check bash "$script_dir/state-check.sh" --change-dir "$change_dir"
+run_closure_required_artifacts
 
 if has_file CODE_SCAN.md; then
   run_gate scan-check bash "$script_dir/scan-check.sh" --change-dir "$change_dir" --project-root "$project_root" --strict

@@ -107,12 +107,14 @@ State Machine Impact: pending
 - 如果问题可以通过读代码回答，先读代码，不问用户。
 - 每个问题都给出 AI 推荐答案。
 - 用户确认后，把结论沉淀回本节或上方设计小节。
+- `Alignment Verdict: aligned` 要求至少 3 行 `Confirmation` 为 `user-confirmed`。
+- 可通过代码确认的行写 `code-confirmed`，但纯 `code-confirmed` 不能通过对齐门禁。
 
 Alignment Source: pending
 
 Open Questions: pending
 
-| Question | AI Recommended Answer | Confirmation | Final Decision |
+| Question | AI Recommended Answer | Confirmation (`user-confirmed` / `code-confirmed` / `pending`) | Final Decision |
 |---|---|---|---|
 | Intent Risk | | pending | |
 | Existing Code Fit | | pending | |

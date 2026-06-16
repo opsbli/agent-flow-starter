@@ -38,9 +38,7 @@ existing_dirs() {
       found+=("$item")
     fi
   done
-  if [ "${#found[@]}" -eq 0 ]; then
-    printf '%s\n' "$1"
-  else
+  if [ "${#found[@]}" -gt 0 ]; then
     printf '%s\n' "${found[@]}"
   fi
 }
@@ -135,6 +133,12 @@ mapfile -t common_paths < <(existing_dirs common shared lib libs utils core pack
 mapfile -t business_modules < <(existing_dirs modules services features apps packages src)
 mapfile -t tests < <(existing_dirs test tests src/test __tests__)
 mapfile -t sql_paths < <(existing_dirs migrations schema sql db database prisma)
+
+if [ "${#backend_entry[@]}" -eq 0 ]; then backend_entry=("TODO_BACKEND_ENTRY"); fi
+if [ "${#common_paths[@]}" -eq 0 ]; then common_paths=("TODO_COMMON_CODE_PATH"); fi
+if [ "${#business_modules[@]}" -eq 0 ]; then business_modules=("TODO_BUSINESS_MODULE_PATH"); fi
+if [ "${#tests[@]}" -eq 0 ]; then tests=("TODO_TEST_PATH"); fi
+if [ "${#sql_paths[@]}" -eq 0 ]; then sql_paths=("TODO_SQL_PATH"); fi
 
 build_files=()
 for file in package.json pnpm-workspace.yaml pnpm-lock.yaml package-lock.json yarn.lock tsconfig.json vite.config.ts next.config.js pom.xml build.gradle settings.gradle pyproject.toml requirements.txt go.mod Cargo.toml; do

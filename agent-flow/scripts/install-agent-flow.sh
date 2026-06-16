@@ -90,6 +90,26 @@ project_owned=(
   "decisions"
 )
 
+# History directories are project-owned runtime evidence. New target projects
+# should get clean directories only; starter-local ignored histories must never
+# be distributed into business projects.
+history_owned=(
+  "changes"
+  "logs"
+  "reports"
+)
+
+is_history_owned() {
+  local item="$1"
+  local candidate
+  for candidate in "${history_owned[@]}"; do
+    if [ "$candidate" = "$item" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 # --- Ensure target agent-flow/ exists ---
 mkdir -p "$target_af"
 
@@ -166,6 +186,12 @@ echo "=== Preserving project-owned files ==="
 for item in "${project_owned[@]}"; do
   path="$target_af/$item"
   if [ -d "$path" ]; then
+    if is_history_owned "$item"; then
+      [ ! -f "$path/.gitkeep" ] && touch "$path/.gitkeep"
+      echo "  PRESERVED: $item/ (history directory; no starter files seeded)"
+      continue
+    fi
+
     seeded_count=0
     if [ -d "$source_af/$item" ]; then
       while IFS= read -r src_file; do
@@ -183,6 +209,10 @@ for item in "${project_owned[@]}"; do
     else
       echo "  PRESERVED: $item/"
     fi
+  elif is_history_owned "$item"; then
+    mkdir -p "$path"
+    touch "$path/.gitkeep"
+    echo "  CREATED: $item/ (clean history directory)"
   elif [ -d "$source_af/$item" ]; then
     cp -R "$source_af/$item" "$path"
     echo "  SEEDED: $item/"

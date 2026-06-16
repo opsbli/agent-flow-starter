@@ -54,6 +54,7 @@ Standard 需求有两个明确的检查点，不要混淆：
   - 每个问题给出 AI 推荐答案
   - 用户确认后，把结论写回 `DESIGN.md`
   - `Alignment Verdict` 必须是 `aligned`，或用户明确接受 `skipped` 且填写 `Skip Reason`
+  - `aligned` 至少需要 3 个问题的 Confirmation 标记为 `user-confirmed`
 
 ## 标准完成线
 
