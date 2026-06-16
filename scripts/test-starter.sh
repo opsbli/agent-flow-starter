@@ -65,6 +65,22 @@ expect_failure() {
   fi
 }
 
+assert_generated_scan_machine_keys() {
+  local target_root="$1"
+  local change_dir="$target_root/agent-flow/changes/demo-generated-scan"
+  mkdir -p "$change_dir"
+  printf '# Change\n\n- [ ] Light\n- [x] Standard\n- [ ] Heavy\n' > "$change_dir/CHANGE.md"
+  printf '# State\n\nchange_id: demo-generated-scan\nflow: Standard\ncurrent_stage: code-scan\nblocked: false\nnext_action: Generate scan.\n' > "$change_dir/STATE.md"
+
+  bash "$target_root/agent-flow/scripts/generate-scan.sh" --change-dir "$change_dir" --project-root "$target_root"
+  for key in scan_time related_modules similar_implementations reusable_abstractions standards_snapshot test_baseline read_files write_files open_questions; do
+    if ! grep -Eiq "^[[:space:]]*$key[[:space:]]*:" "$change_dir/CODE_SCAN.md"; then
+      echo "generate-scan.sh missing machine key: $key" >&2
+      exit 1
+    fi
+  done
+}
+
 demo_design() {
   local verdict="${1:-aligned}"
   local source="${2:-mixed}"
@@ -360,6 +376,7 @@ scan_time: 2026-06-10 10:00
 related_modules: README.md
 similar_implementations: README.md
 reusable_abstractions: README contract
+standards_snapshot: README conventions only
 test_baseline: scripts/test-starter.sh
 read_files: README.md
 write_files: README.md
@@ -592,6 +609,7 @@ scan_time: 2026-06-10 10:00
 related_modules: README.md
 similar_implementations: README.md
 reusable_abstractions: README contract
+standards_snapshot: README conventions only
 test_baseline: scripts/test-starter.sh
 read_files: README.md
 write_files: README.md
@@ -718,7 +736,7 @@ EOF
   mkdir -p "$missing_closure"
   printf '# Change\n\n- [ ] Light\n- [ ] Standard\n- [x] Heavy\n' > "$missing_closure/CHANGE.md"
   printf '# State\n\nchange_id: demo-missing-closure\nflow: Heavy\ncurrent_stage: closure-audit\nblocked: false\nnext_action: Run Closure Audit.\n' > "$missing_closure/STATE.md"
-  printf '# Code Scan\n\nscan_time: 2026-06-10 10:00\nrelated_modules: README.md\nsimilar_implementations: README.md\nreusable_abstractions: README.md\ntest_baseline: manual\nread_files: README.md\nwrite_files: README.md\nopen_questions: none\n' > "$missing_closure/CODE_SCAN.md"
+  printf '# Code Scan\n\nscan_time: 2026-06-10 10:00\nrelated_modules: README.md\nsimilar_implementations: README.md\nreusable_abstractions: README.md\nstandards_snapshot: README conventions only\ntest_baseline: manual\nread_files: README.md\nwrite_files: README.md\nopen_questions: none\n' > "$missing_closure/CODE_SCAN.md"
   printf '# Verify\n\n## AC Evidence\n' > "$missing_closure/VERIFY.md"
   printf '# Report\n' > "$missing_closure/REPORT.md"
   expect_failure "check-change closure required artifact negative case" "closure-required-artifacts" \
@@ -792,6 +810,7 @@ bash "$empty_target/agent-flow/scripts/run-verify.sh" --all
 assert_next_stage "$empty_target" "requirement"
 assert_design_alignment_stage "$empty_target"
 assert_new_change_and_alignment "$empty_target"
+assert_generated_scan_machine_keys "$empty_target"
 assert_gate_scripts "$empty_target"
 assert_task_boundary "$empty_target"
 assert_closure_check "$empty_target"

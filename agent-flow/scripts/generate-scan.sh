@@ -35,13 +35,40 @@ for d in src app server client lib cmd pkg internal core api web frontend backen
   [ -d "$project_root/$d" ] && src_dirs="${src_dirs:+$src_dirs, }$d"
 done
 [ -z "$src_dirs" ] && src_dirs="(none detected)"
+related_modules="$src_dirs"
+[ "$related_modules" = "(none detected)" ] && related_modules="$build_files"
+[ "$related_modules" = "(none detected)" ] && related_modules="TBD_RELATED_MODULES"
+test_baseline="manual verification; no test directory detected"
+read_files="$build_files"
+[ "$read_files" = "(none detected)" ] && read_files="$src_dirs"
+[ "$read_files" = "(none detected)" ] && read_files="TBD_READ_FILES"
+# Standards
+standards_snapshot="no docs/standards directory detected; extract conventions from scanned code"
+if [ -d "$project_root/docs/standards" ]; then
+  standards_files="$(find "$project_root/docs/standards" -maxdepth 1 -type f -name '*.md' 2>/dev/null | sed 's#^.*/#docs/standards/#' | sort | paste -sd ', ' -)"
+  [ -n "$standards_files" ] && standards_snapshot="standards found: $standards_files"
+fi
 # Extract goal from STATE.md
 goal="New feature/module"
 state_file="$change_dir/STATE.md"
-[ -f "$state_file" ] && goal=$(grep -i "goal:" "$state_file" 2>/dev/null | head -1 | sed 's/.*goal://i' | sed 's/^[[:space:]]*//')
+if [ -f "$state_file" ]; then
+  goal="$(grep -i "goal:" "$state_file" 2>/dev/null | head -1 | sed 's/.*goal://i' | sed 's/^[[:space:]]*//' || true)"
+fi
 [ -z "$goal" ] && goal="New feature/module"
 cat > "$scan_out" << SCANEOF
 # CODE_SCAN
+
+## Machine Check
+
+scan_time: $(date '+%Y-%m-%d %H:%M')
+related_modules: $related_modules
+similar_implementations: TBD_SIMILAR_IMPLEMENTATIONS
+reusable_abstractions: TBD_REUSABLE_ABSTRACTIONS
+standards_snapshot: $standards_snapshot
+test_baseline: $test_baseline
+read_files: $read_files
+write_files: TBD_WRITE_FILES
+open_questions: fill TBD fields before running scan-check
 
 ## Project Overview
 
@@ -64,19 +91,27 @@ Search: find "$project_root" -name '*service*' -not -path '*/node_modules/*' -no
 
 - (list existing utilities, base classes, common patterns found)
 
-### 3. Database Schema / Migrations
+### 3. Standards Snapshot
+
+standards_snapshot: $standards_snapshot
+
+- Standards source: $standards_snapshot
+- Followed conventions: (record naming, layering, API, DB, permission, test, or error-handling conventions actually found)
+- Gaps or conflicts: none / (record standards drift)
+
+### 4. Database Schema / Migrations
 
 $([ -d "$project_root/migrations" -o -d "$project_root/prisma" ] && echo "- Migration directory found. Review existing schema." || echo "- (no migration directory detected)")
 
-### 4. API Routes / Endpoints
+### 5. API Routes / Endpoints
 
 - (scan for route definitions, controllers, or API declarations)
 
-### 5. Permission / Auth Models
+### 6. Permission / Auth Models
 
 - (check for auth middleware, permission annotations, config)
 
-### 6. Test Patterns
+### 7. Test Patterns
 
 - (review existing tests for style and coverage expectations)
 

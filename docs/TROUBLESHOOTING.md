@@ -40,7 +40,7 @@ Use strict mode only when the target project context should already be complete.
 
 ### `scan-check` fails
 
-Open `CODE_SCAN.md` and fill the machine-check fields plus `read_files` and `write_files`. For Standard and Heavy changes, run the check before design.
+Open `CODE_SCAN.md` and fill the machine-check fields plus `read_files` and `write_files`. For Standard and Heavy changes, include `standards_snapshot` so the scan records either adopted `docs/standards/` files or the real code conventions found during reading. Run the check before design.
 
 ### `alignment-check` fails
 

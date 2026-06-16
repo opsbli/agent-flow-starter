@@ -65,6 +65,23 @@ function Assert-Fails {
     }
 }
 
+function Assert-GeneratedScanMachineKeys {
+    param([string]$TargetRoot)
+
+    $changeDir = Join-Path $TargetRoot "agent-flow/changes/demo-generated-scan"
+    New-Item -ItemType Directory -Force -Path $changeDir | Out-Null
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [x] Standard`n- [ ] Heavy"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $changeDir "STATE.md") -Value "# State`n`nchange_id: demo-generated-scan`nflow: Standard`ncurrent_stage: code-scan`nblocked: false`nnext_action: Generate scan."
+
+    & (Join-Path $TargetRoot "agent-flow/scripts/generate-scan.ps1") -ChangeDir $changeDir -ProjectRoot $TargetRoot
+    $scan = Get-Content -Raw -Encoding utf8 -LiteralPath (Join-Path $changeDir "CODE_SCAN.md")
+    foreach ($key in @("scan_time", "related_modules", "similar_implementations", "reusable_abstractions", "standards_snapshot", "test_baseline", "read_files", "write_files", "open_questions")) {
+        if ($scan -notmatch "(?im)^\s*$([regex]::Escape($key))\s*:") {
+            throw "generate-scan.ps1 missing machine key: $key"
+        }
+    }
+}
+
 function Get-DemoDesign {
     param(
         [string]$Verdict = "aligned",
@@ -384,6 +401,7 @@ scan_time: 2026-06-10 10:00
 related_modules: README.md
 similar_implementations: README.md
 reusable_abstractions: README contract
+standards_snapshot: README conventions only
 test_baseline: scripts/test-starter.ps1
 read_files: README.md
 write_files: README.md
@@ -675,6 +693,7 @@ scan_time: 2026-06-10 10:00
 related_modules: README.md
 similar_implementations: README.md
 reusable_abstractions: README contract
+standards_snapshot: README conventions only
 test_baseline: scripts/test-starter.ps1
 read_files: README.md
 write_files: README.md
@@ -814,7 +833,7 @@ no_change_reason: no change needed
     New-Item -ItemType Directory -Force -Path $missingClosure | Out-Null
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "CHANGE.md") -Value "# Change`n`n- [ ] Light`n- [ ] Standard`n- [x] Heavy"
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "STATE.md") -Value "# State`n`nchange_id: demo-missing-closure`nflow: Heavy`ncurrent_stage: closure-audit`nblocked: false`nnext_action: Run Closure Audit."
-    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "CODE_SCAN.md") -Value "# Code Scan`n`nscan_time: 2026-06-10 10:00`nrelated_modules: README.md`nsimilar_implementations: README.md`nreusable_abstractions: README.md`ntest_baseline: manual`nread_files: README.md`nwrite_files: README.md`nopen_questions: none"
+    Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "CODE_SCAN.md") -Value "# Code Scan`n`nscan_time: 2026-06-10 10:00`nrelated_modules: README.md`nsimilar_implementations: README.md`nreusable_abstractions: README.md`nstandards_snapshot: README conventions only`ntest_baseline: manual`nread_files: README.md`nwrite_files: README.md`nopen_questions: none"
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "VERIFY.md") -Value "# Verify`n`n## AC Evidence`n"
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $missingClosure "REPORT.md") -Value "# Report`n"
     Assert-Fails -Label "check-change closure required artifact negative case" -ExpectedPattern "closure-required-artifacts" -Command {
@@ -898,6 +917,7 @@ try {
     Assert-NextStage -TargetRoot $emptyTarget -ExpectedStage "requirement"
     Assert-DesignAlignmentStage -TargetRoot $emptyTarget
     Assert-NewChangeAndAlignment -TargetRoot $emptyTarget
+    Assert-GeneratedScanMachineKeys -TargetRoot $emptyTarget
     Assert-GateScripts -TargetRoot $emptyTarget
     Assert-TaskBoundary -TargetRoot $emptyTarget
     Assert-ClosureCheck -TargetRoot $emptyTarget

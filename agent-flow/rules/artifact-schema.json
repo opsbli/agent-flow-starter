@@ -7,6 +7,7 @@
         "related_modules",
         "similar_implementations",
         "reusable_abstractions",
+        "standards_snapshot",
         "test_baseline",
         "read_files",
         "write_files",

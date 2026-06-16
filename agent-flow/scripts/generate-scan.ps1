@@ -88,6 +88,26 @@ Get-ChildItem $ProjectRoot -Directory -Recurse -Depth 2 | Where-Object { $_.Name
     $testDirs += $_.FullName.Replace("$ProjectRoot\", "").Replace("$ProjectRoot/", "")
 }
 $scanResults["Test Directories"] = if ($testDirs.Count -gt 0) { $testDirs -join ", " } else { "(none detected)" }
+$relatedModules = if ($srcDirs.Count -gt 0) { $srcDirs -join ", " } elseif ($buildFiles.Count -gt 0) { $buildFiles -join ", " } else { "TBD_RELATED_MODULES" }
+$testBaseline = if ($testDirs.Count -gt 0) { $testDirs -join ", " } else { "manual verification; no test directory detected" }
+$readFiles = @()
+$readFiles += $buildFiles
+$readFiles += $srcDirs
+if ($readFiles.Count -eq 0) { $readFiles += "TBD_READ_FILES" }
+
+# Standards
+$standardsDir = Join-Path $ProjectRoot "docs/standards"
+$standardsFiles = @()
+if (Test-Path -LiteralPath $standardsDir) {
+    Get-ChildItem -LiteralPath $standardsDir -File -Filter *.md | ForEach-Object {
+        $standardsFiles += ("docs/standards/" + $_.Name)
+    }
+}
+$standardsSnapshot = if ($standardsFiles.Count -gt 0) {
+    "standards found: " + ($standardsFiles -join ", ")
+} else {
+    "no docs/standards directory detected; extract conventions from scanned code"
+}
 
 # Config files
 $configs = @()
@@ -107,6 +127,18 @@ if (Test-Path $stateMd) {
 # --- Generate CODE_SCAN.md ---
 @"
 # CODE_SCAN
+
+## Machine Check
+
+scan_time: $(Get-Date -Format 'yyyy-MM-dd HH:mm')
+related_modules: $relatedModules
+similar_implementations: TBD_SIMILAR_IMPLEMENTATIONS
+reusable_abstractions: TBD_REUSABLE_ABSTRACTIONS
+standards_snapshot: $standardsSnapshot
+test_baseline: $testBaseline
+read_files: $($readFiles -join ", ")
+write_files: TBD_WRITE_FILES
+open_questions: fill TBD fields before running scan-check
 
 ## Project Overview
 
@@ -132,19 +164,27 @@ $(if ($stack["node"]) { "Search: Get-ChildItem -Recurse -Filter '*service*' -Nam
 
 - (list existing utilities, base classes, common patterns found)
 
-### 3. Database Schema / Migrations
+### 3. Standards Snapshot
+
+standards_snapshot: $standardsSnapshot
+
+- Standards source: $standardsSnapshot
+- Followed conventions: (record naming, layering, API, DB, permission, test, or error-handling conventions actually found)
+- Gaps or conflicts: none / (record standards drift)
+
+### 4. Database Schema / Migrations
 
 $(if ((Test-Path (Join-Path $ProjectRoot "migrations")) -or (Test-Path (Join-Path $ProjectRoot "prisma"))) { "- Migration directory found. Review existing schema." } else { "- (no migration directory detected)" })
 
-### 4. API Routes / Endpoints
+### 5. API Routes / Endpoints
 
 - (scan for route definitions, controllers, or API declarations)
 
-### 5. Permission / Auth Models
+### 6. Permission / Auth Models
 
 - (check for auth middleware, permission annotations, Sa-Token config)
 
-### 6. Test Patterns
+### 7. Test Patterns
 
 - (review existing tests for style and coverage expectations)
 

@@ -10,6 +10,7 @@ scan_time: 2026-06-15 00:00
 related_modules: examples/sample-change
 similar_implementations: examples/sample-change/VERIFY.md
 reusable_abstractions: existing status label example structure
+standards_snapshot: example follows existing status label naming and test style
 test_baseline: agent-flow/scripts/ac-check.ps1 -ChangeDir examples/sample-change
 read_files: examples/sample-change/REQUIREMENT.md, examples/sample-change/DESIGN.md, examples/sample-change/VERIFY.md
 write_files: examples/sample-change/CODE_SCAN.md

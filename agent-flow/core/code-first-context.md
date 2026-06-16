@@ -109,19 +109,19 @@ __tests__/**
 - 本次 AC 如何映射测试或手工验证。
 - 哪些只能联调、浏览器、真实数据库或人工验证。
 
-### 6. 标准提取（自动维护）
+### 6. Standards Snapshot（机器可检查）
 
-扫描结束后，自动提取或更新项目编码标准到 `docs/standards/`。
+扫描结束后，必须在 `CODE_SCAN.md` 记录 `standards_snapshot`，让设计和实现继承已发现的代码约定。
 
 - 如果 `docs/standards/` **不存在**：
-  - 从已扫描的代码中提取实际使用的约定，按领域生成 `.md` 文件
+  - 从已扫描的代码中提取本次必须遵守的实际约定，写入 `CODE_SCAN.md` 的 `Standards Snapshot`
   - 提取来源：已有模块的命名模式、分层风格、API 路径惯例、DB 命名、权限码格式、测试写法、错误处理方式
-  - 生成示例文件：`api.md`、`db.md`、`layers.md`、`permissions.md`、`testing.md`、`security.md` 等
   - **只记录代码中实际存在的约定**，不写推测性规则
+  - 如果约定会被后续 change 复用，在 `EVOLUTION.md` 里建议新增或更新 `docs/standards/`
 - 如果 `docs/standards/` **已存在**：
   - 逐条对照现有标准与代码事实
-  - 代码已普遍采用的新约定 → 更新对应标准文件
-  - 新代码违反既有标准 → 在 `CODE_SCAN.md` 的「未决问题」中标记
+  - 符合标准 → 在 `standards_snapshot` 记录采用的标准文件
+  - 标准缺失或代码事实冲突 → 在 `CODE_SCAN.md` 的「未决问题」中标记，并在 `EVOLUTION.md` 建议是否更新标准
 
 ### CODE_SCAN.md 必填结构
 
@@ -133,6 +133,8 @@ __tests__/**
 ## 相似实现
 
 ## 可复用抽象
+
+## Standards Snapshot
 
 ## 禁止重复实现
 

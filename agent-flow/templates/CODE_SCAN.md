@@ -13,6 +13,7 @@ scan_time: YYYY-MM-DD HH:mm
 related_modules: module-or-file
 similar_implementations: path-or-none-with-reason
 reusable_abstractions: abstraction-or-none-with-reason
+standards_snapshot: docs/standards-status-or-code-convention-summary
 test_baseline: command-or-test-file
 read_files: path/to/read
 write_files: path/to/write
@@ -40,6 +41,14 @@ open_questions: none-or-question
 
 - 不重复实现：
 - 原因：
+
+## Standards Snapshot
+
+> Standard / Heavy 必填。先查 `docs/standards/` 是否存在；存在则记录采用或冲突的标准，不存在则从已读代码中提取本次必须遵守的实际约定。不要写猜测性规则。
+
+- Standards source:
+- 本次沿用:
+- 冲突或缺口:
 
 ## Maven / 模块影响
 

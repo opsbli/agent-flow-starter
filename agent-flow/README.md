@@ -502,6 +502,7 @@ AC-03
 - 读了哪些文件。
 - 找到哪些相似实现。
 - 复用了哪些抽象。
+- `standards_snapshot`：`docs/standards/` 存在时记录采用或冲突的标准；不存在时从已读代码中提取本次必须遵守的实际约定。
 - 哪些文件只读。
 - 哪些文件允许写。
 - 哪些问题未决。
@@ -650,6 +651,7 @@ agent-flow/UPGRADE.md
 一个 change 只有满足以下条件，才能说完成：
 
 - `REPORT.md` 已写交付摘要。
+- 如果是评分、审计、复评或调研且没有 tracked 实现改动，`REPORT.md` 必须写清 `No-op / Assessment Closeout`、证据位置和下一个触发条件。
 - `VERIFY.md` 已写验证证据。
 - 所有 AC 有 Evidence 或明确 residual risk。
 - `ac-check`、`coverage-check`、`code-drift-check`、`blocked-check`、`task-boundary-check`、`manifest-check`、`emergency-check`、`closure-check`、`scaffold-health` 已执行或说明跳过原因。

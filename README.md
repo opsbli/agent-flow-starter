@@ -565,6 +565,8 @@ Alignment Verdict 是 aligned 或我明确接受 skipped 后，再补 PLAN、TAS
 如果 Closure Audit 是 conditional，请明确残余风险和后续处理建议。
 ```
 
+如果本次是评分、审计、复评或调研，且结论是不需要修改 tracked 文件，请在 `REPORT.md` 的 `No-op / Assessment Closeout` 写清证据位置和下一个触发条件。
+
 ## 验证命令
 
 `agent-flow` 支持 Windows 和 Linux/macOS。
