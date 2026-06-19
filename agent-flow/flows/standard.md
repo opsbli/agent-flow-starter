@@ -2,6 +2,13 @@
 
 适合单模块、低到中风险功能。
 
+Standard 流程分为两段：
+
+- **Standard-Light**：单模块 CRUD，无 schema 变更，无公共 API 破坏。可跳过 Design Alignment。
+- **Standard-Full**：涉及小型 API 变更或有 schema 但已回滚策略。走当前完整 15 步。
+
+分级判断依据 `code-first 扫描` 结果。如果扫描后发现未声明的 schema/API 变更，应升级为 Heavy。
+
 ## 步骤
 
 1. 建立 change，并创建 `STATE.md`。
@@ -11,14 +18,23 @@
    - 每次只问一个关键问题，给出 AI 推荐答案。
    - 用户确认后，把结论写回 `REQUIREMENT.md` 或 `agent-flow/knowledge/`。
    - 遇到不可逆取舍，创建 ADR 到 `agent-flow/decisions/`。
+   > **Grill 疲劳检测**：如果连续 3 次 Standard change 的 Requirements Grill 都没有提出新问题（所有 user-confirmed 都是 code-confirmed），建议对同类 change 跳过 Grill。
 3. 需求澄清，写 `REQUIREMENT.md`（包含 grill 对齐结论）。
+   > 推荐使用 `REQUIREMENT_ALIGNED.md` 模板（`agent-flow/templates/REQUIREMENT_ALIGNED.md`），它比标准 REQUIREMENT.md 增加 AC→设计→测试的追溯表。
 4. 代码优先扫描，写 `CODE_SCAN.md`。
 5. 运行 `scan-check`。
-6. 技术设计，写 `DESIGN.md`，运行 `design-check`。
+6. **两段判断**：
+   - **Standard-Light 路径**（无 schema 变更、无公共 API 破坏）：跳过 Design Alignment，从步骤 8 继续。
+   - **Standard-Full 路径**（涉及 API 变更或有 schema）：从步骤 7 继续。
+7. 技术设计，写 `DESIGN.md`，运行 `design-check`。
 7. 执行 `Design Alignment / Grill`，把对齐结论写回 `DESIGN.md`，运行 `alignment-check`。
 8. 拆任务，写 `TASKS.md`，每个任务必须有状态、AC、read_files、write_files、验证命令。
 9. 运行 `task-check`。
-10. 按任务实现，每个任务有 verify，并更新任务状态。
+10. 按任务执行 TDD（Test-Driven Development）实现：
+    - 🔴 **RED** — 每个任务先写失败测试，运行并确认测试失败。
+    - 🟢 **GREEN** — 写最小实现代码，运行测试并确认通过。
+    - 🔵 **REFACTOR** — 重构代码，保持测试通过。
+    - 将每个任务的 RED→GREEN checkpoint 结果记录到 `TASKS.md` 对应任务状态中。
 11. 汇总验证，写 `VERIFY.md`。
 12. 写 `REPORT.md`。
 13. 写 `EVOLUTION.md`，运行 `evolution-check`。
@@ -27,7 +43,7 @@
 
 ## 两次对齐环节说明
 
-Standard 需求有两个明确的检查点，不要混淆：
+Standard 需求有两个明确的检查点，不要混淆。**Standard-Light 路径可以跳过检查点 2（Design Alignment）**。
 
 ### 检查点 1 — Requirements Grill（步骤 2）
 
@@ -60,6 +76,7 @@ Standard 需求有两个明确的检查点，不要混淆：
 ## 标准完成线
 
 - 所有 AC 都有验证证据。
+- 每个实现任务都有 RED（测试失败证明）和 GREEN（测试通过证明）TDD checkpoint 记录。
 - `scan-check` 已通过。
 - `design-check` 已通过。
 - `alignment-check` 已通过。

@@ -178,6 +178,60 @@ $suggestions = @()
 if ($total -gt 0 -and $completed -eq 0) { $suggestions += "[HIGH] [Process] No completed changes yet." }
 if ($kCount -le 2 -and $total -gt 0) { $suggestions += "[MEDIUM] [Knowledge] Only $kCount files for $total changes." }
 if ($adrCount -eq 0 -and $total -gt 2) { $suggestions += "[MEDIUM] [Decisions] No ADRs recorded." }
+
+# ── Improvement Tracker scan ──
+$trackerPath = Join-Path $afDir "knowledge/improvement-tracker.md"
+if (Test-Path $trackerPath) {
+    $trackerText = Get-Content -Raw -Encoding utf8 -LiteralPath $trackerPath
+
+    # Count pending items (not implemented/rejected)
+    $pendingCount = 0
+    $pendingLines = @()
+    $lines = $trackerText -split "`n"
+    foreach ($line in $lines) {
+        if ($line -match '^\|.*\|(accepted|deferred|proposed)\s*\|') {
+            $pendingCount++
+            $pendingLines += $line.Trim()
+        }
+    }
+
+    if ($pendingCount -gt 0) {
+        $suggestions += "[HIGH] [Improvement] $pendingCount pending items in improvement-tracker — consider addressing:"
+        foreach ($pl in ($pendingLines | Select-Object -First 3)) {
+            # Extract ID and recommendation
+            if ($pl -match '\|\s*(\S+)\s*\|') {
+                $impId = $matches[1]
+                $parts = $pl -split '\|'
+                $rec = if ($parts.Count -ge 4) { $parts[3].Trim() } else { "unknown" }
+                $suggestions += "  → $impId: $rec"
+            }
+        }
+        if ($pendingCount -gt 3) { $suggestions += "  → ... and $($pendingCount - 3) more items" }
+    } else {
+        $suggestions += "[LOW] [Improvement] No pending items in improvement-tracker. All caught up."
+    }
+
+    # Check for stale items (deferred >30 days without owner)
+    $staleCount = 0
+    foreach ($line in $lines) {
+        if ($line -match '^\|.*\|deferred\s*\|.*\|') {
+            $parts = $line -split '\|'
+            $dateStr = if ($parts.Count -ge 7) { $parts[6].Trim() } else { "" }
+            if ($dateStr -match '(\d{4})-(\d{2})-(\d{2})') {
+                try {
+                    $itemDate = Get-Date -Year $matches[1] -Month $matches[2] -Day $matches[3]
+                    if ((Get-Date) - $itemDate -gt [TimeSpan]::FromDays(30)) {
+                        $staleCount++
+                    }
+                } catch { }
+            }
+        }
+    }
+    if ($staleCount -gt 0) {
+        $suggestions += "[MEDIUM] [Improvement] $staleCount deferred items older than 30 days — review or reassign."
+    }
+}
+
 if (-not $suggestions) { $suggestions += "No suggestions at this time. Project is in good shape." }
 
 Write-Host @"

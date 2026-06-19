@@ -263,6 +263,7 @@ AUDIT.md
 
 ## 硬规则
 
+- 所有代码实现必须走 TDD（Test-Driven Development）：先写失败测试（RED），再写最小实现通过测试（GREEN），最后重构（REFACTOR）。不允许先实现再补测试。
 - 不确认事实源优先级，不处理冲突。
 - `STATE.md` 与工件冲突时，以工件和 `next-step` 推断结果为准，并更新 `STATE.md`。
 - `STATE.md` 滞后时，运行 `sync-state` 后再继续。
@@ -285,6 +286,7 @@ AUDIT.md
 - 收口前必须运行 `manifest-check`，确认脚手架清单、gate 文件和 blocked_if 规则完整。
 - Standard / Heavy change 收口前必须运行 `evolution-check`，确认经验升级或不升级理由已写清。
 - Heavy change 标记完成前必须运行 `closure-check`。
+- **所有代码实现必须经过 TDD 关卡**：每个任务必须有 RED（测试失败证明）和 GREEN（测试通过证明）两个 checkpoint，写入 `TASKS.md` 对应任务状态中。
 - 不确定当前 change 是否健康时，运行 `check-change`，它会串起状态、扫描、设计、对齐、计划、任务、AC、漂移、阻塞、边界、manifest、Emergency、演进和关闭检查，并可输出 `CHECK_RESULT.json`。
 - 发现术语、规则、坑点，立即写入 `agent-flow/knowledge/`。
 - 发现不可逆取舍，写入 `agent-flow/decisions/`。

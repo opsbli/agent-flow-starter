@@ -853,6 +853,22 @@ Heavy 示例额外展示：
 docs/PROMPTS.md
 ```
 
+### 渐进式学习
+
+```text
+docs/learning-path.md
+```
+
+从零开始，分 5 个阶段逐步掌握 agent-flow。每阶段只暴露你当前需要的脚本和工件。
+
+### 流程架构图
+
+```text
+docs/visual-guides/process-flow.md
+```
+
+使用 Mermaid 可视化的路由判定树、门禁时序图和工件依赖图。
+
 故障排除指南在：
 
 ```text

@@ -38,9 +38,11 @@ Emergency 通道绕过了以下安全门：
    - 设定回填截止时间（默认 24h）
 3. 在 `CHANGE.md` 的「风险」中记录 bypass 的理由。
 
-### 阶段 0.5：最小 Grill
+### 阶段 0.5：最小 Grill（可选）
 
-在阶段 0 和阶段 1 之间，执行最小化 `grill-with-docs`：
+当修复方向明确、无歧义时，可以直接跳过此阶段。
+
+如果存在以下情况之一，应执行最小化 `grill-with-docs`：
 
 - 只问 1-2 个最关键的问题（确认修复方向正确、术语一致）。
 - 如果问题可以通过读代码回答，先读代码，不要问用户。
@@ -73,7 +75,11 @@ Emergency 通道绕过了以下安全门：
 
 ### 阶段 4：回填（24 小时内）
 
-必须在 24 小时内补充：
+必须在 24 小时内补充并运行回填检查：
+
+```bash
+bash agent-flow/scripts/emergency-backfill-check.sh --change-dir agent-flow/changes/hotfix-xxx
+```
 
 - [ ] 完整 `REQUIREMENT.md`（即使事后复盘）
 - [ ] 完整 `CODE_SCAN.md`
@@ -140,130 +146,23 @@ Emergency 通道绕过了以下安全门：
 ### 时间锁——检查方法
 
 ```bash
-#!/usr/bin/env bash
-# Emergency time-lock check: prevents same-module Emergency within 7 days.
-# Usage: bash emergency-time-lock.sh <change-dir>
-# Returns 0 if allowed, 1 if blocked by time-lock.
+bash agent-flow/scripts/emergency-time-lock.sh agent-flow/changes/hotfix-login
 
-check_emergency_time_lock() {
-  local new_change_dir="$1"
-  local changes_root="${2:-agent-flow/changes}"
-  local module_name
-
-  # Extract module name from new CHANGE.md's "影响范围" section
-  module_name=$(grep -A1 "^## 影响范围" "$new_change_dir/CHANGE.md" 2>/dev/null | tail -1 | xargs)
-  [ -z "$module_name" ] && module_name=$(basename "$new_change_dir" | sed 's/^[0-9]*-//')
-
-  local now epoch now_date
-  now=$(date +%s)
-  now_date=$(date +%Y-%m-%d)
-
-  for change_dir in "$changes_root"/*/; do
-    [ -d "$change_dir" ] || continue
-    [ "$change_dir" = "$new_change_dir/" ] && continue
-
-    local change_file="$change_dir/CHANGE.md"
-    [ ! -f "$change_file" ] && continue
-
-    # Check if this is an Emergency change
-    if ! grep -Eiq '\[x\][[:space:]]+Emergency' "$change_file"; then
-      continue
-    fi
-
-    # Extract that change's module
-    local other_module
-    other_module=$(grep -A1 "^## 影响范围" "$change_file" 2>/dev/null | tail -1 | xargs)
-    [ -z "$other_module" ] && other_module=$(basename "$change_dir" | sed 's/^[0-9]*-//')
-
-    # Same module?
-    [ "$other_module" != "$module_name" ] && continue
-
-    # Get change date from directory name (format: YYYYMMDD-*)
-    local change_date_str
-    change_date_str=$(basename "$change_dir" | grep -Eo '^[0-9]{8}')
-    [ -z "$change_date_str" ] && continue
-
-    local change_epoch
-    change_epoch=$(date -d "$(printf '%s-%s-%s' "${change_date_str:0:4}" "${change_date_str:4:2}" "${change_date_str:6:2}")" +%s 2>/dev/null || echo 0)
-    [ "$change_epoch" -eq 0 ] && continue
-
-    local diff_days=$(( (now - change_epoch) / 86400 ))
-    if [ "$diff_days" -lt 7 ]; then
-      echo "⛔ Time lock active for module '$module_name' (last Emergency: $(basename "$change_dir"), ${diff_days} day(s) ago). Use Heavy process instead."
-      return 1
-    fi
-  done
-
-  echo "✅ No time-lock conflict for module '$module_name'."
-  return 0
-}
-
-# Run as a script
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  if [ $# -lt 1 ]; then
-    echo "Usage: $0 <change-dir> [changes-root]"
-    exit 2
-  fi
-  check_emergency_time_lock "$@"
-fi
+# PowerShell
+agent-flow/scripts/emergency-time-lock.ps1 -ChangeDir agent-flow/changes/hotfix-login
 ```
+
+返回 `0` 表示允许，`1` 表示被时间锁阻止。
 
 ### 滥用触发升级
 
 如果在一个月内某个模块用了 3 次以上 Emergency：
 
 ```bash
-#!/usr/bin/env bash
-# Emergency abuse detection: hard-lock module after 3+ Emergency uses in 30 days.
-# Usage: bash emergency-abuse-check.sh <changes-root>
+bash agent-flow/scripts/emergency-abuse-check.sh agent-flow/changes <module-name>
 
-check_emergency_abuse() {
-  local changes_root="${1:-agent-flow/changes}"
-  local module="$2"
-  local threshold="${3:-3}"
-  local window_days="${4:-30}"
-  local count=0
-
-  local now
-  now=$(date +%s)
-
-  for change_dir in "$changes_root"/*/; do
-    [ -d "$change_dir" ] || continue
-    local change_file="$change_dir/CHANGE.md"
-    [ ! -f "$change_file" ] && continue
-
-    if ! grep -Eiq '\[x\][[:space:]]+Emergency' "$change_file"; then
-      continue
-    fi
-
-    # Extract that change's module
-    local other_module
-    other_module=$(grep -A1 "^## 影响范围" "$change_file" 2>/dev/null | tail -1 | xargs)
-    [ -z "$other_module" ] && other_module=$(basename "$change_dir" | sed 's/^[0-9]*-//')
-
-    [ "$other_module" != "$module" ] && continue
-
-    # Get change date
-    local change_date_str
-    change_date_str=$(basename "$change_dir" | grep -Eo '^[0-9]{8}')
-    [ -z "$change_date_str" ] && continue
-
-    local change_epoch
-    change_epoch=$(date -d "$(printf '%s-%s-%s' "${change_date_str:0:4}" "${change_date_str:4:2}" "${change_date_str:6:2}")" +%s 2>/dev/null || echo 0)
-    [ "$change_epoch" -eq 0 ] && continue
-
-    local diff_days=$(( (now - change_epoch) / 86400 ))
-    [ "$diff_days" -le "$window_days" ] && count=$((count + 1))
-  done
-
-  if [ "$count" -ge "$threshold" ]; then
-    echo "🔴 Module '$module' has $count Emergency changes in $window_days days (threshold: $threshold)."
-    echo "   Recommend: hard-lock for 30 days, architecture review, and ADR creation."
-    return 1
-  fi
-
-  return 0
-}
+# PowerShell
+agent-flow/scripts/emergency-abuse-check.ps1 -ChangesRoot agent-flow/changes -Module <module>
 ```
 
 1. 自动将该模块标记为 `hard-locked`（禁止未来 30 天内使用 Emergency）

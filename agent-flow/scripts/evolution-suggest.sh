@@ -193,6 +193,43 @@ suggestions=""
 [ "$k_count" -le 2 ] && [ "$total" -gt 0 ] && suggestions="$suggestions\n- [MEDIUM] [Knowledge] Only $k_count knowledge files for $total changes. Add glossary.md, pitfalls.md, and module-map.md."
 [ "$adr_count" -eq 0 ] && [ "$total" -gt 2 ] && suggestions="$suggestions\n- [MEDIUM] [Decisions] No ADRs recorded. Document architecture decisions as they're made."
 [ "$total" -gt 3 ] && [ "$k_count" -lt 3 ] && suggestions="$suggestions\n- [LOW] [Knowledge] $k_count knowledge files for $total changes. Consider expanding."
+
+# ── Improvement Tracker scan (Bash) ──
+TRACKER_FILE="$af_dir/knowledge/improvement-tracker.md"
+if [ -f "$TRACKER_FILE" ]; then
+  # Count pending items
+  PENDING_COUNT=$(grep -c '|.*|\(accepted\|deferred\|proposed\)\s*|' "$TRACKER_FILE" 2>/dev/null || echo 0)
+  if [ "$PENDING_COUNT" -gt 0 ]; then
+    suggestions="$suggestions\n- [HIGH] [Improvement] $PENDING_COUNT pending items in improvement-tracker — consider addressing:"
+    # Show top 3 pending items
+    grep '|.*|\(accepted\|deferred\|proposed\)\s*|' "$TRACKER_FILE" | head -3 | while IFS='|' read -r _ imp_id _ rec _; do
+      [ -n "$imp_id" ] && suggestions="$suggestions\n  → $(echo "$imp_id" | xargs): $(echo "$rec" | xargs)"
+    done
+    if [ "$PENDING_COUNT" -gt 3 ]; then
+      suggestions="$suggestions\n  → ... and $((PENDING_COUNT - 3)) more items"
+    fi
+  else
+    suggestions="$suggestions\n- [LOW] [Improvement] No pending items in improvement-tracker. All caught up."
+  fi
+
+  # Check for stale deferred items (>30 days)
+  STALE_COUNT=0
+  while IFS='|' read -r _ imp_id _ _ status _ date_str _; do
+    status_trimmed=$(echo "$status" | xargs)
+    date_trimmed=$(echo "$date_str" | xargs)
+    if [ "$status_trimmed" = "deferred" ] && echo "$date_trimmed" | grep -Eq '^20[0-9]{2}-[0-9]{2}-[0-9]{2}$'; then
+      item_epoch=$(date -d "$date_trimmed" +%s 2>/dev/null || echo 0)
+      now_epoch=$(date +%s)
+      if [ "$item_epoch" -gt 0 ] && [ $(( (now_epoch - item_epoch) / 86400 )) -gt 30 ]; then
+        STALE_COUNT=$((STALE_COUNT + 1))
+      fi
+    fi
+  done < <(grep '|.*|deferred\s*|' "$TRACKER_FILE")
+  if [ "$STALE_COUNT" -gt 0 ]; then
+    suggestions="$suggestions\n- [MEDIUM] [Improvement] $STALE_COUNT deferred items older than 30 days — review or reassign."
+  fi
+fi
+
 [ -z "$suggestions" ] && suggestions="\nNo suggestions at this time. Project is in good shape."
 
 cat << SUGGESTEOF

@@ -40,6 +40,22 @@ Human approval is required before modifying:
 - hard delete, batch delete, destructive data operations
 - root build files, workspace files, module registration, or application entry dependencies
 
+## Design Decision Rule
+
+**Every design decision in DESIGN.md must reference a specific code location.** This prevents AI from writing plausible-sounding but code-unfounded designs.
+
+Required format:
+```
+决策: 使用 [方案名]
+引用: src/main/java/.../SomeClass.java:42 — see getWithLock() pattern
+理由: [基于代码事实的解释]
+```
+
+`content-check` 门禁会验证：
+- DESIGN.md 必须有 ≥3 个代码引用
+- 每个引用必须是 `path/to/File.ext:line` 格式或 `path/to/File.ext` 格式
+- 纯逻辑推理的决策（"使用 Redis 因为快"）会被标记为证据不足
+
 ## Allowed Without Approval
 
 - read/search/analyze code

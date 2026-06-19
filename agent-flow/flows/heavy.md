@@ -137,6 +137,7 @@ Verdict: accept
 每个任务必须有：
 
 - 目标。
+- 所属 PLAN.md 阶段（phase）。
 - 状态：`pending`、`in_progress`、`completed`、`blocked` 或 `skipped`。
 - AC 映射。
 - `read_files`。
@@ -148,16 +149,57 @@ Verdict: accept
 
 完成 Plan Audit 后必须运行 `plan-check`。未通过时，不进入实现。
 
-## 阶段 5：Dev
+### Phase 门禁
 
-每个任务独立上下文执行：
+每个 PLAN.md 阶段完成后，在进入下一阶段前必须运行：
+
+```powershell
+agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/task-boundary-check.ps1 -ChangeDir agent-flow/changes/<change-id>
+agent-flow/scripts/run-verify.ps1 -All
+```
+
+确保当前阶段没有漂移，再进入下一阶段。
+
+## 阶段 5：Dev + Inline Verify
+
+每个任务独立上下文执行，**完成一个任务就验证一个任务**，而不是所有任务做完再统一验证。
+
+### 每个任务的内联循环
 
 1. 读任务。
 2. 读限定文件。
-3. 先写或定位测试。
-4. 实现。
-5. 运行任务级验证。
-6. 追加任务摘要。
+3. 🔴 **RED** — 按 TDD 先写失败测试，运行并确认测试因缺少实现而失败。不通过 RED 不能进入实现。
+   > 建议创建 git checkpoint: `test: add reproducer for <feature>`
+4. 🟢 **GREEN** — 写最小实现代码，运行测试并确认通过。
+   > 建议创建 git checkpoint: `fix: implement <feature>`
+5. 🔵 **REFACTOR** — 重构代码，保持测试通过。
+6. 将 RED→GREEN checkpoint 记录到 `TASKS.md` 对应任务状态中。
+7. **Task-level Verify** — 运行该任务的验证命令：
+   ```
+   # 编译
+   # 单元测试
+   # task-boundary-check（确认仅修改了 write_files 内的文件）
+   ```
+8. 如果验证失败，**回退到步骤 3**，不要直接进入下一个任务。
+
+### TDD Checkpoint 自动检查（推荐）
+
+完成所有任务后，运行：
+
+```powershell
+# 检查 git log 中是否有 RED→GREEN 模式的 checkpoint commit
+git log --oneline --all | findstr "test: add reproducer\|fix: implement"
+```
+
+如果缺少某个任务的 RED 或 GREEN checkpoint，说明该任务可能跳过了 TDD 步骤。
+
+### Phase 切换
+
+当一个 PLAN.md 阶段的所有任务完成后：
+1. 运行该阶段的 Phase 门禁（见阶段 4）
+2. 更新 `STATE.md` 记录当前阶段
+3. 再进入下一阶段的任务
 
 ## 阶段 6：Verify
 
@@ -202,6 +244,7 @@ Verdict: accept
 完成前必须验证：
 
 - Closure Gates 全部通过。
+- 所有实现任务的 RED（测试失败证明）和 GREEN（测试通过证明）TDD checkpoint 已完整记录。
 - `VERIFY.md` 有证据。
 - AC 覆盖有证据。
 - scan-check 已通过或有明确裁决。
