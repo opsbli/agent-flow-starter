@@ -814,15 +814,36 @@ GitHub Actions 也会在 push / pull request 时运行同一套自测：
 教学示例在：
 
 ```text
-examples/sample-change/
+examples/
+├── sample-change/          # Light 级别：UI 状态标签展示
+├── standard-change/        # Standard 级别：用户通知偏好设置（单模块 CRUD）
+└── heavy-change/           # Heavy 级别：文档审批工作流（新模块 + schema + 状态机 + 权限）
 ```
 
-它展示了：
+各级示例展示的差异：
 
+| 级别 | 典型场景 | 工件数 | 关键差异 |
+|---|---|---|---|
+| Light | 文案、单文件 bug、样式调整 | 5 | 无 REQUIREMENT，设计合并在 CHANGE 中 |
+| Standard | 单模块功能、标准 CRUD | 9 | 有 REQUIREMENT/DESIGN/TASKS/EVOLUTION |
+| Heavy | 新模块、schema/权限/状态机变更 | 12 | 额外有 PLAN/AUDIT/REVIEW，需 Plan Audit + Closure Audit |
+
+Light 示例展示：
 - `AC-01` 编号。
 - `CODE_SCAN.md` 如何写 read/write 边界。
 - `DESIGN.md` 如何写 API/Permission/Auth 决策。
 - `VERIFY.md` 如何绑定 AC Evidence。
+
+Standard 示例额外展示：
+- `REQUIREMENT.md` 如何组织 GWT 格式的 AC。
+- `TASKS.md` 的 write_files 边界约束。
+- `EVOLUTION.md` 的复盘反思。
+
+Heavy 示例额外展示：
+- `PLAN.md` 的分阶段执行和受保护区域审查。
+- `AUDIT.md` 的 Plan Audit + Closure Audit。
+- 状态机设计（Status Vocabulary / Mapping）。
+- 数据库变更决策表和回滚策略。
 
 ## 常用 prompt
 

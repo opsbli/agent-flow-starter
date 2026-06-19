@@ -50,6 +50,12 @@ jobs:
           $ErrorActionPreference = "Stop"
           & "agent-flow/test/test-scripts/test-next-step.ps1"
 
+      - name: Run gate smoke tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          & "agent-flow/test/test-scripts/test-gate-smoke.ps1"
+
   smoke-test-sh:
     name: Smoke Test (Bash)
     runs-on: ubuntu-latest
@@ -65,6 +71,9 @@ jobs:
 
       - name: Run next-step unit tests
         run: bash agent-flow/test/test-scripts/test-next-step.sh
+
+      - name: Run gate smoke tests
+        run: bash agent-flow/test/test-scripts/test-gate-smoke.sh
 
   syntax-check:
     name: Syntax Check All Scripts

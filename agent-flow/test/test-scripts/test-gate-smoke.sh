@@ -1,0 +1,294 @@
+#!/usr/bin/env bash
+# Smoke test for core gate scripts using the minimal-project fixture.
+# Tests: check-change, scan-check, ac-check, coverage-check, design-check, evolution-check
+set -euo pipefail
+
+test_root="$(cd "$(dirname "$0")/.." && pwd)"
+fixture_dir="$test_root/fixtures/minimal-project"
+scripts_dir="$(cd "$test_root/../scripts" && pwd)"
+change_dir=""
+
+echo "=== Smoke test: gate scripts ==="
+echo "Fixture: $fixture_dir"
+
+# --- Setup: install agent-flow into fixture ---
+fixture_af="$fixture_dir/agent-flow"
+if [ ! -d "$fixture_af" ]; then
+  bash "$scripts_dir/install-agent-flow.sh" --target "$fixture_dir" --starter-root "$(cd "$test_root/.." && pwd)" --force
+fi
+
+fail() {
+  echo "FAIL: $1"
+  exit 1
+}
+
+pass() {
+  echo "PASS: $1"
+}
+
+cleanup() {
+  [ -n "$change_dir" ] && [ -d "$change_dir" ] && rm -rf "$change_dir"
+  echo "Cleaned up."
+}
+trap cleanup EXIT
+
+# Create a Standard change for testing
+echo ""
+echo "--- Creating test change ---"
+change_dir="$fixture_af/changes/test-gate-smoke-$(date +%s)"
+mkdir -p "$change_dir"
+
+# Create CHANGE.md
+cat > "$change_dir/CHANGE.md" << 'CHANGEOF'
+# Change: test-gate-smoke
+
+## 流程级别
+
+- [ ] Light
+- [x] Standard
+- [ ] Heavy
+
+## 目标
+
+Test gate scripts
+
+## 非目标
+
+None
+
+## 影响范围
+
+test
+
+## 风险
+
+None
+CHANGEOF
+pass "CHANGE.md created"
+
+# Create CODE_SCAN.md with all required fields
+cat > "$change_dir/CODE_SCAN.md" << 'SCANEOF'
+# Code Scan
+
+## 扫描时间
+
+2026-06-19 12:00
+
+## Machine Check
+
+scan_time: 2026-06-19 12:00
+related_modules: test
+similar_implementations: none (test fixture)
+reusable_abstractions: none
+standards_snapshot: test fixture
+test_baseline: echo ok
+read_files: src/index.ts
+write_files: src/index.ts
+open_questions: none
+
+## read_files
+
+read_files:
+  - src/index.ts
+
+## write_files
+
+write_files:
+  - src/index.ts
+
+## 未决问题
+
+无
+SCANEOF
+pass "CODE_SCAN.md created"
+
+# Create REQUIREMENT.md
+cat > "$change_dir/REQUIREMENT.md" << 'REQEOF'
+# Requirement
+
+## 验收标准
+
+| AC | Given | When | Then | 验证方式 |
+|---|---|---|---|---|
+| AC-01 | test | test | test | test |
+| AC-02 | test | test | test | test |
+REQEOF
+pass "REQUIREMENT.md created"
+
+# Create DESIGN.md with alignment
+cat > "$change_dir/DESIGN.md" << 'DESIGNEOF'
+# Design
+
+## API / Permission / Auth Decisions
+
+Decision Status: accepted
+
+| Item | Decision | Evidence / Reason |
+|---|---|---|
+| REST Path | unchanged | test |
+| HTTP Method | unchanged | test |
+| Permission Code | unchanged | test |
+| SaCheckPermission | unchanged | test |
+| Anonymous Interface | unchanged | test |
+| Login/Token | unchanged | test |
+| Tenant/Data Permission | unchanged | test |
+| State Machine Impact | not-applicable | test |
+
+State Machine Impact: no
+
+## Design Alignment / Grill
+
+Alignment Source: mixed
+
+Open Questions: none
+
+| Question | AI Recommended Answer | Confirmation | Final Decision |
+|---|---|---|---|
+| Intent Risk | test | user-confirmed | test |
+| Existing Code Fit | test | user-confirmed | test |
+| Unnecessary Abstraction | test | user-confirmed | test |
+| Protected Areas | test | user-confirmed | test |
+| Boundary And Failure Modes | test | user-confirmed | test |
+
+Alignment Verdict: aligned
+DESIGNEOF
+pass "DESIGN.md created"
+
+# Create TASKS.md
+cat > "$change_dir/TASKS.md" << 'TASKSEOF'
+# Tasks
+
+## Task Matrix
+
+| Task | Status | AC | read_files | write_files | Verify | Parallel | conflict_warning |
+|---|---|---|---|---|---|---|---|
+| T001 | completed | AC-01 | `src/index.ts` | `src/index.ts` | `echo ok` | no | |
+
+## write_files 汇总
+
+write_files:
+  - src/index.ts
+
+### T001 - Test
+
+状态：completed
+目标：Test
+AC：AC-01
+read_files：src/index.ts
+write_files：src/index.ts
+验证：echo ok
+可并行：no
+TASKSEOF
+pass "TASKS.md created"
+
+# Create VERIFY.md
+cat > "$change_dir/VERIFY.md" << 'VERIFYEOF'
+# Verify
+
+## AC Evidence
+
+| AC | Requirement Summary | Evidence Type | Evidence Location | Result | Residual Risk |
+|---|---|---|---|---|---|
+| AC-01 | test | command | echo ok | pass | none |
+| AC-02 | test | skipped | test fixture | skipped | test fixture |
+
+## Coverage Summary
+
+| Metric | Source | Value | Result | Notes |
+|---|---|---|---|---|
+| AC Coverage | coverage-check | 2/2 | pass | |
+| Test Coverage | N/A | skipped | skipped | test fixture |
+VERIFYEOF
+pass "VERIFY.md created"
+
+# Create EVOLUTION.md
+cat > "$change_dir/EVOLUTION.md" << 'EVOEOF'
+# Evolution
+
+## Machine Check
+
+problem: none
+knowledge: none
+adr: none
+gate: none
+template: none
+no_change_reason: test fixture
+EVOEOF
+pass "EVOLUTION.md created"
+
+echo ""
+echo "--- Running gate tests ---"
+
+# Test 1: scan-check
+echo ""
+echo "Test 1: scan-check"
+if output=$(bash "$scripts_dir/scan-check.sh" --change-dir "$change_dir" --project-root "$fixture_dir" --strict 2>&1); then
+  pass "scan-check passed"
+else
+  echo "Output: $output"
+  fail "scan-check failed"
+fi
+
+# Test 2: design-check
+echo ""
+echo "Test 2: design-check"
+if output=$(bash "$scripts_dir/design-check.sh" --change-dir "$change_dir" 2>&1); then
+  pass "design-check passed"
+else
+  echo "Output: $output"
+  fail "design-check failed"
+fi
+
+# Test 3: alignment-check
+echo ""
+echo "Test 3: alignment-check"
+if output=$(bash "$scripts_dir/alignment-check.sh" --change-dir "$change_dir" 2>&1); then
+  pass "alignment-check passed"
+else
+  echo "Output: $output"
+  fail "alignment-check failed"
+fi
+
+# Test 4: task-check
+echo ""
+echo "Test 4: task-check"
+if output=$(bash "$scripts_dir/task-check.sh" --change-dir "$change_dir" 2>&1); then
+  pass "task-check passed"
+else
+  echo "Output: $output"
+  fail "task-check failed"
+fi
+
+# Test 5: ac-check
+echo ""
+echo "Test 5: ac-check"
+if output=$(bash "$scripts_dir/ac-check.sh" --change-dir "$change_dir" 2>&1); then
+  pass "ac-check passed"
+else
+  echo "Output: $output"
+  fail "ac-check failed"
+fi
+
+# Test 6: evolution-check
+echo ""
+echo "Test 6: evolution-check"
+if output=$(bash "$scripts_dir/evolution-check.sh" --change-dir "$change_dir" 2>&1); then
+  pass "evolution-check passed"
+else
+  echo "Output: $output"
+  fail "evolution-check failed"
+fi
+
+# Test 7: coverage-check
+echo ""
+echo "Test 7: coverage-check"
+if output=$(bash "$scripts_dir/coverage-check.sh" --change-dir "$change_dir" 2>&1); then
+  pass "coverage-check passed"
+else
+  echo "Output: $output"
+  fail "coverage-check failed"
+fi
+
+echo ""
+echo "=== All gate smoke tests passed ==="
+exit 0

@@ -140,20 +140,131 @@ Emergency 通道绕过了以下安全门：
 ### 时间锁——检查方法
 
 ```bash
-# 检查最近7天内该模块是否有 Emergency change
-# 如果存在，自动拒绝 Emergency 通道并退回 Heavy 流程
-grep -l "Emergency" agent-flow/changes/*/CHANGE.md 2>/dev/null | while read f; do
-  module=$(grep "module_name:" "$f" 2>/dev/null | head -1)
-  # ... compare module and date
-  if same_module_and_within_7days; then
-    echo "⛔ Time lock active for this module. Use Heavy process instead."
+#!/usr/bin/env bash
+# Emergency time-lock check: prevents same-module Emergency within 7 days.
+# Usage: bash emergency-time-lock.sh <change-dir>
+# Returns 0 if allowed, 1 if blocked by time-lock.
+
+check_emergency_time_lock() {
+  local new_change_dir="$1"
+  local changes_root="${2:-agent-flow/changes}"
+  local module_name
+
+  # Extract module name from new CHANGE.md's "影响范围" section
+  module_name=$(grep -A1 "^## 影响范围" "$new_change_dir/CHANGE.md" 2>/dev/null | tail -1 | xargs)
+  [ -z "$module_name" ] && module_name=$(basename "$new_change_dir" | sed 's/^[0-9]*-//')
+
+  local now epoch now_date
+  now=$(date +%s)
+  now_date=$(date +%Y-%m-%d)
+
+  for change_dir in "$changes_root"/*/; do
+    [ -d "$change_dir" ] || continue
+    [ "$change_dir" = "$new_change_dir/" ] && continue
+
+    local change_file="$change_dir/CHANGE.md"
+    [ ! -f "$change_file" ] && continue
+
+    # Check if this is an Emergency change
+    if ! grep -Eiq '\[x\][[:space:]]+Emergency' "$change_file"; then
+      continue
+    fi
+
+    # Extract that change's module
+    local other_module
+    other_module=$(grep -A1 "^## 影响范围" "$change_file" 2>/dev/null | tail -1 | xargs)
+    [ -z "$other_module" ] && other_module=$(basename "$change_dir" | sed 's/^[0-9]*-//')
+
+    # Same module?
+    [ "$other_module" != "$module_name" ] && continue
+
+    # Get change date from directory name (format: YYYYMMDD-*)
+    local change_date_str
+    change_date_str=$(basename "$change_dir" | grep -Eo '^[0-9]{8}')
+    [ -z "$change_date_str" ] && continue
+
+    local change_epoch
+    change_epoch=$(date -d "$(printf '%s-%s-%s' "${change_date_str:0:4}" "${change_date_str:4:2}" "${change_date_str:6:2}")" +%s 2>/dev/null || echo 0)
+    [ "$change_epoch" -eq 0 ] && continue
+
+    local diff_days=$(( (now - change_epoch) / 86400 ))
+    if [ "$diff_days" -lt 7 ]; then
+      echo "⛔ Time lock active for module '$module_name' (last Emergency: $(basename "$change_dir"), ${diff_days} day(s) ago). Use Heavy process instead."
+      return 1
+    fi
+  done
+
+  echo "✅ No time-lock conflict for module '$module_name'."
+  return 0
+}
+
+# Run as a script
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  if [ $# -lt 1 ]; then
+    echo "Usage: $0 <change-dir> [changes-root]"
+    exit 2
   fi
-done
+  check_emergency_time_lock "$@"
+fi
 ```
 
 ### 滥用触发升级
 
 如果在一个月内某个模块用了 3 次以上 Emergency：
+
+```bash
+#!/usr/bin/env bash
+# Emergency abuse detection: hard-lock module after 3+ Emergency uses in 30 days.
+# Usage: bash emergency-abuse-check.sh <changes-root>
+
+check_emergency_abuse() {
+  local changes_root="${1:-agent-flow/changes}"
+  local module="$2"
+  local threshold="${3:-3}"
+  local window_days="${4:-30}"
+  local count=0
+
+  local now
+  now=$(date +%s)
+
+  for change_dir in "$changes_root"/*/; do
+    [ -d "$change_dir" ] || continue
+    local change_file="$change_dir/CHANGE.md"
+    [ ! -f "$change_file" ] && continue
+
+    if ! grep -Eiq '\[x\][[:space:]]+Emergency' "$change_file"; then
+      continue
+    fi
+
+    # Extract that change's module
+    local other_module
+    other_module=$(grep -A1 "^## 影响范围" "$change_file" 2>/dev/null | tail -1 | xargs)
+    [ -z "$other_module" ] && other_module=$(basename "$change_dir" | sed 's/^[0-9]*-//')
+
+    [ "$other_module" != "$module" ] && continue
+
+    # Get change date
+    local change_date_str
+    change_date_str=$(basename "$change_dir" | grep -Eo '^[0-9]{8}')
+    [ -z "$change_date_str" ] && continue
+
+    local change_epoch
+    change_epoch=$(date -d "$(printf '%s-%s-%s' "${change_date_str:0:4}" "${change_date_str:4:2}" "${change_date_str:6:2}")" +%s 2>/dev/null || echo 0)
+    [ "$change_epoch" -eq 0 ] && continue
+
+    local diff_days=$(( (now - change_epoch) / 86400 ))
+    [ "$diff_days" -le "$window_days" ] && count=$((count + 1))
+  done
+
+  if [ "$count" -ge "$threshold" ]; then
+    echo "🔴 Module '$module' has $count Emergency changes in $window_days days (threshold: $threshold)."
+    echo "   Recommend: hard-lock for 30 days, architecture review, and ADR creation."
+    return 1
+  fi
+
+  return 0
+}
+```
 
 1. 自动将该模块标记为 `hard-locked`（禁止未来 30 天内使用 Emergency）
 2. 需要架构评审会议才能解除锁定

@@ -17,6 +17,8 @@ nul
 .pi/
 !.pi/APPEND_SYSTEM.md
 
+.reasonix/
+
 agent-flow/changes/*
 !agent-flow/changes/.gitkeep
 agent-flow/logs/*

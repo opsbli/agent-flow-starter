@@ -77,7 +77,13 @@ $required = @(
     "agent-flow/test/test-scripts/test-new-change.ps1",
     "agent-flow/test/test-scripts/test-new-change.sh",
     "agent-flow/test/test-scripts/test-next-step.ps1",
-    "agent-flow/test/test-scripts/test-next-step.sh"
+    "agent-flow/test/test-scripts/test-next-step.sh",
+    "agent-flow/test/test-scripts/test-gate-smoke.ps1",
+    "agent-flow/test/test-scripts/test-gate-smoke.sh",
+    "tests/README.md",
+    "examples/sample-change/CHANGE.md",
+    "examples/standard-change/CHANGE.md",
+    "examples/heavy-change/CHANGE.md"
 )
 
 $gateRulesPath = Join-Path $projectRoot "agent-flow/rules/gates.txt"

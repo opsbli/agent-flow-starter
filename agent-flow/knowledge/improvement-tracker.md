@@ -29,7 +29,7 @@ proposed | accepted | implemented | rejected | deferred
 | IMP-0015 | agent-flow-improvements-round2 | Non-functional requirements in REQUIREMENT.md template | templates | implemented | Added performance/security/observability/availability/latency table | 2026-06-16 |
 | IMP-0016 | agent-flow-improvements-round2 | design-quality-check gate for design review quality | scripts | implemented | Added design-quality-check.ps1/.sh, registered in check-change, manifest, gates.txt | 2026-06-16 |
 | IMP-0017 | agent-flow-improvements-round3 | conflict_warning column in TASKS.md template | templates | implemented | Added 8th column for parallel-safety marking + documentation | 2026-06-16 |
-| IMP-0018 | agent-flow-improvements-round3 | integration_test + api_test commands in manifest.yaml | config | implemented | Added verification slots for integration and API contract tests | 2026-06-16 |
+| IMP-0018 | agent-flow-improvements-round3 | integration_test + api_test commands in manifest.yaml | config | implemented | Added integration_test and api_test slots to manifest.yaml | 2026-06-16 |
 | IMP-0019 | capability-score-report-2026-06-16 | Fix GO.md vs Light flow EVOLUTION.md conflict | docs | implemented | Added Light exception note to GO.md | 2026-06-16 |
 | IMP-0020 | capability-score-report-2026-06-16 | Add Machine Gate Summary recommendation for Standard | docs | implemented | Added note to standard.md completion line | 2026-06-16 |
 

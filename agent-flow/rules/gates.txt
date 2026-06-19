@@ -1,5 +1,7 @@
 # One required public script per line. Keep paths relative to project root.
 # Internal shared libraries such as _common.ps1/.sh are checked by scaffold-health, not listed here.
+# NOTE: verify-backend.* and verify-module.* are deprecated wrappers around run-verify.*.
+# They remain in agent-flow/scripts/ for backward compatibility but are not listed here.
 agent-flow/scripts/ac-check.ps1
 agent-flow/scripts/ac-check.sh
 agent-flow/scripts/ac-traceability-check.ps1
@@ -84,7 +86,3 @@ agent-flow/scripts/task-check.ps1
 agent-flow/scripts/task-check.sh
 agent-flow/scripts/template-check.ps1
 agent-flow/scripts/template-check.sh
-agent-flow/scripts/verify-backend.ps1
-agent-flow/scripts/verify-backend.sh
-agent-flow/scripts/verify-module.ps1
-agent-flow/scripts/verify-module.sh

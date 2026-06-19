@@ -10,6 +10,7 @@ project:
     framework: none
     language: none
     repo: none
+    verify_required: false
   database:
     engine: TODO_DATABASE_OR_NONE
     sql_paths:
@@ -70,6 +71,8 @@ verification:
   frontend_typecheck: TODO_FRONTEND_TYPECHECK_COMMAND
   frontend_test: TODO_FRONTEND_TEST_COMMAND
   frontend_lint: TODO_FRONTEND_LINT_COMMAND
+  integration_test: TODO_INTEGRATION_TEST_COMMAND
+  api_test: TODO_API_TEST_COMMAND
 
 gates:
   - agent-flow/scripts/ac-check.ps1
@@ -156,7 +159,3 @@ gates:
   - agent-flow/scripts/task-check.sh
   - agent-flow/scripts/template-check.ps1
   - agent-flow/scripts/template-check.sh
-  - agent-flow/scripts/verify-backend.ps1
-  - agent-flow/scripts/verify-backend.sh
-  - agent-flow/scripts/verify-module.ps1
-  - agent-flow/scripts/verify-module.sh
