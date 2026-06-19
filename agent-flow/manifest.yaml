@@ -12,24 +12,25 @@ project:
     repo: none
     verify_required: false
   database:
-    engine: TODO_DATABASE_OR_NONE
-    sql_paths:
-      - TODO_SQL_PATH
+    engine: none
+    # sql_paths: (none for this project)
+      # sql_paths: none
   cache:
-    engine: TODO_CACHE_OR_NONE
+    engine: none
   auth:
-    engine: TODO_AUTH_OR_NONE
+    engine: none
 
 code_map:
   backend_entry:
-    - src
+    - agent-flow
   common:
-    - TODO_COMMON_CODE_PATH
-  business_modules:
-    - src
+    - agent-flow/scripts
+    business_modules:
+    - agent-flow
   build_files:
-    - TODO_BUILD_FILE
-  tests:
+    - scripts
+  # tests:
+    - agent-flow/test
     - tests
 
 change_storage:
@@ -64,6 +65,7 @@ risk_rules:
     - payment_bypass
 
 verification:
+  # Template placeholders - replace after init-project
   backend_compile: TODO_BACKEND_COMPILE_COMMAND
   backend_test: TODO_BACKEND_TEST_COMMAND
   module_compile: TODO_MODULE_COMPILE_COMMAND

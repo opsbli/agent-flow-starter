@@ -52,6 +52,7 @@ if [ -f "$tasks_path" ]; then
   )
 fi
 
+(
 cd "$project_root"
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "SKIP: task-boundary-check requires a git worktree."
@@ -96,3 +97,4 @@ if [ "${#violations[@]}" -gt 0 ]; then
 fi
 
 echo "Task boundary check passed: changed files are within write_files or the change folder."
+)

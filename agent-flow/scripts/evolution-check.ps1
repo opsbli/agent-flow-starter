@@ -41,6 +41,7 @@ if (-not (Test-Path -LiteralPath $path)) {
     }
     Write-Host "Evolution check failed:"
     Write-Host " - Missing EVOLUTION.md"
+    Write-Host " - HINT: Run 'agent-flow/scripts/evolution-suggest.ps1 -ChangeDir <change> -Output <change>/EVOLUTION.md' to generate a draft."
     exit 2
 }
 

@@ -1,5 +1,7 @@
 # Evolution
 
+> 💡 **提示**: 可用 `evolution-suggest --change-dir <change> [--output <change>/EVOLUTION.md]` 自动生成草稿
+
 ## Machine Check
 
 problem: none-or-summary

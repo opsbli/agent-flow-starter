@@ -34,6 +34,7 @@ if [ ! -f "$path" ]; then
   fi
   echo "Evolution check failed:"
   echo " - Missing EVOLUTION.md"
+  echo " - HINT: Run 'bash agent-flow/scripts/evolution-suggest.sh --change-dir <change> --output <change>/EVOLUTION.md' to generate a draft."
   exit 2
 fi
 

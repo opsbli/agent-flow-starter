@@ -3,6 +3,7 @@
 set -euo pipefail
 
 project_root="${1:-.}"
+(
 cd "$project_root"
 
 changed_files=""
@@ -85,3 +86,4 @@ if [ "$failed" -gt 0 ]; then
 else
   echo "  [PASS] All checks passed."
 fi
+)

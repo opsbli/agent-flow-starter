@@ -1,10 +1,11 @@
 <#
 .SYNOPSIS
-Validate starter templates and template metadata.
+Validate templates against artifact-schema.json — dynamically reads rules from schema.
 
 .DESCRIPTION
-Checks that required templates, template version metadata, and the artifact
-schema exist and contain the sections that downstream gates rely on.
+Checks that required templates exist, the artifact schema is valid JSON,
+and each artifact's required sections, text patterns, and machine-check keys
+match the template content.
 
 .PARAMETER ProjectRoot
 Project root that contains agent-flow/.
@@ -31,20 +32,10 @@ $schemaPath = Join-Path $root "agent-flow/rules/artifact-schema.json"
 $issues = @()
 
 $requiredTemplates = @(
-    "STATE.md",
-    "CHANGE.md",
-    "REQUIREMENT.md",
-    "REQUIREMENT_ALIGNED.md",
-    "CODE_SCAN.md",
-    "DESIGN.md",
-    "PLAN.md",
-    "TASKS.md",
-    "VERIFY.md",
-    "REPORT.md",
-    "REVIEW.md",
-    "AUDIT.md",
-    "EVOLUTION.md",
-    "ADR.md",
+    "STATE.md", "CHANGE.md", "REQUIREMENT.md", "REQUIREMENT_ALIGNED.md",
+    "CODE_SCAN.md", "DESIGN.md", "PLAN.md", "TASKS.md", "VERIFY.md",
+    "REPORT.md", "REVIEW.md", "AUDIT.md", "EVOLUTION.md",
+    "ADR.md", "CANCEL.md", "ROLLBACK.md", "INIT_CHECKLIST.md", "LOG_ENTRY.md",
     "VERSION"
 )
 
@@ -54,6 +45,7 @@ foreach ($template in $requiredTemplates) {
     }
 }
 
+# Validate schema and dynamically check artifacts
 if (-not (Test-Path -LiteralPath $schemaPath)) {
     $issues += "Missing artifact schema: agent-flow/rules/artifact-schema.json"
 } else {
@@ -64,34 +56,60 @@ if (-not (Test-Path -LiteralPath $schemaPath)) {
         }
         if ($null -eq $schema.artifacts) {
             $issues += "artifact-schema.json missing artifacts map."
+        } else {
+            # Dynamically validate each artifact defined in the schema
+            foreach ($artifact in $schema.artifacts.PSObject.Properties) {
+                $name = $artifact.Name
+                $tplPath = Join-Path $templateRoot $name
+                if (-not (Test-Path -LiteralPath $tplPath)) { continue }
+
+                # Check requiredSections
+                if ($artifact.Value.requiredSections) {
+                    $content = Get-Content -Raw -Encoding utf8 -LiteralPath $tplPath
+                    foreach ($section in $artifact.Value.requiredSections) {
+                        if ($content -notmatch "(?m)^##\s+$([regex]::Escape($section))") {
+                            $issues += "$name missing required section: $section"
+                        }
+                    }
+                }
+
+                # Check requiredText
+                if ($artifact.Value.requiredText) {
+                    $content = Get-Content -Raw -Encoding utf8 -LiteralPath $tplPath
+                    foreach ($text in $artifact.Value.requiredText) {
+                        if ($content -notmatch [regex]::Escape($text)) {
+                            $issues += "$name missing required text: $text"
+                        }
+                    }
+                }
+
+                # Check machineCheckKeys
+                if ($artifact.Value.machineCheckKeys) {
+                    $content = Get-Content -Raw -Encoding utf8 -LiteralPath $tplPath
+                    foreach ($key in $artifact.Value.machineCheckKeys) {
+                        if ($content -notmatch "(?m)^$([regex]::Escape($key)):") {
+                            $issues += "$name missing machine-check key: $key"
+                        }
+                    }
+                }
+            }
         }
     } catch {
         $issues += "artifact-schema.json is not valid JSON: $($_.Exception.Message)"
     }
 }
 
-function Require-Text {
-    param(
-        [string]$TemplateName,
-        [string]$Needle
-    )
-    $path = Join-Path $templateRoot $TemplateName
-    if (-not (Test-Path -LiteralPath $path)) { return }
-    $text = Get-Content -Raw -Encoding utf8 -LiteralPath $path
-    if ($text -notmatch [regex]::Escape($Needle)) {
-        $script:issues += "$TemplateName missing required text: $Needle"
+# Check template VERSION matches schemaVersion
+$tplVersionPath = Join-Path $templateRoot "VERSION"
+$schemaVersionPath = Join-Path $root "agent-flow/rules/artifact-schema.json"
+if ((Test-Path -LiteralPath $tplVersionPath) -and (Test-Path -LiteralPath $schemaVersionPath)) {
+    $tv = (Get-Content -Raw -Encoding utf8 -LiteralPath $tplVersionPath).Trim()
+    $schemaCheck = Get-Content -Raw -Encoding utf8 -LiteralPath $schemaVersionPath | ConvertFrom-Json
+    $sv = "$($schemaCheck.schemaVersion)"
+    if ($tv -ne $sv) {
+        $issues += "Template VERSION ($tv) does not match artifact-schema.json schemaVersion ($sv)."
     }
 }
-
-Require-Text -TemplateName "VERIFY.md" -Needle "## AC Evidence"
-Require-Text -TemplateName "VERIFY.md" -Needle "## Coverage Summary"
-Require-Text -TemplateName "VERIFY.md" -Needle "## Machine Gate Summary"
-Require-Text -TemplateName "REQUIREMENT.md" -Needle "AC-01"
-Require-Text -TemplateName "REQUIREMENT_ALIGNED.md" -Needle "## Confirmed Acceptance Criteria"
-Require-Text -TemplateName "ADR.md" -Needle "Proposed / Accepted / Deprecated / Superseded"
-Require-Text -TemplateName "ADR.md" -Needle "## Supersedes"
-Require-Text -TemplateName "ADR.md" -Needle "## Superseded By"
-Require-Text -TemplateName "EVOLUTION.md" -Needle "Improvement Tracker"
 
 if ($issues.Count -gt 0) {
     Write-Host "Template check failed:"

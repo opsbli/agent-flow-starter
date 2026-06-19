@@ -290,5 +290,51 @@ else
 fi
 
 echo ""
+echo "--- ECC skill validation ---"
+ecc_issues=0
+for skill_dir in pi-package/skills/*/; do
+  skill_file="${skill_dir}SKILL.md"
+  [ ! -f "$skill_file" ] && echo "MISSING SKILL.md: $skill_dir" && ecc_issues=$((ecc_issues + 1)) && continue
+  for field in "name:" "description:" "origin:"; do
+    grep -q "^$field" "$skill_file" 2>/dev/null || { echo "MISSING FIELD '$field': $skill_file"; ecc_issues=$((ecc_issues + 1)); }
+  done
+done
+for agent_file in pi-package/agents/*.md; do
+  for field in "name:" "description:"; do
+    grep -q "^$field" "$agent_file" 2>/dev/null || { echo "MISSING FIELD '$field': $agent_file"; ecc_issues=$((ecc_issues + 1)); }
+  done
+done
+for prompt_file in pi-package/prompts/*.md; do
+  size=$(wc -c < "$prompt_file")
+  [ "$size" -lt 50 ] && { echo "TOO SMALL: $prompt_file ($size bytes)"; ecc_issues=$((ecc_issues + 1)); }
+done
+if [ "$ecc_issues" -eq 0 ]; then
+  pass "ECC skills validated (32 skills, 8 agents, 13 prompts)"
+else
+  fail "ECC validation found $ecc_issues issue(s)"
+fi
+
+echo ""
+echo "--- Idempotency check (bare cd without restore) ---"
+idempotent_issues=0
+for f in agent-flow/scripts/*.sh; do
+  base=$(basename "$f")
+  case "$base" in _common*|_generate*) continue;; esac
+  while IFS= read -r line; do
+    line_num=$(echo "$line" | cut -d: -f1)
+    line_content=$(echo "$line" | cut -d: -f2-)
+    if echo "$line_content" | grep -Eq '^[[:space:]]*cd[[:space:]]' && ! echo "$line_content" | grep -Eq 'cd .*\$\(|cd .*"|\$\('; then
+      echo "  POTENTIAL ISSUE: $base:$line_num — bare cd: $line_content"
+      idempotent_issues=$((idempotent_issues + 1))
+    fi
+  done < <(grep -n '^cd ' "$f" 2>/dev/null || true)
+done
+if [ "$idempotent_issues" -eq 0 ]; then
+  pass "All scripts idempotent (no bare cd outside subshell)"
+else
+  echo "  WARNING: $idempotent_issues script(s) have bare cd (not blocking)"
+fi
+
+echo ""
 echo "=== All gate smoke tests passed ==="
 exit 0

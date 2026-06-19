@@ -1,63 +1,186 @@
 <#
 .SYNOPSIS
-Generate improvement suggestions based on evolution stats.
+Generate improvement suggestions and auto-fill EVOLUTION.md drafts.
+
 .DESCRIPTION
-Analyzes project activity patterns and suggests concrete improvements.
+Two modes:
+  1. --change-dir: analyze a specific change and generate an EVOLUTION.md draft
+  2. --project-root: project-wide improvement suggestions
+
+.PARAMETER ChangeDir
+Path to the change directory to analyze.
+
+.PARAMETER ProjectRoot
+Project root path (default: current directory).
+
+.PARAMETER Output
+Output file path for the generated EVOLUTION.md draft.
 #>
+
 param(
-    [string]$ProjectRoot = "."
+    [string]$ChangeDir = "",
+    [string]$ProjectRoot = ".",
+    [string]$Output = ""
 )
+
 $ErrorActionPreference = "Stop"
+$scriptDir = Split-Path -Parent $PSCommandPath
+. (Join-Path $scriptDir "_common.ps1")
+
+# --- Mode 1: Change-specific analysis ---
+if ($ChangeDir -and (Test-Path $ChangeDir)) {
+    $flow = Get-FlowLevel -Dir $ChangeDir
+    $changeName = Split-Path $ChangeDir -Leaf
+
+    $problems = @()
+    $knowledgeSuggestions = @()
+    $adrSuggestions = @()
+    $gateSuggestions = @()
+    $templateSuggestions = @()
+    $noChangeReason = ""
+
+    # 1. Scan REQUIREMENT.md for new terms
+    $reqFile = Join-Path $ChangeDir "REQUIREMENT.md"
+    if (Test-Path $reqFile) {
+        $content = Get-Content -Raw -Encoding utf8 $reqFile
+        if ($content -match '(?s)## 术语.*?(?=## )') {
+            $termsTable = $matches[0]
+            $rows = $termsTable -split "`n" | Where-Object { $_ -match '^\|' -and $_ -notmatch '术语.*定义|是否已沉淀' }
+            $newTerms = @()
+            foreach ($row in $rows) {
+                $cells = $row -split '\|' | ForEach-Object { $_.Trim() }
+                if ($cells.Count -ge 5 -and $cells[1] -and $cells[4] -notmatch '是') {
+                    $newTerms += $cells[1]
+                }
+            }
+            if ($newTerms.Count -gt 0) {
+                $knowledgeSuggestions += "New terms from requirements that are not yet in glossary: $($newTerms -join ', ')"
+                $problems += "Requirements introduced new terminology without glossary deposition."
+            }
+        }
+    }
+
+    # 2. Scan CODE_SCAN.md for patterns
+    $scanFile = Join-Path $ChangeDir "CODE_SCAN.md"
+    if (Test-Path $scanFile) {
+        $scanContent = Get-Content -Raw -Encoding utf8 $scanFile
+        if ($scanContent -match '(?i)reusable' -and $scanContent -notmatch '(?i)none') {
+            $knowledgeSuggestions += "Reusable abstractions found — consider updating reuse-map.md"
+        }
+        if ($scanContent -match '(?i)冲突|缺口') {
+            $problems += "Standards gaps or conflicts recorded in CODE_SCAN."
+        }
+    }
+
+    # 3. Check DESIGN.md for ADR candidates
+    $designFile = Join-Path $ChangeDir "DESIGN.md"
+    if (Test-Path $designFile) {
+        $designContent = Get-Content -Raw -Encoding utf8 $designFile
+        if ($designContent -match '(?s)## ADR 候选.*?(?=## )' -and $matches[0] -notmatch 'none|无') {
+            $adrSuggestions += "ADR candidates found in DESIGN.md — consider creating ADR entries."
+        }
+    }
+
+    # 4. Check CHANGE.md for protected areas
+    $changeFile = Join-Path $ChangeDir "CHANGE.md"
+    if (Test-Path $changeFile) {
+        $changeContent = Get-Content -Raw -Encoding utf8 $changeFile
+        if ($changeContent -match '(?i)schema|database|migration') {
+            $gateSuggestions += "Schema change — verify db-migration-check coverage."
+        }
+        if ($changeContent -match '(?i)permission|auth|role') {
+            $gateSuggestions += "Auth/permission change — verify api-compatibility-check coverage."
+        }
+        if ($changeContent -match '(?i)state.machine|workflow|status') {
+            $gateSuggestions += "State machine change — verify code-drift-check coverage."
+        }
+    }
+
+    if (-not $problems -and -not $knowledgeSuggestions -and -not $adrSuggestions -and -not $gateSuggestions -and -not $templateSuggestions) {
+        $noChangeReason = "No issues or improvement opportunities detected for this change."
+    }
+
+    # --- Build output ---
+    $outputLines = @(
+        "# Evolution",
+        "",
+        "## Machine Check",
+        "",
+        "problem: $(if ($problems.Count -gt 0) { $problems[0] } else { 'none' })",
+        "knowledge: $(if ($knowledgeSuggestions.Count -gt 0) { $knowledgeSuggestions[0] -replace ':.*', '' } else { 'none' })",
+        "adr: $(if ($adrSuggestions.Count -gt 0) { $adrSuggestions[0] -replace ':.*', '' } else { 'none' })",
+        "gate: $(if ($gateSuggestions.Count -gt 0) { $gateSuggestions[0] -replace ':.*', '' } else { 'none' })",
+        "template: $(if ($templateSuggestions.Count -gt 0) { $templateSuggestions[0] -replace ':.*', '' } else { 'none' })",
+        "no_change_reason: $(if ($noChangeReason) { $noChangeReason } else { 'none' })",
+        "",
+        "## 本次 change 暴露的问题",
+        "",
+        $(if ($problems.Count -gt 0) { $problems | ForEach-Object { "- $_" } } else { "- 无" }),
+        "",
+        "## 应写入 knowledge 的内容",
+        "",
+        $(if ($knowledgeSuggestions.Count -gt 0) { $knowledgeSuggestions | ForEach-Object { "- $_" } } else { "- 无" }),
+        "",
+        "## 应新增或修改的 ADR",
+        "",
+        $(if ($adrSuggestions.Count -gt 0) { $adrSuggestions | ForEach-Object { "- $_" } } else { "- 无" }),
+        "",
+        "## 应新增的 gate",
+        "",
+        $(if ($gateSuggestions.Count -gt 0) { $gateSuggestions | ForEach-Object { "- $_" } } else { "- 无" }),
+        "",
+        "## 应调整的模板",
+        "",
+        $(if ($templateSuggestions.Count -gt 0) { $templateSuggestions | ForEach-Object { "- $_" } } else { "- 无" }),
+        "",
+        "## Improvement Tracker 更新",
+        "",
+        "- [ ] 不需要跟踪，原因：",
+        "- [ ] 已新增或更新 `agent-flow/knowledge/improvement-tracker.md`",
+        "",
+        "## 本次不调整的原因",
+        "",
+        $(if ($noChangeReason) { $noChangeReason } else { "无" })
+    )
+
+    $outputText = ($outputLines | Where-Object { $_ -ne $null }) -join "`r`n"
+
+    if ($Output) {
+        $outputText | Set-Content -Path $Output -Encoding utf8
+        Write-Host "Wrote EVOLUTION.md draft to: $Output"
+    } else {
+        Write-Host $outputText
+    }
+    return
+}
+
+# --- Mode 2: Project-wide suggestions ---
 $afDir = Join-Path $ProjectRoot "agent-flow"
 $changesDir = Join-Path $afDir "changes"
-$suggestions = @()
-# 1. Check change completion rate
+
 $total = 0; $completed = 0
 if (Test-Path $changesDir) {
-    $dirs = Get-ChildItem $changesDir -Directory | Where-Object { $_.Name -ne '.gitkeep' }
-    $total = $dirs.Count
-    foreach ($d in $dirs) {
-        if (Test-Path (Join-Path $d.FullName "REPORT.md")) { $completed++ }
+    Get-ChildItem -Directory $changesDir | Where-Object { $_.Name -ne '.gitkeep' } | ForEach-Object {
+        $total++
+        if (Test-Path (Join-Path $_.FullName "REPORT.md")) { $completed++ }
     }
 }
-if ($total -gt 0) {
-    $rate = $completed / $total
-    if ($rate -lt 0.5) {
-        $suggestions += @{ priority = "HIGH"; area = "Process"; suggestion = "Change completion rate is $([math]::Round($rate*100))%. Consider simplifying requirements or reducing scope per change." }
-    } elseif ($rate -gt 0.9) {
-        $suggestions += @{ priority = "LOW"; area = "Process"; suggestion = "High completion rate ($([math]::Round($rate*100))%). Process is well-calibrated." }
-    }
-}
-# 2. Check knowledge utilization
-$kDir = Join-Path $afDir "knowledge"
+
 $kCount = 0
-if (Test-Path $kDir) { $kCount = (Get-ChildItem $kDir -File | Where-Object { $_.Name -ne '.gitkeep' }).Count }
-if ($kCount -eq 0 -and $total -gt 0) {
-    $suggestions += @{ priority = "HIGH"; area = "Knowledge"; suggestion = "No knowledge files found after $total changes. Start recording pitfalls and module maps." }
-} elseif ($kCount -lt 3 -and $total -gt 3) {
-    $suggestions += @{ priority = "MEDIUM"; area = "Knowledge"; suggestion = "Only $kCount knowledge files for $total changes. Consider adding glossary.md and module-map.md." }
-}
-# 3. Check ADR usage
-$dDir = Join-Path $afDir "decisions"
+$knowledgeDir = Join-Path $afDir "knowledge"
+if (Test-Path $knowledgeDir) { $kCount = (Get-ChildItem -File $knowledgeDir | Where-Object { $_.Name -ne '.gitkeep' }).Count }
+
 $adrCount = 0
-if (Test-Path $dDir) { $adrCount = (Get-ChildItem $dDir -Filter "ADR-*").Count }
-if ($adrCount -eq 0 -and $total -gt 2) {
-    $suggestions += @{ priority = "MEDIUM"; area = "Decisions"; suggestion = "No ADRs recorded after $total changes. Record architecture decisions as they're made." }
-}
-# 4. Check if ECC is available
-$hasEcc = Test-Path "$env:USERPROFILE\.pi\agent\npm\node_modules\ecc-universal"
-$hasSkills = Test-Path "$env:USERPROFILE\.pi\agent\skills"
-if (-not $hasEcc -and -not $hasSkills) {
-    $suggestions += @{ priority = "MEDIUM"; area = "ECC"; suggestion = "ECC skills not installed. Run 'pi install npm:ecc-universal' or 'scripts/setup-new-pc.ps1' to enable skill acceleration." }
-}
-# 5. Check EVOLUTION.md quality
-$evolutionDir = Join-Path $afDir "knowledge"
-$hasImprovementTracker = Test-Path (Join-Path $evolutionDir "improvement-tracker.md")
-if (-not $hasImprovementTracker -and $total -gt 2) {
-    $suggestions += @{ priority = "LOW"; area = "Evolution"; suggestion = "Create improvement-tracker.md to track recurring process improvement suggestions." }
-}
-# Output
-@"
+$decisionsDir = Join-Path $afDir "decisions"
+if (Test-Path $decisionsDir) { $adrCount = (Get-ChildItem -Filter "ADR-*" $decisionsDir).Count }
+
+$suggestions = @()
+if ($total -gt 0 -and $completed -eq 0) { $suggestions += "[HIGH] [Process] No completed changes yet." }
+if ($kCount -le 2 -and $total -gt 0) { $suggestions += "[MEDIUM] [Knowledge] Only $kCount files for $total changes." }
+if ($adrCount -eq 0 -and $total -gt 2) { $suggestions += "[MEDIUM] [Decisions] No ADRs recorded." }
+if (-not $suggestions) { $suggestions += "No suggestions at this time. Project is in good shape." }
+
+Write-Host @"
 # Evolution Suggestions
 
 Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm')
@@ -73,14 +196,8 @@ Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm')
 
 ## Improvement Suggestions
 
-$(if ($suggestions.Count -eq 0) {
-    "No suggestions at this time. Project is in good shape."
-} else {
-    $suggestions | Sort-Object { if ($_.priority -eq "HIGH") { 0 } elseif ($_.priority -eq "MEDIUM") { 1 } else { 2 } } | ForEach-Object {
-        "- [$($_.priority)] [$($_.area)] $($_.suggestion)"
-    }
-})
+$($suggestions -join "`n")
 
 ---
-*Generated by evolution-suggest.ps1 — run periodically to track project health*
+*Generated by evolution-suggest.ps1 — use -ChangeDir for change-specific EVOLUTION.md drafting*
 "@

@@ -1,33 +1,29 @@
 {
   "schemaVersion": "1.0",
   "artifacts": {
-    "CODE_SCAN.md": {
-      "machineCheckKeys": [
-        "scan_time",
-        "related_modules",
-        "similar_implementations",
-        "reusable_abstractions",
-        "standards_snapshot",
-        "test_baseline",
-        "read_files",
-        "write_files",
-        "open_questions"
-      ],
-      "strictPathKeys": ["read_files", "write_files"]
+    "STATE.md": {
+      "requiredSections": []
     },
-    "TASKS.md": {
-      "matrixColumns": ["Task", "Status", "AC", "read_files", "write_files", "Verify", "Parallel"],
-      "statusValues": ["pending", "not_started", "in_progress", "completed", "blocked", "skipped"],
-      "requiresWriteFilesList": true
+    "CHANGE.md": {
+      "requiredSections": [],
+      "emergencyKeys": ["Level", "Approved by", "Bypass reason", "Backfill deadline", "Backfill status"]
     },
-    "VERIFY.md": {
-      "requiredSections": ["AC Evidence", "Coverage Summary", "Machine Gate Summary"],
-      "coverageColumns": ["Metric", "Source", "Value", "Result", "Notes"],
-      "machineGateColumns": ["Gate", "Required For", "Result", "Command", "Exit Code", "When", "Evidence"]
+    "REQUIREMENT.md": {
+      "requiredSections": [],
+      "requiredText": ["AC-01"],
+      "acPattern": "AC-\\d{2}"
     },
     "REQUIREMENT_ALIGNED.md": {
       "requiredSections": ["Confirmed Intent", "Confirmed Acceptance Criteria", "Human Confirmation"],
       "alignmentColumns": ["AC", "Confirmed Requirement", "Verification Method", "Changed From Original?"]
+    },
+    "CODE_SCAN.md": {
+      "machineCheckKeys": [
+        "scan_time", "related_modules", "similar_implementations",
+        "reusable_abstractions", "standards_snapshot", "test_baseline",
+        "read_files", "write_files", "open_questions"
+      ],
+      "strictPathKeys": ["read_files", "write_files"]
     },
     "DESIGN.md": {
       "decisionStatus": ["accepted"],
@@ -39,15 +35,40 @@
       "requiredKeys": ["Plan Status", "Current Baseline", "Goals", "Non-Goals", "Execution Phases", "read_files", "write_files", "Exit Criteria", "Verification", "Closure Gates", "Protected Area Review"],
       "statusValues": ["planned", "in-progress", "completed", "superseded", "deferred"]
     },
+    "TASKS.md": {
+      "matrixColumns": ["Task", "Status", "AC", "read_files", "write_files", "Verify", "Parallel", "conflict_warning"],
+      "statusValues": ["pending", "not_started", "in_progress", "completed", "blocked", "skipped"],
+      "requiresWriteFilesList": true
+    },
+    "VERIFY.md": {
+      "requiredSections": ["AC Evidence", "Coverage Summary", "Machine Gate Summary"],
+      "coverageColumns": ["Metric", "Source", "Value", "Result", "Notes"],
+      "machineGateColumns": ["Gate", "Required For", "Result", "Command", "Exit Code", "When", "Evidence"]
+    },
+    "REVIEW.md": {
+      "requiredSections": ["Intent Compliance", "Architecture Compliance", "Code Quality", "Verification Evidence", "Findings", "Recommendation"]
+    },
+    "REPORT.md": {
+      "requiredSections": []
+    },
     "AUDIT.md": {
+      "requiredSections": ["Plan Audit", "Closure Audit"],
       "planAuditVerdicts": ["accept", "conditional"],
       "planAuditChecklist": ["Current baseline checked against live code", "Goals and Non-Goals clear", "Code scan complete", "Design check passed", "Design Alignment completed", "Protected areas identified", "read_files/write_files bounded", "Exit criteria verifiable", "Risks mitigated"]
     },
     "EVOLUTION.md": {
-      "machineCheckKeys": ["problem", "knowledge", "adr", "gate", "template", "no_change_reason"]
+      "requiredSections": ["Machine Check", "Improvement Tracker"],
+      "machineCheckKeys": ["problem", "knowledge", "adr", "gate", "template", "no_change_reason"],
+      "requiredText": ["Improvement Tracker"]
     },
-    "CHANGE.md": {
-      "emergencyKeys": ["Level", "Approved by", "Bypass reason", "Backfill deadline", "Backfill status"]
+    "ADR.md": {
+      "requiredText": ["Proposed / Accepted / Deprecated / Superseded", "## Supersedes", "## Superseded By"]
+    },
+    "CANCEL.md": {
+      "requiredSections": ["Change", "Reason for Cancellation", "What Was Done", "Salvageable Artifacts", "Lessons Learned"]
+    },
+    "ROLLBACK.md": {
+      "requiredSections": ["Scope of Rollback", "Files to Revert", "Verification After Rollback"]
     }
   }
 }

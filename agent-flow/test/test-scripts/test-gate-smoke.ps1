@@ -230,21 +230,33 @@ no_change_reason: test fixture
     $output = & "$scriptsDir/design-check.ps1" -ChangeDir $changeDir 2>&1
     if ($LASTEXITCODE -eq 0) { pass "design-check passed" } else { Write-Host $output; fail "design-check failed" }
 
-    # Test 3: ac-check
+    # Test 3: alignment-check
     Write-Host ""
-    Write-Host "Test 3: ac-check"
+    Write-Host "Test 3: alignment-check"
+    $output = & "$scriptsDir/alignment-check.ps1" -ChangeDir $changeDir 2>&1
+    if ($LASTEXITCODE -eq 0) { pass "alignment-check passed" } else { Write-Host $output; fail "alignment-check failed" }
+
+    # Test 4: task-check
+    Write-Host ""
+    Write-Host "Test 4: task-check"
+    $output = & "$scriptsDir/task-check.ps1" -ChangeDir $changeDir 2>&1
+    if ($LASTEXITCODE -eq 0) { pass "task-check passed" } else { Write-Host $output; fail "task-check failed" }
+
+    # Test 5: ac-check
+    Write-Host ""
+    Write-Host "Test 5: ac-check"
     $output = & "$scriptsDir/ac-check.ps1" -ChangeDir $changeDir 2>&1
     if ($LASTEXITCODE -eq 0) { pass "ac-check passed" } else { Write-Host $output; fail "ac-check failed" }
 
-    # Test 4: evolution-check
+    # Test 6: evolution-check
     Write-Host ""
-    Write-Host "Test 4: evolution-check"
+    Write-Host "Test 6: evolution-check"
     $output = & "$scriptsDir/evolution-check.ps1" -ChangeDir $changeDir 2>&1
     if ($LASTEXITCODE -eq 0) { pass "evolution-check passed" } else { Write-Host $output; fail "evolution-check failed" }
 
-    # Test 5: coverage-check
+    # Test 7: coverage-check
     Write-Host ""
-    Write-Host "Test 5: coverage-check"
+    Write-Host "Test 7: coverage-check"
     $output = & "$scriptsDir/coverage-check.ps1" -ChangeDir $changeDir 2>&1
     if ($LASTEXITCODE -eq 0) { pass "coverage-check passed" } else { Write-Host $output; fail "coverage-check failed" }
 
@@ -252,6 +264,43 @@ no_change_reason: test fixture
     # Cleanup
     if (Test-Path $changeDir) { Remove-Item -Recurse -Force $changeDir }
     Write-Host "Cleaned up."
+}
+
+# ECC skill validation
+Write-Host ""
+Write-Host "--- ECC skill validation ---"
+$eccIssues = 0
+
+$skillDirs = Get-ChildItem -Directory "pi-package/skills"
+foreach ($skillDir in $skillDirs) {
+    $skillFile = Join-Path $skillDir.FullName "SKILL.md"
+    if (-not (Test-Path $skillFile)) { Write-Host "MISSING SKILL.md: $skillDir"; $eccIssues++ }
+    else {
+        $content = Get-Content -Raw $skillFile
+        foreach ($field in @("name:", "description:", "origin:")) {
+            if ($content -notmatch "(?m)^$([regex]::Escape($field))") { Write-Host "MISSING FIELD '$field': $skillFile"; $eccIssues++ }
+        }
+    }
+}
+
+$agentFiles = Get-ChildItem "pi-package/agents/*.md"
+foreach ($agentFile in $agentFiles) {
+    $content = Get-Content -Raw $agentFile
+    foreach ($field in @("name:", "description:")) {
+        if ($content -notmatch "(?m)^$([regex]::Escape($field))") { Write-Host "MISSING FIELD '$field': $agentFile"; $eccIssues++ }
+    }
+}
+
+$promptFiles = Get-ChildItem "pi-package/prompts/*.md"
+foreach ($promptFile in $promptFiles) {
+    $size = (Get-Item $promptFile).Length
+    if ($size -lt 50) { Write-Host "TOO SMALL: $promptFile ($size bytes)"; $eccIssues++ }
+}
+
+if ($eccIssues -eq 0) {
+    pass "ECC skills validated (32 skills, 8 agents, 13 prompts)"
+} else {
+    fail "ECC validation found $eccIssues issue(s)"
 }
 
 Write-Host ""
