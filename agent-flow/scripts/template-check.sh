@@ -111,6 +111,26 @@ if [ -f "$tpl_version" ] && [ -f "$schema_path" ]; then
   [ "$sv" = "$tv" ] || issues+=("Template VERSION ($tv) does not match artifact-schema.json schemaVersion ($sv).")
 fi
 
+# Breaking change detection: validate existing changes against current schema
+changes_dir="$project_root/agent-flow/changes"
+if [ -d "$changes_dir" ]; then
+  for change in "$changes_dir"/*/; do
+    [ "$(basename "$change")" = ".gitkeep" ] && continue
+    [ ! -d "$change" ] && continue
+
+    # Check VERIFY.md against current schema if it exists
+    if [ -f "$change/VERIFY.md" ] && [ -f "$template_root/VERIFY.md" ]; then
+      # Check that the change's VERIFY.md has the required sections from current schema
+      sections=$(grep -E '^\s+"[A-Za-z ]+"' -A20 "$schema_path" | sed -n '/"VERIFY.md"/,/^[[:space:]]*}/p' | grep '"requiredSections"' -A5 | grep -E '^\s+"[^"]+"' | grep -v ':' | sed 's/.*"\([^"]*\)".*/\1/' || true)
+      for section in $sections; do
+        if ! grep -Eq "^##[[:space:]]+$section" "$change/VERIFY.md" 2>/dev/null; then
+          issues+=("BREAKING: Change '$(basename "$change")' VERIFY.md missing new required section: $section (from schema v$sv)")
+        fi
+      done
+    fi
+  done
+fi
+
 if [ "${#issues[@]}" -gt 0 ]; then
   echo "Template check failed:"
   printf ' - %s\n' "${issues[@]}"

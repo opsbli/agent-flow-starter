@@ -24,13 +24,48 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run scaffold-health.sh
-        run: bash agent-flow/scripts/scaffold-health.sh
+        id: health
+        run: |
+          start=$(date +%s%N)
+          bash agent-flow/scripts/scaffold-health.sh
+          end=$(date +%s%N)
+          echo "duration_ms=$(( (end - start) / 1000000 ))" >> $GITHUB_OUTPUT
 
       - name: Run manifest-check.sh
-        run: bash agent-flow/scripts/manifest-check.sh
+        id: manifest
+        run: |
+          start=$(date +%s%N)
+          bash agent-flow/scripts/manifest-check.sh
+          end=$(date +%s%N)
+          echo "duration_ms=$(( (end - start) / 1000000 ))" >> $GITHUB_OUTPUT
 
       - name: Run template-check.sh
-        run: bash agent-flow/scripts/template-check.sh
+        id: template
+        run: |
+          start=$(date +%s%N)
+          bash agent-flow/scripts/template-check.sh
+          end=$(date +%s%N)
+          echo "duration_ms=$(( (end - start) / 1000000 ))" >> $GITHUB_OUTPUT
+
+      - name: Performance Baseline Summary
+        run: |
+          echo "## ⏱ Gate Performance Baseline" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Duration (ms) | Threshold (ms) | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------------|----------------|--------|" >> $GITHUB_STEP_SUMMARY
+          for gate in health manifest template; do
+            dur="${{ steps.$gate.outputs.duration_ms }}"
+            [ -z "$dur" ] && dur="N/A"
+            threshold=5000
+            if [ "$dur" != "N/A" ] && [ "$dur" -gt "$threshold" ] 2>/dev/null; then
+              status="⚠️ EXCEEDS"
+            else
+              status="✅"
+            fi
+            echo "| $gate-check | ${dur}ms | ${threshold}ms | ${status} |" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Threshold: 5s per gate. Alert if consistently exceeded._" >> $GITHUB_STEP_SUMMARY
 
   smoke-test-ps1:
     name: Smoke Test (PowerShell)
