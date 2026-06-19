@@ -19,8 +19,6 @@ nul
 
 .reasonix/
 
-agent-flow/changes/*
-!agent-flow/changes/.gitkeep
 agent-flow/logs/*
 !agent-flow/logs/.gitkeep
 agent-flow/reports/*

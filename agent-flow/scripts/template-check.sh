@@ -138,3 +138,4 @@ if [ "${#issues[@]}" -gt 0 ]; then
 fi
 
 echo "Template check passed."
+echo "  Schema version: $sv | Templates version: $tv"

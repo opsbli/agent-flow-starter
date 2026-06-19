@@ -15,6 +15,9 @@ ADR status: Proposed, Accepted, Deprecated, or Superseded (default: Proposed).
 .PARAMETER Supersedes
 ADR this one supersedes, e.g. ADR-0001.
 
+.PARAMETER ScanAll
+Scan all changes for ADR candidates in DESIGN.md.
+
 .PARAMETER ChangeDir
 Change directory to read DESIGN.md context from.
 
@@ -31,11 +34,35 @@ param(
     [ValidateSet("Proposed", "Accepted", "Deprecated", "Superseded")]
     [string]$Status = "Proposed",
     [string]$Supersedes = "",
+    [switch]$ScanAll,
     [string]$ChangeDir = "",
     [string]$DecisionsRoot = "agent-flow/decisions"
 )
 
 $ErrorActionPreference = "Stop"
+
+# --- Scan-all mode ---
+if ($ScanAll) {
+    $changesRoot = if ($ChangeDir) { $ChangeDir } else { "agent-flow/changes" }
+    Write-Host "Scanning for ADR candidates in: $changesRoot"
+    $found = 0
+    Get-ChildItem -Directory $changesRoot | Where-Object { $_.Name -ne '.gitkeep' } | ForEach-Object {
+        $designFile = Join-Path $_.FullName "DESIGN.md"
+        if (-not (Test-Path $designFile)) { return }
+        $content = Get-Content -Raw -Encoding utf8 $designFile
+        if ($content -match '(?s)## ADR 候选(.*?)(?=## )') {
+            $candidateText = $matches[1].Trim()
+            if ($candidateText -and $candidateText -notmatch '^(none|无)$') {
+                Write-Host "`n--- ADR candidate in $($_.Name) ---"
+                $candidateText -split "`n" | Select-Object -First 5 | ForEach-Object { Write-Host "  $_" }
+                Write-Host "  -> Use: -ChangeDir $($_.FullName) -Title '...'"
+                $found++
+            }
+        }
+    }
+    Write-Host "`nScan complete. $found ADR candidate(s) found."
+    return
+}
 
 # Determine next ADR number
 $decisionsDir = $DecisionsRoot

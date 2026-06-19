@@ -4,6 +4,7 @@ set -euo pipefail
 project_root="."
 manifest="agent-flow/manifest.yaml"
 strict_todo=false
+todo_threshold=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -15,8 +16,11 @@ while [ "$#" -gt 0 ]; do
       manifest="$2"; shift 2 ;;
     --strict-todo|-StrictTodo)
       strict_todo=true; shift ;;
+    --todo-threshold|-TodoThreshold)
+      if [ "$#" -lt 2 ]; then echo "Missing value for $1" >&2; exit 2; fi
+      todo_threshold="$2"; shift 2 ;;
     -h|--help)
-      echo "Usage: manifest-check.sh [--project-root <path>] [--manifest agent-flow/manifest.yaml] [--strict-todo]"
+      echo "Usage: manifest-check.sh [--project-root <path>] [--manifest agent-flow/manifest.yaml] [--strict-todo] [--todo-threshold <N>]"
       exit 0 ;;
     *)
       echo "Unknown argument: $1" >&2; exit 2 ;;
@@ -188,6 +192,8 @@ if [ "$todo_count" -gt 0 ]; then
   message="Manifest has $todo_count unresolved TODO_ value(s)."
   if [ "$strict_todo" = true ]; then
     issues+=("$message")
+  elif [ "$todo_threshold" -gt 0 ] && [ "$todo_count" -gt "$todo_threshold" ]; then
+    issues+=("$message (threshold: $todo_threshold)")
   else
     warnings+=("$message")
   fi

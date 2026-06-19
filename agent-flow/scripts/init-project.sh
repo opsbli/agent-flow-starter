@@ -2,6 +2,7 @@
 set -euo pipefail
 
 target="."
+auto_fix=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -13,8 +14,14 @@ while [ "$#" -gt 0 ]; do
       target="$2"
       shift 2
       ;;
+    --auto-fix|-AutoFix)
+      auto_fix=true
+      shift
+      ;;
     -h|--help)
-      echo "Usage: agent-flow/scripts/init-project.sh [--target <project-root>]"
+      echo "Usage: agent-flow/scripts/init-project.sh [--target <project-root>] [--auto-fix]"
+      echo ""
+      echo "  --auto-fix    Automatically infer and fill missing manifest values"
       exit 0
       ;;
     *)
@@ -366,6 +373,43 @@ if [ -f "$agents_path" ]; then
     !skipping { print }
   ' "$agents_path" > "$tmp_agents"
   mv "$tmp_agents" "$agents_path"
+fi
+
+# --- Auto-fix mode: infer missing manifest values ---
+if [ "$auto_fix" = true ]; then
+  manifest_path="$root/agent-flow/manifest.yaml"
+  [ -f "$manifest_path" ] && grep -q "TODO_" "$manifest_path" && {
+    echo ""
+    echo "--- Auto-fix: inferring manifest values ---"
+    # Database: check for migration files or SQL
+    if grep -q "TODO_DATABASE_OR_NONE" "$manifest_path"; then
+      if ls "$root"/migrations/*.sql "$root"/schema/*.sql 2>/dev/null | head -1 >/dev/null 2>&1; then
+        sed -i 's/engine: TODO_DATABASE_OR_NONE/engine: auto-detected/' "$manifest_path"
+      else
+        sed -i 's/engine: TODO_DATABASE_OR_NONE/engine: none/' "$manifest_path"
+      fi
+      echo "  database.engine -> set"
+    fi
+    # Cache: check for redis config
+    if grep -q "TODO_CACHE_OR_NONE" "$manifest_path"; then
+      if ls "$root"/**/redis* "$root"/redis* 2>/dev/null | head -1 >/dev/null 2>&1; then
+        sed -i 's/engine: TODO_CACHE_OR_NONE/engine: auto-detected/' "$manifest_path"
+      else
+        sed -i 's/engine: TODO_CACHE_OR_NONE/engine: none/' "$manifest_path"
+      fi
+      echo "  cache.engine -> set"
+    fi
+    # Auth
+    if grep -q "TODO_AUTH_OR_NONE" "$manifest_path"; then
+      if ls "$root"/**/SaToken* "$root"/**/Jwt* "$root"/**/Security* 2>/dev/null | head -1 >/dev/null 2>&1; then
+        sed -i 's/engine: TODO_AUTH_OR_NONE/engine: auto-detected/' "$manifest_path"
+      else
+        sed -i 's/engine: TODO_AUTH_OR_NONE/engine: none/' "$manifest_path"
+      fi
+      echo "  auth.engine -> set"
+    fi
+    echo "Auto-fix complete. Run manifest-check to verify."
+  }
 fi
 
 bash "$root/agent-flow/scripts/scaffold-health.sh"

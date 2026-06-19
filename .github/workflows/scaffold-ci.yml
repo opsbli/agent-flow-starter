@@ -63,6 +63,8 @@ jobs:
               status="✅"
             fi
             echo "| $gate-check | ${dur}ms | ${threshold}ms | ${status} |" >> $GITHUB_STEP_SUMMARY
+            # Persist to baseline file
+            [ "$dur" != "N/A" ] && bash agent-flow/scripts/_collect-baseline.sh --gate "$gate-check" --duration-ms "$dur" 2>/dev/null || true
           done
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "_Threshold: 5s per gate. Alert if consistently exceeded._" >> $GITHUB_STEP_SUMMARY

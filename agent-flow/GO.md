@@ -109,6 +109,31 @@
                            │ TASKS → 实现 (分阶段)
                            │ VERIFY → Closure Audit
 
+```mermaid
+flowchart TD
+    A[需求进入] --> B{P0/P1 事故？}
+    B -->|YES| C[Emergency 通道<br/>bypass, 24h回填]
+    B -->|NO| D[建立 Change 工件]
+    D --> E[Code-First 代码扫描]
+    E --> F[路由分级]
+    F --> G[Light 流程<br/>5 工件]
+    F --> H[Standard 流程]
+    F --> I[Heavy 流程]
+    H --> H1[Requirements Grill]
+    H1 --> H2[Code Scan → DESIGN]
+    H2 --> H3[Design Alignment]
+    H3 --> H4[TASKS → 实现 → VERIFY]
+    I --> I1[Requirements Grill]
+    I1 --> I2[Code Scan → DESIGN]
+    I2 --> I3[Design Alignment]
+    I3 --> I4[Plan Audit]
+    I4 --> I5[TASKS → 实现]
+    I5 --> I6[VERIFY → Closure Audit]
+    G --> J[完成: VERIFY + REPORT + EVOLUTION]
+    H4 --> J
+    I6 --> J
+```
+
 所有路径的完成线：VERIFY.md + REPORT.md + EVOLUTION.md
 
 > ⚠️ Light 路径例外：Light 流程要求的最低产物是 `STATE.md` + `CHANGE.md` + `CODE_SCAN.md` + `VERIFY.md` + `REPORT.md`，**不要求 `EVOLUTION.md`**（见 `agent-flow/flows/light.md`）。`EVOLUTION.md` 仅在 Standard / Heavy 路径中强制。
