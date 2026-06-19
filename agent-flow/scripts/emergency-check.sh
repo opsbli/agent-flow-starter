@@ -55,6 +55,15 @@ meaningful "$bypass_reason" true "$emergency_invalid" || issues+=("Emergency Byp
 meaningful "$deadline" true "$emergency_invalid" || issues+=("Emergency Backfill deadline must be set.")
 printf '%s' "$status" | grep -Eiq '^(pending|done|waived)$' || issues+=("Emergency Backfill status must be pending, done, or waived.")
 
+# Check if deadline has passed when status is still pending
+if printf '%s' "$status" | grep -Eiq '^pending$' && meaningful "$deadline" true "$emergency_invalid"; then
+  deadline_date="$(printf '%s' "$deadline" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1)"
+  today="$(date +%Y-%m-%d)"
+  if [ -n "$deadline_date" ] && [ "$deadline_date" \< "$today" 2>/dev/null; then
+    issues+=("Emergency Backfill deadline ($deadline_date) has already passed (today: $today) but backfill status is still pending.")
+  fi
+fi
+
 for file in CODE_SCAN.md TASKS.md VERIFY.md REPORT.md EVOLUTION.md; do
   [ -f "$change_dir/$file" ] || issues+=("Emergency change must include $file.")
 done

@@ -233,14 +233,20 @@ if ((Test-File "REQUIREMENT.md") -and (Test-File "VERIFY.md")) {
 
 if (Test-File "DESIGN.md") {
     Invoke-Gate -GateName "code-drift-check" -GatePath (Join-Path $scriptDir "code-drift-check.ps1") -GateArgs @($ChangeDir, $ProjectRoot)
+    Invoke-Gate -GateName "api-compatibility-check" -GatePath (Join-Path $scriptDir "api-compatibility-check.ps1") -GateArgs @($ChangeDir, $ProjectRoot)
+    Invoke-Gate -GateName "design-quality-check" -GatePath (Join-Path $scriptDir "design-quality-check.ps1") -GateArgs @($ChangeDir, $ProjectRoot)
 } else {
     Skip-Gate -GateName "code-drift-check" -Reason "DESIGN.md not present"
+    Skip-Gate -GateName "api-compatibility-check" -Reason "DESIGN.md not present"
+    Skip-Gate -GateName "design-quality-check" -Reason "DESIGN.md not present"
 }
 
 if (Test-File "TASKS.md") {
     Invoke-Gate -GateName "blocked-check" -GatePath (Join-Path $scriptDir "blocked-check.ps1") -GateArgs @($ChangeDir, $ProjectRoot)
+    Invoke-Gate -GateName "db-migration-check" -GatePath (Join-Path $scriptDir "db-migration-check.ps1") -GateArgs @($ChangeDir, $ProjectRoot)
 } else {
     Skip-Gate -GateName "blocked-check" -Reason "TASKS.md not present"
+    Skip-Gate -GateName "db-migration-check" -Reason "TASKS.md not present"
 }
 
 Invoke-Gate -GateName "manifest-check" -GatePath (Join-Path $scriptDir "manifest-check.ps1") -GateArgs @($ProjectRoot)

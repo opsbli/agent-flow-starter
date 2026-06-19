@@ -114,6 +114,7 @@ if (Test-Path $decisionsDir) {
 # Build report
 $completionRate = if ($stats.total_changes -gt 0) { "$([math]::Round($stats.completed_changes/$stats.total_changes*100, 1))%" } else { "N/A" }
 $acFail = $stats.ac_total - $stats.ac_pass
+if ($stats.ac_pass -gt $stats.ac_total) { $stats.ac_pass = $stats.ac_total; $acFail = 0 }
 $acPassRate = if ($stats.ac_total -gt 0) { "$([math]::Round($stats.ac_pass/$stats.ac_total*100, 1))%" } else { "N/A" }
 $blockRate = if ($stats.total_changes -gt 0) { "$([math]::Round($stats.blocked_changes/$stats.total_changes*100, 1))%" } else { "N/A" }
 

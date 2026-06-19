@@ -6,6 +6,8 @@ agent-flow/scripts/ac-traceability-check.ps1
 agent-flow/scripts/ac-traceability-check.sh
 agent-flow/scripts/alignment-check.ps1
 agent-flow/scripts/alignment-check.sh
+agent-flow/scripts/api-compatibility-check.ps1
+agent-flow/scripts/api-compatibility-check.sh
 agent-flow/scripts/blocked-check.ps1
 agent-flow/scripts/blocked-check.sh
 agent-flow/scripts/check-change.ps1
@@ -16,7 +18,11 @@ agent-flow/scripts/code-drift-check.ps1
 agent-flow/scripts/code-drift-check.sh
 agent-flow/scripts/coverage-check.ps1
 agent-flow/scripts/coverage-check.sh
+agent-flow/scripts/db-migration-check.ps1
+agent-flow/scripts/db-migration-check.sh
 agent-flow/scripts/design-check.ps1
+agent-flow/scripts/design-quality-check.ps1
+agent-flow/scripts/design-quality-check.sh
 agent-flow/scripts/design-check.sh
 agent-flow/scripts/detect-unused.ps1
 agent-flow/scripts/detect-unused.sh

@@ -216,14 +216,20 @@ fi
 
 if has_file DESIGN.md; then
   run_gate code-drift-check bash "$script_dir/code-drift-check.sh" --change-dir "$change_dir" --project-root "$project_root"
+  run_gate api-compatibility-check bash "$script_dir/api-compatibility-check.sh" --change-dir "$change_dir" --project-root "$project_root"
+  run_gate design-quality-check bash "$script_dir/design-quality-check.sh" --change-dir "$change_dir" --project-root "$project_root"
 else
   skip_gate code-drift-check "DESIGN.md not present"
+  skip_gate api-compatibility-check "DESIGN.md not present"
+  skip_gate design-quality-check "DESIGN.md not present"
 fi
 
 if has_file TASKS.md; then
   run_gate blocked-check bash "$script_dir/blocked-check.sh" --change-dir "$change_dir" --project-root "$project_root"
+  run_gate db-migration-check bash "$script_dir/db-migration-check.sh" --change-dir "$change_dir" --project-root "$project_root"
 else
   skip_gate blocked-check "TASKS.md not present"
+  skip_gate db-migration-check "TASKS.md not present"
 fi
 
 run_gate manifest-check bash "$script_dir/manifest-check.sh" --project-root "$project_root"

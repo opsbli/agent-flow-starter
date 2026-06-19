@@ -70,3 +70,5 @@ Standard 需求有两个明确的检查点，不要混淆：
 - 模块编译通过。
 - 相关测试通过或记录不可自动化原因。
 - 知识/决策已沉淀。
+
+> 💡 虽然 Standard 不强制 `closure-check`，但建议在 `VERIFY.md` 中增加 Machine Gate Summary 表来记录门禁执行结果（参考 Heavy 流程的 Closure Audit）。`check-change` 聚合运行时会自动记录所有门禁状态。

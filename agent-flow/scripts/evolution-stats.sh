@@ -63,14 +63,16 @@ if [ -d "$CHANGES_DIR" ]; then
       blocked_changes=$((blocked_changes + 1))
     fi
 
-    # Count ACs and verification
+    # Count ACs and verification (use grep -o for match count to stay consistent with PowerShell)
     if [ -f "$d/TASKS.md" ]; then
-      task_acs=$(grep -c 'AC-[0-9]' "$d/TASKS.md" 2>/dev/null || echo 0)
-      ac_total=$((ac_total + task_acs))
-      if [ -f "$d/VERIFY.md" ] && [ "$task_acs" -gt 0 ]; then
-        for ac_num in $(grep -o 'AC-[0-9]' "$d/TASKS.md" 2>/dev/null); do
-          grep -q "$ac_num" "$d/VERIFY.md" 2>/dev/null && ac_pass=$((ac_pass + 1))
-        done
+      all_acs="$(grep -o 'AC-[0-9][0-9]' "$d/TASKS.md" 2>/dev/null || true)"
+      task_ac_count="$(printf '%s' "$all_acs" | grep -c . || echo 0)"
+      ac_total=$((ac_total + task_ac_count))
+      if [ -f "$d/VERIFY.md" ] && [ "$task_ac_count" -gt 0 ]; then
+        while IFS= read -r ac_num; do
+          [ -z "$ac_num" ] && continue
+          grep -qF "$ac_num" "$d/VERIFY.md" 2>/dev/null && ac_pass=$((ac_pass + 1))
+        done <<< "$all_acs"
       fi
     fi
   done
@@ -94,6 +96,8 @@ completion_rate="N/A"
 [ "$total_changes" -gt 0 ] && completion_rate="$((completed_changes * 100 / total_changes))%"
 block_rate="N/A"
 [ "$total_changes" -gt 0 ] && block_rate="$((blocked_changes * 100 / total_changes))%"
+# Safeguard: pass cannot exceed total
+[ "$ac_pass" -gt "$ac_total" ] && ac_pass=$ac_total
 ac_fail=$((ac_total - ac_pass))
 ac_pass_rate="N/A"
 [ "$ac_total" -gt 0 ] && ac_pass_rate="$(echo "scale=1; $ac_pass * 100 / $ac_total" | bc 2>/dev/null || echo "$((ac_pass * 100 / ac_total))%")"

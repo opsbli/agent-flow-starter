@@ -13,6 +13,18 @@
 
 ## 非目标
 
+## 非功能需求
+
+> 必须填写已知要求。无特殊要求时写 `none`。
+
+| 维度 | 要求 (或 none) | 验证方式 | 优先级 |
+|---|---|---|---|
+| 性能 (P99/per-request) | | | P0/P1/P2/P3 |
+| 安全 (auth/audit/compliance) | | | P0/P1/P2/P3 |
+| 可观测性 (logging/metrics/tracing) | | | P0/P1/P2/P3 |
+| 可用性 (SLA/HA/DR) | | | P0/P1/P2/P3 |
+| 延迟 (max acceptable) | | | P0/P1/P2/P3 |
+
 ## 业务规则
 
 | 编号 | 规则 |

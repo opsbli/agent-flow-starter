@@ -21,6 +21,17 @@ proposed | accepted | implemented | rejected | deferred
 | IMP-0007 | capability-score-report-2026-06-11 | Add template version and template validation | templates/scripts | implemented | Added `templates/VERSION`, `REQUIREMENT_ALIGNED.md`, and `template-check.ps1/.sh` | 2026-06-12 |
 | IMP-0008 | capability-score-report-2026-06-11 | Add AC coverage and test coverage gate | scripts/templates | implemented | Added `coverage-check.ps1/.sh` and `VERIFY.md` Coverage Summary | 2026-06-12 |
 | IMP-0009 | capability-score-report-2026-06-11 | Add troubleshooting guide | docs | implemented | Added `docs/TROUBLESHOOTING.md` and FAQ links | 2026-06-12 |
+| IMP-0010 | agent-flow-p1-improvements | New api-compatibility-check gate for API/permission drift detection | scripts | implemented | Added `api-compatibility-check.ps1/.sh`, registered in check-change, manifest, gates.txt | 2026-06-16 |
+| IMP-0011 | agent-flow-p1-improvements | New db-migration-check gate for rollback SQL verification | scripts | implemented | Added `db-migration-check.ps1/.sh`, registered in check-change, manifest, gates.txt | 2026-06-16 |
+| IMP-0012 | agent-flow-p1-improvements | Chrome DevTools debugging checklist in frontend-fit.md | docs | implemented | Added Network/Console/Elements/Application checklists | 2026-06-16 |
+| IMP-0013 | agent-flow-p1-improvements | DB Change decision table and frontend verification contract in DESIGN.md template | templates | implemented | Added both tables to DESIGN.md template | 2026-06-16 |
+| IMP-0014 | agent-flow-p1-improvements | manifest.yaml frontend_verify_required toggle | config | implemented | Added frontend.verify_required field to manifest.yaml + frontend-fit.md reference | 2026-06-16 |
+| IMP-0015 | agent-flow-improvements-round2 | Non-functional requirements in REQUIREMENT.md template | templates | implemented | Added performance/security/observability/availability/latency table | 2026-06-16 |
+| IMP-0016 | agent-flow-improvements-round2 | design-quality-check gate for design review quality | scripts | implemented | Added design-quality-check.ps1/.sh, registered in check-change, manifest, gates.txt | 2026-06-16 |
+| IMP-0017 | agent-flow-improvements-round3 | conflict_warning column in TASKS.md template | templates | implemented | Added 8th column for parallel-safety marking + documentation | 2026-06-16 |
+| IMP-0018 | agent-flow-improvements-round3 | integration_test + api_test commands in manifest.yaml | config | implemented | Added verification slots for integration and API contract tests | 2026-06-16 |
+| IMP-0019 | capability-score-report-2026-06-16 | Fix GO.md vs Light flow EVOLUTION.md conflict | docs | implemented | Added Light exception note to GO.md | 2026-06-16 |
+| IMP-0020 | capability-score-report-2026-06-16 | Add Machine Gate Summary recommendation for Standard | docs | implemented | Added note to standard.md completion line | 2026-06-16 |
 
 ## Rules
 

@@ -51,6 +51,21 @@ State Machine Impact: pending
 
 ## 数据设计
 
+### DB Change 决策表
+
+> 涉及数据库 Schema 变更的 change 必须填写此表。不涉及 Schema 变更时写 `none`。
+
+| 变更项 | 操作 (add/modify/delete) | 详情 | 回滚 SQL 存在? | 迁移策略 |
+|---|---|---|---|---|
+| 表 | | | yes / no / n/a | |
+| 列 | | | yes / no / n/a | |
+| 索引 | | | yes / no / n/a | |
+| 约束 | | | yes / no / n/a | |
+| 默认值 | | | yes / no / n/a | |
+| 枚举/字典 | | | yes / no / n/a | |
+
+回滚策略: (rollback-sql-provided / schema-only-add / not-needed / pending)
+
 ## State Machine
 
 普通 CRUD 可写 `State Machine Impact: no`。涉及 workflow/status/state machine 的 change 必须补充下面三节。
@@ -89,6 +104,19 @@ State Machine Impact: pending
 
 | Screen / Component | State | User Action | Expected Result | Notes |
 |---|---|---|---|---|
+
+### 前端验证契约
+
+> 如果 `manifest.yaml` 中 `frontend.framework` 不为 `none`，必须在此记录前端验证计划。
+> 无前端时写 `none`。
+
+| 验证项 | 验证方式 | 预期结果 | 对应 AC |
+|---|---|---|---|
+| API 联调 | DevTools Network | 无 4xx/5xx | |
+| 控制台错误 | DevTools Console | 无报错 | |
+| 权限拦截 | 浏览器操作 | 未授权元素正确隐藏 | |
+| 空/loading 状态 | 浏览器操作 | 状态正确 | |
+| 响应式/布局 | 浏览器操作 | 无溢出 | |
 
 ## Demo Evidence
 

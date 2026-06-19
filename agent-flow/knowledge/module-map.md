@@ -1,16 +1,16 @@
-# Module Map
+﻿# Module Map
 
 ## Current Modules
 
 | Module | Path | Responsibility | Notes |
 |---|---|---|---|
-| TODO_BUSINESS_MODULE_PATH | `TODO_BUSINESS_MODULE_PATH` | TODO | initialized |
+| src | `src` | TODO | initialized |
 
 ## Entry Points
 
 | Entry | Path | Purpose |
 |---|---|---|
-| TODO_BACKEND_ENTRY | `TODO_BACKEND_ENTRY` | TODO |
+| src | `src` | TODO |
 
 ## New Module Registry
 

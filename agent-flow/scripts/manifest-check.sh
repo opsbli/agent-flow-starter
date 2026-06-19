@@ -29,6 +29,9 @@ if [ ! -f "$manifest_path" ]; then
   echo "Manifest not found: $manifest_path" >&2
   exit 2
 fi
+manifest_check_path="$(mktemp)"
+trap 'rm -f "$manifest_check_path"' EXIT
+LC_ALL=C sed '1s/^\xEF\xBB\xBF//' "$manifest_path" > "$manifest_check_path"
 
 issues=()
 warnings=()
@@ -53,7 +56,7 @@ collect_todos() {
       todo_placeholders+=("$placeholder")
       todo_lines+=("$line_no: ${line#"${line%%[![:space:]]*}"}")
     done < <(printf '%s\n' "$line" | grep -Eo 'TODO_[A-Z0-9_]+' || true)
-  done < "$manifest_path"
+  done < "$manifest_check_path"
 }
 
 write_todo_guidance() {
@@ -104,7 +107,7 @@ public_script_entries() {
 
 require_text() {
   local label="$1" pattern="$2"
-  if ! grep -Eq "$pattern" "$manifest_path"; then
+  if ! grep -Eq "$pattern" "$manifest_check_path"; then
     issues+=("Missing $label")
   fi
 }
@@ -155,7 +158,7 @@ if [ "$gate_rules_found" = true ]; then
 fi
 
 mapfile -t manifest_gates < <(
-  grep -E '^[[:space:]]*-[[:space:]]+agent-flow/scripts/[^[:space:]#]+[[:space:]]*$' "$manifest_path" |
+  grep -E '^[[:space:]]*-[[:space:]]+agent-flow/scripts/[^[:space:]#]+[[:space:]]*$' "$manifest_check_path" |
     sed -E 's/^[[:space:]]*-[[:space:]]+//;s/[[:space:]]*$//' |
     sort -u
 )

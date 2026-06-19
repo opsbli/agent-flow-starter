@@ -151,6 +151,9 @@ jobs:
       - name: Run starter self-test with machine gates
         run: bash scripts/test-starter.sh
 
+      - name: Run gate fixture tests
+        run: bash scripts/test-gate-fixtures.sh
+
   starter-self-test-windows:
     name: Starter Self-Test (Windows)
     runs-on: windows-latest
@@ -161,3 +164,7 @@ jobs:
       - name: Run starter self-test with machine gates
         shell: pwsh
         run: .\scripts\test-starter.ps1
+
+      - name: Run gate fixture tests
+        shell: pwsh
+        run: .\scripts\test-gate-fixtures.ps1

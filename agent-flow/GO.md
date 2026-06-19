@@ -39,6 +39,8 @@
                            │ VERIFY → Closure Audit
 
 所有路径的完成线：VERIFY.md + REPORT.md + EVOLUTION.md
+
+> ⚠️ Light 路径例外：Light 流程要求的最低产物是 `STATE.md` + `CHANGE.md` + `CODE_SCAN.md` + `VERIFY.md` + `REPORT.md`，**不要求 `EVOLUTION.md`**（见 `agent-flow/flows/light.md`）。`EVOLUTION.md` 仅在 Standard / Heavy 路径中强制。
 ```
 
 ## 读取策略

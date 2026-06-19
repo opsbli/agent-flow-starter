@@ -89,6 +89,18 @@ demo_design() {
   cat <<EOF
 # Design
 
+## Reuse
+
+- Existing Code Fit: reuse README and current agent-flow scripts.
+
+## Don't Reuse
+
+- No new abstraction is needed for this self-test fixture.
+
+## Standards Snapshot
+
+- standards_snapshot: README conventions only.
+
 ## API / Permission / Auth Decisions
 
 Decision Status: accepted
@@ -105,6 +117,12 @@ Decision Status: accepted
 | State Machine Impact | no | No workflow/status transition touched |
 
 State Machine Impact: no
+
+## Test Strategy
+
+| AC | Test File | Test Method | Type |
+|---|---|---|---|
+| AC-01 | scripts/test-starter.sh | check-change closure fixture | test |
 
 ## Design Alignment / Grill
 

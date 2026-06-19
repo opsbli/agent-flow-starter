@@ -74,6 +74,15 @@ if ($status -notmatch "^(?i)pending|done|waived$") {
     $issues += "Emergency Backfill status must be pending, done, or waived."
 }
 
+if ($status -match "^(?i)pending$" -and (Test-Meaningful -Value $deadline -InvalidPattern $emergencyInvalid)) {
+    $parsedDeadline = [datetime]::MinValue
+    if ([datetime]::TryParse($deadline, [ref] $parsedDeadline)) {
+        if ($parsedDeadline -lt (Get-Date)) {
+            $issues += "Emergency Backfill deadline ($deadline) has already passed but backfill status is still pending."
+        }
+    }
+}
+
 foreach ($file in @("CODE_SCAN.md", "TASKS.md", "VERIFY.md", "REPORT.md", "EVOLUTION.md")) {
     $path = Join-Path $ChangeDir $file
     if (-not (Test-Path -LiteralPath $path)) {
