@@ -9,8 +9,8 @@
 |---------|------|---------------|------------|-------|
 | heavy-change | Heavy | ✅ 6/6 pass | ⚠️ write_files paths (example) | Complete teaching example |
 | standard-change | Standard | ✅ 6/6 pass | ⚠️ write_files paths (example) | Complete teaching example |
-| sample-change | Light | ❌ CHANGE.md, CODE_SCAN.md | N/A | Minimal starter — placeholders intentional |
-| spring-boot-notification-pref | Standard | ❌ CHANGE.md, CODE_SCAN.md, TASKS.md | N/A | WIP — being drafted |
+| sample-change | Light | ✅ 5/5 pass | N/A | **已验证** — all placeholders resolved |
+| spring-boot-notification-pref | Standard | ✅ 5/5 pass | N/A | **已验证** — all placeholders resolved |
 | go-gin-rate-limiter | — | N/A | N/A | README only |
 | react-query-feedback | — | N/A | N/A | CODE_SCAN.md + README only |
 

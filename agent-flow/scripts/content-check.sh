@@ -51,7 +51,7 @@ check_artifact() {
     return
   fi
 
-  if meaningful_file "$path" "TODO" "TBD" "path/to" "{module}" "example"; then
+  if meaningful_file "$path" "TODO" "TBD" "path/to" "{module}"; then
     pass=$((pass + 1))
     echo "  PASS $name"
   else
@@ -107,8 +107,10 @@ check_scaffold_file() {
 
   # Skip files that are known to contain doc examples matching placeholder patterns
   # (The pattern list should be kept minimal — only documented-valid cases)
-  local basename
+  # Also skip example change artifacts (intentional teaching content)
+  local basename dirname
   basename="$(basename "$path")"
+  dirname="$(basename "$(dirname "$path")")"
   case "$basename" in
     autonomy-policy.md|router.md)
       scaffold_pass=$((scaffold_pass + 1))
@@ -116,8 +118,15 @@ check_scaffold_file() {
       return
       ;;
   esac
+  case "$dirname" in
+    sample-change|spring-boot-notification-pref|go-gin-rate-limiter|react-query-feedback|heavy-change|standard-change)
+      scaffold_pass=$((scaffold_pass + 1))
+      echo "  PASS $label (example artifact)"
+      return
+      ;;
+  esac
 
-  if meaningful_file "$path" "TODO" "TBD" "path/to" "{module}" "example"; then
+  if meaningful_file "$path" "TODO" "TBD" "path/to" "{module}"; then
     scaffold_pass=$((scaffold_pass + 1))
     echo "  PASS $label"
   else

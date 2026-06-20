@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-06-20T12:48:16Z",
+  "change_dir": "agent-flow/changes/20260620-cleanup-reasonix-and-evolution",
+  "project_root": ".",
+  "closure": false,
+  "passed": false,
+  "gates": [
+    {"gate":"sync-state","status":"pass","required":true,"exit_code":0,"reason":""},
+    {"gate":"state-check","status":"pass","required":true,"exit_code":0,"reason":""},
+    {"gate":"actionlint-check","status":"pass","required":true,"exit_code":0,"reason":""},
+    {"gate":"frontend-verify-check","status":"pass","required":true,"exit_code":0,"reason":""},
+    {"gate":"scan-check","status":"fail","required":true,"exit_code":2,"reason":"gate exited with code 2"},
+    {"gate":"emergency-check","status":"skipped","required":true,"exit_code":0,"reason":"SKIP: emergency-check only applies to Emergency changes."},
+    {"gate":"design-check","status":"skipped","required":false,"exit_code":0,"reason":"DESIGN.md not present"},
+    {"gate":"alignment-check","status":"skipped","required":false,"exit_code":0,"reason":"DESIGN.md not present"},
+    {"gate":"task-check","status":"skipped","required":false,"exit_code":0,"reason":"TASKS.md not present"},
+    {"gate":"task-boundary-check","status":"skipped","required":false,"exit_code":0,"reason":"TASKS.md not present"},
+    {"gate":"plan-check","status":"skipped","required":false,"exit_code":0,"reason":"PLAN.md or AUDIT.md not present"},
+    {"gate":"ac-check","status":"skipped","required":false,"exit_code":0,"reason":"REQUIREMENT.md or VERIFY.md not present"},
+    {"gate":"ac-traceability-check","status":"skipped","required":false,"exit_code":0,"reason":"REQUIREMENT.md or VERIFY.md not present"},
+    {"gate":"coverage-check","status":"skipped","required":false,"exit_code":0,"reason":"REQUIREMENT.md or VERIFY.md not present"},
+    {"gate":"code-drift-check","status":"skipped","required":false,"exit_code":0,"reason":"DESIGN.md not present"},
+    {"gate":"api-compatibility-check","status":"skipped","required":false,"exit_code":0,"reason":"DESIGN.md not present"},
+    {"gate":"design-quality-check","status":"skipped","required":false,"exit_code":0,"reason":"DESIGN.md not present"},
+    {"gate":"blocked-check","status":"skipped","required":false,"exit_code":0,"reason":"TASKS.md not present"},
+    {"gate":"db-migration-check","status":"skipped","required":false,"exit_code":0,"reason":"TASKS.md not present"},
+    {"gate":"manifest-check","status":"pass","required":true,"exit_code":0,"reason":""},
+    {"gate":"content-check","status":"pass","required":true,"exit_code":0,"reason":""},
+    {"gate":"evolution-check","status":"skipped","required":false,"exit_code":0,"reason":"EVOLUTION.md not present"},
+    {"gate":"closure-check","status":"fail","required":true,"exit_code":2,"reason":"gate exited with code 2"}
+  ]
+}

@@ -1,20 +1,20 @@
 # State
 
-change_id: fix-readme-typo
+change_id: 20260620-fix-readme-typo
 flow: Light
-current_stage: intake
-blocked: false
+current_stage: complete-or-review
+blocked: true
 blockers:
-  - none
-next_action: Run next-step and follow the returned next_prompt.
+  - blocked
+next_action: Light artifacts are ready. Review manually, then close or record reusable lessons in EVOLUTION.md.
 owner: unassigned
-last_updated: YYYY-MM-DD
+last_updated: 2026-06-20
 
 ## Stage History
 
 | Time | Stage | Actor | Notes |
 |---|---|---|---|
-| YYYY-MM-DD | intake | AI | Created change scaffold. |
+| '2026-06-20' | 'complete-or-review' | sync-state | Synced from next-step. |
 
 ## Notes
 

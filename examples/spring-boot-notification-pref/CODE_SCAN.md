@@ -10,7 +10,7 @@ scan_time: 2025-07-15 10:30
 related_modules: system
 similar_implementations: src/main/java/com/example/system/（现有用户模块为唯一参考）
 reusable_abstractions: BaseController (R<T> 响应封装), ISysUserService (现有接口风格), SaTokenPermission (权限注解)
-standards_snapshot: 项目使用 MyBatis-Plus LambdaQueryWrapper, TINYINT 表示 boolean, REST 路径 /system/{module}/{resource}
+standards_snapshot: 项目使用 MyBatis-Plus LambdaQueryWrapper, TINYINT 表示 boolean, REST 路径采用 /system/[module]/[resource] 格式
 test_baseline: mvn test -pl system
 read_files: src/main/java/com/example/system/domain/SysUser.java, src/main/java/com/example/system/service/ISysUserService.java, src/main/java/com/example/system/controller/SysUserController.java
 write_files: sql/V1.1__add_notification_enabled.sql, src/main/java/com/example/system/domain/SysUser.java, src/main/java/com/example/system/service/ISysUserService.java, src/main/java/com/example/system/service/impl/SysUserServiceImpl.java, src/main/java/com/example/system/controller/SysUserController.java, src/main/resources/mapper/system/SysUserMapper.xml

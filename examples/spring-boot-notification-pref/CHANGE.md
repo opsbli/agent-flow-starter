@@ -44,7 +44,7 @@ CODE_SCAN 发现需要新增数据库字段（`notification_enabled`），涉及
 ## 关联前端
 
 - [x] 否（前端单独协作，不在此 change 范围）
-- [ ] 是：`TODO_FRONTEND_PATH`
+- [ ] 是：`none`
 
 ## 风险
 

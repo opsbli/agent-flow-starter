@@ -1,20 +1,20 @@
 # State
 
-change_id: 20260620-cleanup-reasonix-and-evolution
-flow: Light
-current_stage: complete-or-review
-blocked: true
+change_id: final-polish
+flow: Standard
+current_stage: intake
+blocked: false
 blockers:
-  - blocked
-next_action: Light artifacts are ready. Review manually, then close or record reusable lessons in EVOLUTION.md.
+  - none
+next_action: Run next-step and follow the returned next_prompt.
 owner: unassigned
-last_updated: 2026-06-20
+last_updated: YYYY-MM-DD
 
 ## Stage History
 
 | Time | Stage | Actor | Notes |
 |---|---|---|---|
-| '2026-06-20' | 'complete-or-review' | sync-state | Synced from next-step. |
+| YYYY-MM-DD | intake | AI | Created change scaffold. |
 
 ## Notes
 
