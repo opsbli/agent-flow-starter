@@ -235,6 +235,7 @@ else
 fi
 
 run_gate manifest-check bash "$script_dir/manifest-check.sh" --project-root "$project_root"
+run_gate content-check bash "$script_dir/content-check.sh" --project-root "$project_root"
 
 if has_file EVOLUTION.md; then
   run_gate evolution-check bash "$script_dir/evolution-check.sh" --change-dir "$change_dir"

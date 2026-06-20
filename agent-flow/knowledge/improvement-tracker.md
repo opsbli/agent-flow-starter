@@ -45,6 +45,8 @@ proposed | accepted | implemented | rejected | deferred
 
 | IMP-0026 | gate-tiering-matrix | Create gate tiering matrix document defining Required/Warning/Advisory for all 62 gates across Light/Standard/Heavy/Emergency | rules | implemented | This change: gate-tiering-matrix | 2026-06-20 |
 
+| IMP-0027 | enhance-content-check | Extend content-check to scan agent-flow/core/ and rules/ directories for placeholders | scripts | implemented | This change: enhance-content-check | 2026-06-20 |
+
 ## Rules
 
 - Add an item when `EVOLUTION.md` recommends changing `agent-flow/` templates, scripts, gates, knowledge, decisions, or flow rules.

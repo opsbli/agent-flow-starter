@@ -252,6 +252,7 @@ if (Test-File "TASKS.md") {
 }
 
 Invoke-Gate -GateName "manifest-check" -GatePath (Join-Path $scriptDir "manifest-check.ps1") -GateArgs @($ProjectRoot)
+Invoke-Gate -GateName "content-check" -GatePath (Join-Path $scriptDir "content-check.ps1") -GateArgs @($null, $ProjectRoot)
 
 if (Test-File "EVOLUTION.md") {
     Invoke-Gate -GateName "evolution-check" -GatePath (Join-Path $scriptDir "evolution-check.ps1") -GateArgs @($ChangeDir)
