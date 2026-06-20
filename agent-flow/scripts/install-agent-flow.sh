@@ -42,7 +42,14 @@ fi
 # --- Resolve paths ---
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 if [ -z "$starter_root" ]; then
-  starter_root="$(cd "$script_dir/.." && pwd)"
+  # Try multiple levels to find agent-flow/ directory (handles running from scripts/)
+  for levels in ".." "../.."; do
+    candidate="$(cd "$script_dir/$levels" 2>/dev/null && pwd)" || continue
+    if [ -d "$candidate/agent-flow" ]; then
+      starter_root="$candidate"
+      break
+    fi
+  done
 fi
 
 target="$(cd "$target" && pwd)"
