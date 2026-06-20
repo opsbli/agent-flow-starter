@@ -127,8 +127,8 @@ jobs:
       - name: Run check-change integration test
         run: bash agent-flow/test/test-scripts/test-check-change.sh
 
-  syntax-check:
-    name: Syntax Check All Scripts
+  structural-checks:
+    name: Structural Checks (syntax + file parity)
     runs-on: ubuntu-latest
     needs: scaffold-health
     steps:
@@ -170,13 +170,6 @@ jobs:
           }
           if ($failed -ne 0) { exit 1 }
           Write-Host "All .ps1 scripts syntax OK"
-
-  file-consistency:
-    name: Cross-Platform File Consistency
-    runs-on: ubuntu-latest
-    needs: scaffold-health
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Check ps1/sh parity
         run: |
