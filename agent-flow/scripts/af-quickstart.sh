@@ -40,14 +40,21 @@ manifest_script="$root/agent-flow/scripts/manifest-check.sh"
 [ -f "$manifest_script" ] || { echo "Missing $manifest_script. Run init-project after installation." >&2; exit 2; }
 run_step "2. manifest check" bash "$manifest_script"
 
-change_dir="$root/agent-flow/changes/$demo_name"
+changes_root="$root/agent-flow/changes"
+change_dir="$changes_root/$demo_name"
 if [ "$skip_demo" != true ]; then
   new_change="$root/agent-flow/scripts/new-change.sh"
   [ -f "$new_change" ] || { echo "Missing $new_change." >&2; exit 2; }
   echo
   echo "== 3. demo change =="
-  if [ ! -d "$change_dir" ]; then
-    bash "$new_change" --name "$demo_name" --flow Light
+  existing="$(find "$changes_root" -maxdepth 1 -type d -name "*$demo_name" | sort | tail -n 1 || true)"
+  if [ -n "$existing" ]; then
+    change_dir="$existing"
+  else
+    bash "$new_change" --name "$demo_name" --flow Light --changes-root "$changes_root" --template-root "$root/agent-flow/templates" --force
+    created="$(find "$changes_root" -maxdepth 1 -type d -name "*$demo_name" | sort | tail -n 1 || true)"
+    [ -n "$created" ] || { echo "new-change did not create a directory for $demo_name" >&2; exit 2; }
+    change_dir="$created"
   fi
   change_file="$change_dir/CHANGE.md"
   if [ -f "$change_file" ]; then
@@ -81,10 +88,15 @@ Demo only; no production code changes.
 - none
 EOF
   fi
-  echo "Demo change ready: agent-flow/changes/$demo_name"
+  relative_created="${change_dir#$root/}"
+  echo "Demo change ready: $relative_created"
 fi
 
-relative_change_dir="agent-flow/changes/$demo_name"
+if [ "$skip_demo" = true ]; then
+  relative_change_dir="agent-flow/changes/$demo_name"
+else
+  relative_change_dir="${change_dir#$root/}"
+fi
 if [ "$skip_demo" = true ]; then
   next_command="bash agent-flow/scripts/new-change.sh --name <change-id> --flow Standard"
 else

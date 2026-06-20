@@ -91,6 +91,16 @@ Core path:
 af-quickstart -> new-change -> next-step -> check-change -> report/evolution
 ```
 
+Public entry points:
+
+```text
+af-quickstart  onboarding and first recommended command
+new-change     create a tracked change
+next-step      decide the next workflow action
+check-change   run the closure gate bundle
+dashboard      inspect change health at a glance
+```
+
 Script groups:
 
 ```text
@@ -99,11 +109,13 @@ gates:
   task-check, plan-check, ac-check, coverage-check, code-drift-check
   blocked-check, task-boundary-check, emergency-check, evolution-check
   closure-check, content-check, api-compatibility-check, db-migration-check
+  doc-quality-check
 
 tools:
   af-quickstart, dashboard, next-step, new-change, recover, flow-detect
   sync-state, knowledge-search, knowledge-suggest, pattern-discovery
   evolution-stats, evolution-suggest, fatigue-action, install-git-hooks
+  registry-sync
 
 generators:
   generate-scan, generate-design, generate-tasks, generate-verify

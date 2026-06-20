@@ -812,6 +812,12 @@ assert_path "$empty_target/agent-flow/scripts/alignment-check.sh"
 assert_clean_history_dirs "$empty_target"
 bash "$empty_target/agent-flow/scripts/init-project.sh" --target "$empty_target"
 bash "$empty_target/agent-flow/scripts/manifest-check.sh" --project-root "$empty_target"
+bash "$empty_target/agent-flow/scripts/registry-sync.sh" --project-root "$empty_target" --check
+bash "$empty_target/agent-flow/scripts/doc-quality-check.sh" --project-root "$empty_target"
+bash "$empty_target/agent-flow/scripts/af-quickstart.sh" --target "$empty_target" --demo-name "hello-agent-flow-smoke"
+quickstart_change="$(find "$empty_target/agent-flow/changes" -maxdepth 1 -type d -name '*hello-agent-flow-smoke' | sort | tail -n 1)"
+[ -n "$quickstart_change" ] || { echo "af-quickstart did not create hello-agent-flow-smoke change." >&2; exit 1; }
+bash "$empty_target/agent-flow/scripts/next-step.sh" --change-dir "$quickstart_change" >/dev/null
 for placeholder in TODO_BACKEND_ENTRY TODO_COMMON_CODE_PATH TODO_BUSINESS_MODULE_PATH TODO_TEST_PATH TODO_SQL_PATH; do
   if ! grep -q "$placeholder" "$empty_target/agent-flow/manifest.yaml"; then
     echo "Expected bash init manifest placeholder missing: $placeholder" >&2

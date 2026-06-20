@@ -923,6 +923,14 @@ try {
     Assert-CleanHistoryDirs -TargetRoot $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/init-project.ps1") -Target $emptyTarget
     & (Join-Path $emptyTarget "agent-flow/scripts/manifest-check.ps1") -ProjectRoot $emptyTarget
+    & (Join-Path $emptyTarget "agent-flow/scripts/registry-sync.ps1") -ProjectRoot $emptyTarget -Check
+    & (Join-Path $emptyTarget "agent-flow/scripts/doc-quality-check.ps1") -ProjectRoot $emptyTarget
+    & (Join-Path $emptyTarget "agent-flow/scripts/af-quickstart.ps1") -Target $emptyTarget -DemoName "hello-agent-flow-smoke"
+    $quickstartChange = Get-ChildItem -LiteralPath (Join-Path $emptyTarget "agent-flow/changes") -Directory -Filter "*hello-agent-flow-smoke" |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    if (-not $quickstartChange) { throw "af-quickstart did not create hello-agent-flow-smoke change." }
+    & (Join-Path $emptyTarget "agent-flow/scripts/next-step.ps1") -ChangeDir $quickstartChange.FullName | Out-Null
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.ps1") -Value "Write-Host 'unregistered'"
     Set-Content -Encoding utf8 -LiteralPath (Join-Path $emptyTarget "agent-flow/scripts/unregistered-demo.sh") -Value "#!/usr/bin/env bash`necho unregistered"
     Assert-Fails -Label "manifest-check public script registry negative case" -ExpectedPattern "Public script missing from gate registry" -Command {

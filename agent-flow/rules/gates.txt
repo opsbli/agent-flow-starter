@@ -34,6 +34,8 @@ agent-flow/scripts/design-quality-check.sh
 agent-flow/scripts/design-check.sh
 agent-flow/scripts/detect-unused.ps1
 agent-flow/scripts/detect-unused.sh
+agent-flow/scripts/doc-quality-check.ps1
+agent-flow/scripts/doc-quality-check.sh
 agent-flow/scripts/drift-check.ps1
 agent-flow/scripts/drift-check.sh
 agent-flow/scripts/emergency-check.ps1
@@ -96,6 +98,8 @@ agent-flow/scripts/run-verify.ps1
 agent-flow/scripts/run-verify.sh
 agent-flow/scripts/recover.ps1
 agent-flow/scripts/recover.sh
+agent-flow/scripts/registry-sync.ps1
+agent-flow/scripts/registry-sync.sh
 agent-flow/scripts/scaffold-health.ps1
 agent-flow/scripts/scaffold-health.sh
 agent-flow/scripts/scan-check.ps1

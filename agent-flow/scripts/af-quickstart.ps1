@@ -31,6 +31,26 @@ function Run-Step {
     & $Action
 }
 
+function Get-RelativePathCompat {
+    param(
+        [string]$BasePath,
+        [string]$TargetPath
+    )
+
+    if ([System.IO.Path].GetMethod("GetRelativePath", [type[]]@([string], [string]))) {
+        return [System.IO.Path]::GetRelativePath($BasePath, $TargetPath)
+    }
+
+    $baseFull = [System.IO.Path]::GetFullPath($BasePath)
+    $targetFull = [System.IO.Path]::GetFullPath($TargetPath)
+    if (-not $baseFull.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
+        $baseFull += [System.IO.Path]::DirectorySeparatorChar
+    }
+    $baseUri = [System.Uri]::new($baseFull)
+    $targetUri = [System.Uri]::new($targetFull)
+    return [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString()).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+}
+
 Write-Host "agent-flow quickstart"
 Write-Host "Project: $root"
 
@@ -50,15 +70,29 @@ Run-Step "2. manifest check" {
     & $script
 }
 
-$changeDir = Join-Path $root "agent-flow/changes/$DemoName"
+$changesRoot = Join-Path $root "agent-flow/changes"
+$changeDir = Join-Path $changesRoot $DemoName
 if (-not $SkipDemo) {
     Run-Step "3. demo change" {
         $script = Join-Path $root "agent-flow/scripts/new-change.ps1"
         if (-not (Test-Path -LiteralPath $script)) {
             throw "Missing $script."
         }
-        if (-not (Test-Path -LiteralPath $changeDir)) {
-            & $script -Name $DemoName -Flow Light
+        $existing = @(
+            Get-ChildItem -LiteralPath $changesRoot -Directory -Filter "*$DemoName" -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending
+        )
+        if ($existing.Count -gt 0) {
+            $script:changeDir = $existing[0].FullName
+        } else {
+            $templateRoot = Join-Path $root "agent-flow/templates"
+            & $script -Name $DemoName -Flow Light -ChangesRoot $changesRoot -TemplateRoot $templateRoot -Force
+            $created = @(
+                Get-ChildItem -LiteralPath $changesRoot -Directory -Filter "*$DemoName" -ErrorAction SilentlyContinue |
+                    Sort-Object LastWriteTime -Descending
+            )
+            if ($created.Count -eq 0) { throw "new-change did not create a directory for $DemoName" }
+            $script:changeDir = $created[0].FullName
         }
         $changePath = Join-Path $changeDir "CHANGE.md"
         if (Test-Path -LiteralPath $changePath) {
@@ -92,11 +126,12 @@ Demo only; no production code changes.
 - none
 "@ | Set-Content -Encoding utf8 -LiteralPath $changePath
         }
-        Write-Host "Demo change ready: agent-flow/changes/$DemoName"
+        $displayDir = Get-RelativePathCompat -BasePath $root -TargetPath $changeDir
+        Write-Host "Demo change ready: $displayDir"
     }
 }
 
-$relativeChangeDir = "agent-flow/changes/$DemoName"
+$relativeChangeDir = if ($SkipDemo) { "agent-flow/changes/$DemoName" } else { Get-RelativePathCompat -BasePath $root -TargetPath $changeDir }
 $nextCommand = if ($SkipDemo) {
     "agent-flow/scripts/new-change.ps1 -Name <change-id> -Flow Standard"
 } else {

@@ -104,6 +104,8 @@ script_registry:
     - agent-flow/scripts/design-check.sh
     - agent-flow/scripts/design-quality-check.ps1
     - agent-flow/scripts/design-quality-check.sh
+    - agent-flow/scripts/doc-quality-check.ps1
+    - agent-flow/scripts/doc-quality-check.sh
     - agent-flow/scripts/drift-check.ps1
     - agent-flow/scripts/drift-check.sh
     - agent-flow/scripts/emergency-abuse-check.ps1
@@ -177,6 +179,8 @@ script_registry:
     - agent-flow/scripts/pattern-discovery.sh
     - agent-flow/scripts/recover.ps1
     - agent-flow/scripts/recover.sh
+    - agent-flow/scripts/registry-sync.ps1
+    - agent-flow/scripts/registry-sync.sh
     - agent-flow/scripts/sync-state.ps1
     - agent-flow/scripts/sync-state.sh
   generators:
@@ -223,6 +227,8 @@ gates:
   - agent-flow/scripts/design-check.sh
   - agent-flow/scripts/design-quality-check.ps1
   - agent-flow/scripts/design-quality-check.sh
+  - agent-flow/scripts/doc-quality-check.ps1
+  - agent-flow/scripts/doc-quality-check.sh
   - agent-flow/scripts/drift-check.ps1
   - agent-flow/scripts/drift-check.sh
   - agent-flow/scripts/emergency-abuse-check.ps1
