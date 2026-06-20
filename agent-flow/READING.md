@@ -62,6 +62,27 @@ check-change
 scaffold-health
 ```
 
+## Script Registry Contract
+
+`agent-flow/rules/gates.txt` is the public-script registry. Every public
+`.ps1` / `.sh` script in `agent-flow/scripts` must appear there unless it is an
+internal helper whose filename starts with `_`.
+
+`agent-flow/manifest.yaml` must also classify every public script under
+`script_registry`:
+
+```text
+script_registry:
+  gates:       blocking or advisory validation checks
+  tools:       user-facing helpers, dashboards, installers, navigators
+  generators:  scripts that create or update workflow artifacts
+  deprecated:  compatibility entries that still exist on disk
+```
+
+Keep `gates:` in `manifest.yaml` for backward compatibility with older tooling,
+but do not use it as the only registry. Run `manifest-check` after adding,
+renaming, or deleting scripts.
+
 ## Minimum Safe Loop
 
 ```text

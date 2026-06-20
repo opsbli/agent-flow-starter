@@ -25,11 +25,11 @@ code_map:
     - agent-flow
   common:
     - agent-flow/scripts
-    business_modules:
+  business_modules:
     - agent-flow
   build_files:
     - scripts
-  # tests:
+  tests:
     - agent-flow/test
     - tests
 
@@ -75,6 +75,126 @@ verification:
   frontend_lint: TODO_FRONTEND_LINT_COMMAND
   integration_test: TODO_INTEGRATION_TEST_COMMAND
   api_test: TODO_API_TEST_COMMAND
+
+script_registry:
+  gates:
+    - agent-flow/scripts/ac-check.ps1
+    - agent-flow/scripts/ac-check.sh
+    - agent-flow/scripts/ac-traceability-check.ps1
+    - agent-flow/scripts/ac-traceability-check.sh
+    - agent-flow/scripts/alignment-check.ps1
+    - agent-flow/scripts/alignment-check.sh
+    - agent-flow/scripts/api-compatibility-check.ps1
+    - agent-flow/scripts/api-compatibility-check.sh
+    - agent-flow/scripts/blocked-check.ps1
+    - agent-flow/scripts/blocked-check.sh
+    - agent-flow/scripts/check-change.ps1
+    - agent-flow/scripts/check-change.sh
+    - agent-flow/scripts/closure-check.ps1
+    - agent-flow/scripts/closure-check.sh
+    - agent-flow/scripts/code-drift-check.ps1
+    - agent-flow/scripts/code-drift-check.sh
+    - agent-flow/scripts/content-check.ps1
+    - agent-flow/scripts/content-check.sh
+    - agent-flow/scripts/coverage-check.ps1
+    - agent-flow/scripts/coverage-check.sh
+    - agent-flow/scripts/db-migration-check.ps1
+    - agent-flow/scripts/db-migration-check.sh
+    - agent-flow/scripts/design-check.ps1
+    - agent-flow/scripts/design-check.sh
+    - agent-flow/scripts/design-quality-check.ps1
+    - agent-flow/scripts/design-quality-check.sh
+    - agent-flow/scripts/drift-check.ps1
+    - agent-flow/scripts/drift-check.sh
+    - agent-flow/scripts/emergency-abuse-check.ps1
+    - agent-flow/scripts/emergency-abuse-check.sh
+    - agent-flow/scripts/emergency-backfill-check.ps1
+    - agent-flow/scripts/emergency-backfill-check.sh
+    - agent-flow/scripts/emergency-check.ps1
+    - agent-flow/scripts/emergency-check.sh
+    - agent-flow/scripts/emergency-time-lock.ps1
+    - agent-flow/scripts/emergency-time-lock.sh
+    - agent-flow/scripts/evolution-check.ps1
+    - agent-flow/scripts/evolution-check.sh
+    - agent-flow/scripts/gate-fatigue-check.ps1
+    - agent-flow/scripts/gate-fatigue-check.sh
+    - agent-flow/scripts/incremental-verify.ps1
+    - agent-flow/scripts/incremental-verify.sh
+    - agent-flow/scripts/knowledge-expiry-check.ps1
+    - agent-flow/scripts/knowledge-expiry-check.sh
+    - agent-flow/scripts/manifest-check.ps1
+    - agent-flow/scripts/manifest-check.sh
+    - agent-flow/scripts/manifest-drift-check.ps1
+    - agent-flow/scripts/manifest-drift-check.sh
+    - agent-flow/scripts/plan-check.ps1
+    - agent-flow/scripts/plan-check.sh
+    - agent-flow/scripts/run-verify.ps1
+    - agent-flow/scripts/run-verify.sh
+    - agent-flow/scripts/scaffold-health.ps1
+    - agent-flow/scripts/scaffold-health.sh
+    - agent-flow/scripts/scan-check.ps1
+    - agent-flow/scripts/scan-check.sh
+    - agent-flow/scripts/state-check.ps1
+    - agent-flow/scripts/state-check.sh
+    - agent-flow/scripts/task-boundary-check.ps1
+    - agent-flow/scripts/task-boundary-check.sh
+    - agent-flow/scripts/task-check.ps1
+    - agent-flow/scripts/task-check.sh
+    - agent-flow/scripts/template-check.ps1
+    - agent-flow/scripts/template-check.sh
+  tools:
+    - agent-flow/scripts/af-quickstart.ps1
+    - agent-flow/scripts/af-quickstart.sh
+    - agent-flow/scripts/dashboard.ps1
+    - agent-flow/scripts/dashboard.sh
+    - agent-flow/scripts/detect-unused.ps1
+    - agent-flow/scripts/detect-unused.sh
+    - agent-flow/scripts/evolution-stats.ps1
+    - agent-flow/scripts/evolution-stats.sh
+    - agent-flow/scripts/evolution-suggest.ps1
+    - agent-flow/scripts/evolution-suggest.sh
+    - agent-flow/scripts/fatigue-action.ps1
+    - agent-flow/scripts/fatigue-action.sh
+    - agent-flow/scripts/flow-detect.ps1
+    - agent-flow/scripts/flow-detect.sh
+    - agent-flow/scripts/init-project.ps1
+    - agent-flow/scripts/init-project.sh
+    - agent-flow/scripts/init-wizard.ps1
+    - agent-flow/scripts/init-wizard.sh
+    - agent-flow/scripts/install-agent-flow.ps1
+    - agent-flow/scripts/install-agent-flow.sh
+    - agent-flow/scripts/install-git-hooks.ps1
+    - agent-flow/scripts/install-git-hooks.sh
+    - agent-flow/scripts/knowledge-search.ps1
+    - agent-flow/scripts/knowledge-search.sh
+    - agent-flow/scripts/knowledge-suggest.ps1
+    - agent-flow/scripts/knowledge-suggest.sh
+    - agent-flow/scripts/new-change.ps1
+    - agent-flow/scripts/new-change.sh
+    - agent-flow/scripts/next-step.ps1
+    - agent-flow/scripts/next-step.sh
+    - agent-flow/scripts/pattern-discovery.ps1
+    - agent-flow/scripts/pattern-discovery.sh
+    - agent-flow/scripts/recover.ps1
+    - agent-flow/scripts/recover.sh
+    - agent-flow/scripts/sync-state.ps1
+    - agent-flow/scripts/sync-state.sh
+  generators:
+    - agent-flow/scripts/generate-audit.ps1
+    - agent-flow/scripts/generate-audit.sh
+    - agent-flow/scripts/generate-design.ps1
+    - agent-flow/scripts/generate-design.sh
+    - agent-flow/scripts/generate-emergency.ps1
+    - agent-flow/scripts/generate-emergency.sh
+    - agent-flow/scripts/generate-report.ps1
+    - agent-flow/scripts/generate-report.sh
+    - agent-flow/scripts/generate-scan.ps1
+    - agent-flow/scripts/generate-scan.sh
+    - agent-flow/scripts/generate-tasks.ps1
+    - agent-flow/scripts/generate-tasks.sh
+    - agent-flow/scripts/generate-verify.ps1
+    - agent-flow/scripts/generate-verify.sh
+  deprecated: []
 
 gates:
   - agent-flow/scripts/ac-check.ps1

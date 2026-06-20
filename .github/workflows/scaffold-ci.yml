@@ -49,23 +49,29 @@ jobs:
 
       - name: Performance Baseline Summary
         run: |
-          echo "## ⏱ Gate Performance Baseline" >> $GITHUB_STEP_SUMMARY
+          echo "## Gate Performance Baseline" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Gate | Duration (ms) | Threshold (ms) | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------------|----------------|--------|" >> $GITHUB_STEP_SUMMARY
-          for gate in health manifest template; do
-            dur="${{ steps.$gate.outputs.duration_ms }}"
+          threshold=5000
+          health_duration="${{ steps.health.outputs.duration_ms }}"
+          manifest_duration="${{ steps.manifest.outputs.duration_ms }}"
+          template_duration="${{ steps.template.outputs.duration_ms }}"
+          write_row() {
+            gate="$1"
+            dur="$2"
             [ -z "$dur" ] && dur="N/A"
-            threshold=5000
             if [ "$dur" != "N/A" ] && [ "$dur" -gt "$threshold" ] 2>/dev/null; then
-              status="⚠️ EXCEEDS"
+              status="EXCEEDS"
             else
-              status="✅"
+              status="OK"
             fi
-            echo "| $gate-check | ${dur}ms | ${threshold}ms | ${status} |" >> $GITHUB_STEP_SUMMARY
-            # Persist to baseline file
-            [ "$dur" != "N/A" ] && bash agent-flow/scripts/_collect-baseline.sh --gate "$gate-check" --duration-ms "$dur" 2>/dev/null || true
-          done
+            echo "| $gate | ${dur}ms | ${threshold}ms | ${status} |" >> $GITHUB_STEP_SUMMARY
+            [ "$dur" != "N/A" ] && bash agent-flow/scripts/_collect-baseline.sh --gate "$gate" --duration-ms "$dur" 2>/dev/null || true
+          }
+          write_row "health-check" "$health_duration"
+          write_row "manifest-check" "$manifest_duration"
+          write_row "template-check" "$template_duration"
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "_Threshold: 5s per gate. Alert if consistently exceeded._" >> $GITHUB_STEP_SUMMARY
 

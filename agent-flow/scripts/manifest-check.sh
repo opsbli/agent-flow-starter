@@ -116,8 +116,12 @@ require_text() {
   fi
 }
 
-for section in project code_map change_storage risk_rules verification gates; do
+for section in project code_map change_storage risk_rules verification script_registry gates; do
   require_text "section: $section" "^$section:"
+done
+
+for category in gates tools generators deprecated; do
+  require_text "script_registry.$category" "^[[:space:]]+$category:"
 done
 
 for rule in heavy_if destructive_gate blocked_if; do
@@ -161,28 +165,21 @@ if [ "$gate_rules_found" = true ]; then
   done
 fi
 
-mapfile -t manifest_gates < <(
+mapfile -t manifest_scripts < <(
   grep -E '^[[:space:]]*-[[:space:]]+agent-flow/scripts/[^[:space:]#]+[[:space:]]*$' "$manifest_check_path" |
     sed -E 's/^[[:space:]]*-[[:space:]]+//;s/[[:space:]]*$//' |
     sort -u
 )
-for entry in "${manifest_gates[@]}"; do
-  found=false
-  for gate in "${required_gates[@]}"; do
-    if [ "$gate" = "$entry" ]; then
-      found=true
-      break
-    fi
-  done
-  if [ "$found" = false ]; then
-    issues+=("Manifest gate entry missing from gate registry: $entry")
+for entry in "${manifest_scripts[@]}"; do
+  if [ ! -f "$project_root/$entry" ]; then
+    issues+=("Manifest script entry does not exist: $entry")
   fi
 done
 
 for gate in "${required_gates[@]}"; do
-  require_text "gate entry: $gate" "^[[:space:]]*-[[:space:]]+$gate[[:space:]]*$"
+  require_text "script registry entry: $gate" "^[[:space:]]*-[[:space:]]+$gate[[:space:]]*$"
   if [ ! -f "$project_root/$gate" ]; then
-    issues+=("Gate file does not exist: $gate")
+    issues+=("Registered script file does not exist: $gate")
   fi
 done
 

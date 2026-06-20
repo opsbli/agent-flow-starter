@@ -1,93 +1,93 @@
 #!/usr/bin/env bash
-# Apply fatigue recommendations — auto-skip or advisory-mode fatigued gates.
-# Usage: bash agent-flow/scripts/fatigue-action.sh [--threshold 8] [--apply]
+# Apply fatigue recommendations by marking consistently passing gates advisory.
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-CHANGES_DIR="$ROOT/agent-flow/changes"
-THRESHOLD=8
-APPLY=false
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(cd "$script_dir/../.." && pwd)"
+threshold=8
+apply=false
 
-while [[ $# -gt 0 ]]; do
+while [ "$#" -gt 0 ]; do
   case "$1" in
-    --threshold) THRESHOLD="$2"; shift 2 ;;
-    --apply) APPLY=true; shift ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+    --threshold) threshold="$2"; shift 2 ;;
+    --apply) apply=true; shift ;;
+    -h|--help)
+      echo "Usage: fatigue-action.sh [--threshold 8] [--apply]"
+      exit 0 ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
 
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; WHITE='\033[1;37m'; GRAY='\033[0;90m'; NC='\033[0m'
-
-[ -d "$CHANGES_DIR" ] || { echo "No changes directory found"; exit 0; }
-
-echo -e "${CYAN}Fatigue Action Report${NC}"
-echo "============================================================"
-echo "Threshold: $THRESHOLD consecutive passes"
-
-# Scan gate results
-ADVISORY=""
-REVIEW=""
-CHANGE_COUNT=0
-
-for change_dir in "$CHANGES_DIR"/*/; do
-  [ ! -d "$change_dir" ] && continue
-  CHECK_JSON="$change_dir/CHECK_RESULT.json"
-  [ ! -f "$CHECK_JSON" ] && continue
-  CHANGE_COUNT=$((CHANGE_COUNT + 1))
-done
-
-echo "Changes scanned: $CHANGE_COUNT"
-
-# Simplified analysis: run gate-fatigue-check and parse output
-FATIGUE_OUTPUT=$(bash "$SCRIPT_DIR/gate-fatigue-check.sh" --threshold "$THRESHOLD" 2>/dev/null || true)
-
-# Extract fatigued gate names from the report
-FATIGUED_GATES=$(echo "$FATIGUE_OUTPUT" | grep '|.*|[0-9]\+.*|[0-9]\+.*|[0-9]\+.*|' | grep -v 'Gate\|------' | awk -F'|' '{print $2}' | xargs || true)
-
-if [ -z "$FATIGUED_GATES" ]; then
-  echo -e "\n${GREEN}✅ No fatigued gates found (threshold = $THRESHOLD).${NC}"
+changes_dir="$root/agent-flow/changes"
+if [ ! -d "$changes_dir" ]; then
+  echo "No changes directory found"
   exit 0
 fi
 
-echo -e "\n${YELLOW}Fatigued gates:${NC}"
-for g in $FATIGUED_GATES; do
-  echo -e "  ${WHITE}$g${NC}"
-  ADVISORY="$ADVISORY $g"
-done
+echo "Fatigue Action Report"
+echo "============================================================"
+echo "Threshold: $threshold consecutive passes"
 
-echo -e "\n${YELLOW}Recommended actions:${NC}"
-for g in $FATIGUED_GATES; do
-  echo -e "  $g → advisory for Light changes (warn but don't block)"
+change_count=0
+for change_dir in "$changes_dir"/*/; do
+  [ -d "$change_dir" ] || continue
+  [ -f "$change_dir/CHECK_RESULT.json" ] || continue
+  change_count=$((change_count + 1))
 done
+echo "Changes scanned: $change_count"
 
-if [ "$APPLY" = true ]; then
-  echo -e "\n${CYAN}Applying recommendations...${NC}"
-  CONFIG_FILE="$ROOT/agent-flow/.gates-config.json"
-  if [ -f "$CONFIG_FILE" ]; then
-    # Read existing config and append
-    python3 -c "
-import json
-with open('$CONFIG_FILE') as f:
-    config = json.load(f)
-advisory = config.get('advisory', [])
-for g in '$FATIGUED_GATES'.split():
-    if g not in advisory:
-        advisory.append(g)
-config['advisory'] = advisory
-with open('$CONFIG_FILE', 'w') as f:
-    json.dump(config, f, indent=2)
-print('Updated advisory list')
-" 2>/dev/null || {
-    # Fallback: write new file
-    echo "{ \"advisory\": [$(for g in $FATIGUED_GATES; do echo -n "\"$g\","; done | sed 's/,$//')] }" > "$CONFIG_FILE"
-  }
-  for g in $FATIGUED_GATES; do
-    echo -e "  ${GREEN}✅ $g → advisory mode${NC}"
-  done
-  echo -e "\nConfiguration written to: agent-flow/.gates-config.json"
-else
-  echo -e "\n${GRAY}Dry-run mode. Use --apply to persist changes.${NC}"
-  echo -e "${CYAN}  bash agent-flow/scripts/fatigue-action.sh --apply${NC}"
+fatigue_output="$(bash "$script_dir/gate-fatigue-check.sh" --threshold "$threshold" 2>/dev/null || true)"
+fatigued_gates="$(
+  printf '%s\n' "$fatigue_output" |
+    awk -F'|' '/\|/ && $2 !~ /Gate|---/ { gsub(/^[ \t]+|[ \t]+$/, "", $2); if ($2 != "") print $2 }' |
+    sort -u |
+    xargs || true
+)"
+
+if [ -z "$fatigued_gates" ]; then
+  echo
+  echo "No fatigued gates found."
+  exit 0
 fi
+
+echo
+echo "Fatigued gates:"
+for gate in $fatigued_gates; do
+  echo "  $gate"
+done
+
+echo
+echo "Recommended action: advisory for Light changes."
+
+if [ "$apply" != true ]; then
+  echo
+  echo "Dry-run mode. Use --apply to persist changes."
+  exit 0
+fi
+
+config_file="$root/agent-flow/.gates-config.json"
+python3 - "$config_file" $fatigued_gates <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+gates = sys.argv[2:]
+config = {}
+if path.exists():
+    try:
+        config = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        config = {}
+
+advisory = list(config.get("advisory", []))
+for gate in gates:
+    if gate not in advisory:
+        advisory.append(gate)
+config["advisory"] = advisory
+path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+PY
+
+echo
+echo "Configuration written to: agent-flow/.gates-config.json"

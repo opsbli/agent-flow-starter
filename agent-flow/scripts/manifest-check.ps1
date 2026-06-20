@@ -107,9 +107,15 @@ function Get-PublicScriptEntries {
     )
 }
 
-foreach ($section in @("project:", "code_map:", "change_storage:", "risk_rules:", "verification:", "gates:")) {
+foreach ($section in @("project:", "code_map:", "change_storage:", "risk_rules:", "verification:", "script_registry:", "gates:")) {
     if ($text -notmatch "(?m)^$([regex]::Escape($section))") {
         $issues += "Missing required section: $section"
+    }
+}
+
+foreach ($category in @("gates:", "tools:", "generators:", "deprecated:")) {
+    if ($text -notmatch "(?m)^\s+$([regex]::Escape($category))") {
+        $issues += "Missing script_registry.$($category.TrimEnd(':'))"
     }
 }
 
@@ -158,23 +164,23 @@ if ($gateRulesFound) {
     }
 }
 
-$manifestGateEntries = @(
+$manifestScriptEntries = @(
     [regex]::Matches($text, "(?m)^\s+-\s+(agent-flow/scripts/[^\s#]+)\s*$") |
         ForEach-Object { $_.Groups[1].Value } |
         Sort-Object -Unique
 )
-foreach ($entry in $manifestGateEntries) {
-    if (-not $registered.ContainsKey($entry)) {
-        $issues += "Manifest gate entry missing from gate registry: $entry"
+foreach ($entry in $manifestScriptEntries) {
+    if (-not (Test-Path -LiteralPath (Join-Path $projectRootPath $entry))) {
+        $issues += "Manifest script entry does not exist: $entry"
     }
 }
 
 foreach ($gate in $requiredGates) {
     if ($text -notmatch "(?m)^\s+-\s+$([regex]::Escape($gate))\s*$") {
-        $issues += "Missing gate entry: $gate"
+        $issues += "Missing script registry entry: $gate"
     }
     if (-not (Test-Path -LiteralPath (Join-Path $projectRootPath $gate))) {
-        $issues += "Gate file does not exist: $gate"
+        $issues += "Registered script file does not exist: $gate"
     }
 }
 

@@ -97,7 +97,7 @@ if ($ChangeDir -and (Test-Path (Join-Path $ChangeDir "DESIGN.md"))) {
 
 # Create ADR file
 $content = @"
-# $adrId: $Title
+# ${adrId}: $Title
 
 ## 状态
 

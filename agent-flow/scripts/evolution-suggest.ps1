@@ -203,7 +203,7 @@ if (Test-Path $trackerPath) {
                 $impId = $matches[1]
                 $parts = $pl -split '\|'
                 $rec = if ($parts.Count -ge 4) { $parts[3].Trim() } else { "unknown" }
-                $suggestions += "  → $impId: $rec"
+                $suggestions += "  -> ${impId}: $rec"
             }
         }
         if ($pendingCount -gt 3) { $suggestions += "  → ... and $($pendingCount - 3) more items" }

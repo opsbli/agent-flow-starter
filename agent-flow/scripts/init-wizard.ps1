@@ -214,6 +214,7 @@ $gateLines = (
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("#") } |
         ForEach-Object { "  - $_" }
 ) -join "`n"
+$registryGateLines = ($gateLines -split "`n" | ForEach-Object { "  $_" }) -join "`n"
 
 $manifest = @"
 project:
@@ -280,6 +281,13 @@ verification:
   frontend_test: $frontendTest
   frontend_lint: $frontendLint
   tdd_enforced: $($tddMode.ToString().ToLower())
+
+script_registry:
+  gates:
+$registryGateLines
+  tools: []
+  generators: []
+  deprecated: []
 
 gates:
 $gateLines

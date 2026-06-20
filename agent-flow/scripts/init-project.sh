@@ -170,6 +170,7 @@ gate_lines="$(
   grep -Ev '^[[:space:]]*(#|$)' "$gate_rules_path" |
     sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^/  - /'
 )"
+registry_gate_lines="$(printf '%s\n' "$gate_lines" | sed 's/^/  /')"
 
 cat > "$root/agent-flow/manifest.yaml" <<EOF
 project:
@@ -244,6 +245,13 @@ verification:
   frontend_typecheck: $frontend_typecheck
   frontend_test: $frontend_test
   frontend_lint: $frontend_lint
+
+script_registry:
+  gates:
+$registry_gate_lines
+  tools: []
+  generators: []
+  deprecated: []
 
 gates:
 $gate_lines

@@ -190,6 +190,7 @@ if [ ! -f "$GATES_FILE" ]; then
   exit 1
 fi
 GATE_LINES=$(grep -Ev '^\s*(#|$)' "$GATES_FILE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^/  - /')
+REGISTRY_GATE_LINES=$(printf '%s\n' "$GATE_LINES" | sed 's/^/  /')
 
 # Write manifest.yaml
 MANIFEST="$ROOT/agent-flow/manifest.yaml"
@@ -256,6 +257,13 @@ verification:
   frontend_test: $FRONTEND_TEST_CMD
   frontend_lint: $FRONTEND_LINT
   tdd_enforced: $([ "$TDD_MODE" = true ] && echo true || echo false)
+
+script_registry:
+  gates:
+$REGISTRY_GATE_LINES
+  tools: []
+  generators: []
+  deprecated: []
 
 gates:
 $GATE_LINES
