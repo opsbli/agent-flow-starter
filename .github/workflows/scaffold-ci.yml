@@ -287,6 +287,39 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "_actionlint ran in non-blocking mode (continue-on-error: true). Review issues above._" >> $GITHUB_STEP_SUMMARY
 
+  performance-baseline:
+    name: Gate Performance Baseline
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check gate performance baselines
+        run: |
+          echo "## Gate Performance Baseline" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Duration (ms) | Threshold (ms) | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------------|----------------|--------|" >> $GITHUB_STEP_SUMMARY
+          threshold=5000
+          total=0
+          degraded=0
+          for gate in scaffold-health manifest-check template-check; do
+            start=$(date +%s%N)
+            bash "agent-flow/scripts/${gate}.sh" >/dev/null 2>&1 || true
+            end=$(date +%s%N)
+            duration=$(( (end - start) / 1000000 ))
+            total=$((total + 1))
+            if [ "$duration" -gt "$threshold" ]; then
+              status="⚠️ EXCEEDS"
+              degraded=$((degraded + 1))
+            else
+              status="✅ OK"
+            fi
+            echo "| ${gate}.sh | ${duration}ms | ${threshold}ms | ${status} |" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Threshold: ${threshold}ms per gate. Degraded: ${degraded}/${total}_" >> $GITHUB_STEP_SUMMARY
+
   static-analysis-ps1:
     name: Static Analysis (PSScriptAnalyzer)
     runs-on: windows-latest

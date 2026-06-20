@@ -1,12 +1,12 @@
 # State
 
-change_id: add-actionlint-gate
+change_id: 20260620-add-actionlint-gate
 flow: Standard
-current_stage: completed
-blocked: false
+current_stage: complete-or-conditional
+blocked: true
 blockers:
-  - none
-next_action: None — change is complete.
+  - blocked
+next_action: Artifacts are ready. Review manually, then close the change.
 owner: unassigned
 last_updated: 2026-06-20
 
@@ -14,6 +14,7 @@ last_updated: 2026-06-20
 
 | Time | Stage | Actor | Notes |
 |---|---|---|---|
+| '2026-06-20' | 'complete-or-conditional' | sync-state | Synced from next-step. |
 | 2026-06-20 | intake | AI | Created change scaffold |
 | 2026-06-20 | scanning | AI | Completed CODE_SCAN.md — identified 7 affected files |
 | 2026-06-20 | design | AI | DESIGN.md completed — simplified format for dev-toolkit |

@@ -1,20 +1,20 @@
 # State
 
-change_id: 20260620-enhance-content-check
+change_id: remaining-enhancements
 flow: Standard
-current_stage: complete-or-conditional
-blocked: true
+current_stage: intake
+blocked: false
 blockers:
-  - blocked
-next_action: Artifacts are ready. Review manually, then close the change.
+  - none
+next_action: Run next-step and follow the returned next_prompt.
 owner: unassigned
-last_updated: 2026-06-20
+last_updated: YYYY-MM-DD
 
 ## Stage History
 
 | Time | Stage | Actor | Notes |
 |---|---|---|---|
-| '2026-06-20' | 'complete-or-conditional' | sync-state | Synced from next-step. |
+| YYYY-MM-DD | intake | AI | Created change scaffold. |
 
 ## Notes
 
