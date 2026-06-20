@@ -49,6 +49,8 @@ proposed | accepted | implemented | rejected | deferred
 
 | IMP-0028 | remaining-enhancements | Generate CHECK_RESULT.json baselines, example freshness doc, ECC validation, performance baseline CI check | multiple | implemented | This change: remaining-enhancements | 2026-06-20 |
 
+| IMP-0029 | remaining-enhancements | Create pi templates, verify examples, final review | multiple | implemented | This session | 2026-06-20 |
+
 ## Rules
 
 - Add an item when `EVOLUTION.md` recommends changing `agent-flow/` templates, scripts, gates, knowledge, decisions, or flow rules.
