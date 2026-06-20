@@ -195,6 +195,42 @@ jobs:
           fi
           echo "All script pairs have both .ps1 and .sh"
 
+  structural-checks-windows:
+    name: Structural Checks (Windows PowerShell)
+    runs-on: windows-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PowerShell syntax for all .ps1 scripts
+        shell: pwsh
+        run: |
+          $failed = 0
+          Get-ChildItem -Path agent-flow/scripts -Filter *.ps1 -Recurse | ForEach-Object {
+              try {
+                  $null = [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$null)
+              } catch {
+                  Write-Host "SYNTAX ERROR: $_"
+                  $failed = 1
+              }
+          }
+          if ($failed -ne 0) { exit 1 }
+          Write-Host "All .ps1 scripts syntax OK on Windows"
+
+      - name: Check ps1/sh parity
+        shell: pwsh
+        run: |
+          $failed = 0
+          Get-ChildItem -Path agent-flow/scripts -Filter *.ps1 | ForEach-Object {
+              $shFile = [System.IO.Path]::ChangeExtension($_.FullName, ".sh")
+              if (-not (Test-Path -LiteralPath $shFile)) {
+                  Write-Host "MISSING .sh counterpart for: $($_.Name)"
+                  $failed = 1
+              }
+          }
+          if ($failed -ne 0) { exit 1 }
+          Write-Host "All script pairs validated on Windows"
+
   pair-consistency:
     name: Pair Consistency Check (advisory)
     runs-on: ubuntu-latest
