@@ -35,6 +35,9 @@ write_files:
   - agent-flow/rules/gate-tiers.md
   - agent-flow/scripts/scaffold-health.sh
   - agent-flow/scripts/scaffold-health.ps1
+  - agent-flow/flows/light.md
+  - agent-flow/flows/standard.md
+  - agent-flow/flows/heavy.md
 
 ## 未决问题
 

@@ -2,6 +2,8 @@
 
 适合单模块、低到中风险功能。
 
+> 门禁分级参考：`agent-flow/rules/gate-tiers.md` — Standard 流程需要所有 Light gates + design-check + alignment-check + task-check + evolution-check + coverage-check 等。
+
 Standard 流程分为两段：
 
 - **Standard-Light**：单模块 CRUD，无 schema 变更，无公共 API 破坏。可跳过 Design Alignment。

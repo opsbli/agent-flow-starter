@@ -2,6 +2,8 @@
 
 适合老项目新模块、跨模块、高风险需求。
 
+> 门禁分级参考：`agent-flow/rules/gate-tiers.md` — Heavy 流程需要所有 Standard gates + plan-check + code-drift-check + blocked-check + closure-check 等。
+
 ## 阶段 0：Intake
 
 > **紧急出口**：如果这是 P0/P1 生产事故，考虑走 `agent-flow/flows/emergency.md`。

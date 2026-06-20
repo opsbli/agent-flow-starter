@@ -4,6 +4,8 @@
 
 ## 步骤
 
+> 门禁分级参考：`agent-flow/rules/gate-tiers.md` — Light 流程仅要求 `scan-check` (warn) + `manifest-check` (always) + `ac-check` (when applicable)。
+
 1. 执行 `grill-with-docs` 对本次改动进行快速追问和术语对齐。
    - 如果问题可以通过读代码回答，先读代码，不要问用户。
    - 每次只问一个关键问题，给出 AI 推荐答案。
