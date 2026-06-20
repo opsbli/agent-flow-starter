@@ -1,54 +1,74 @@
 ﻿# Verification Knowledge
 
-## Backend
+> This project is a dev-toolkit (shell/powershell scripts), not a traditional backend/frontend app.
+> "Testing" here means scaffold self-checks and gate validation.
 
-~~~text
-TODO_BACKEND_COMPILE_COMMAND
-TODO_BACKEND_TEST_COMMAND
-~~~
+## Scaffold Integrity
 
-## Frontend
-
-~~~text
-TODO_FRONTEND_TYPECHECK_COMMAND
-TODO_FRONTEND_TEST_COMMAND
-TODO_FRONTEND_LINT_COMMAND
-~~~
-
-## Gates
-
-Windows:
-
-~~~powershell
-agent-flow/scripts/scaffold-health.ps1
-agent-flow/scripts/manifest-check.ps1
-agent-flow/scripts/scan-check.ps1 -ChangeDir agent-flow/changes/<change-id> -ProjectRoot . -Strict
-agent-flow/scripts/design-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/alignment-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/task-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/plan-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/emergency-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/evolution-check.ps1 -ChangeDir agent-flow/changes/<change-id>
-agent-flow/scripts/check-change.ps1 -ChangeDir agent-flow/changes/<change-id> -OutputPath agent-flow/changes/<change-id>/CHECK_RESULT.json
-agent-flow/scripts/run-verify.ps1 -All
-~~~
-
-Linux/macOS:
-
-~~~bash
+```bash
+# Linux/macOS
 bash agent-flow/scripts/scaffold-health.sh
 bash agent-flow/scripts/manifest-check.sh
-bash agent-flow/scripts/scan-check.sh --change-dir agent-flow/changes/<change-id> --project-root . --strict
+bash agent-flow/scripts/template-check.sh
+```
+
+```powershell
+# Windows
+agent-flow/scripts/scaffold-health.ps1
+agent-flow/scripts/manifest-check.ps1
+agent-flow/scripts/template-check.ps1
+```
+
+## Change Workflow Gates
+
+```bash
+# Per-change gate bundle (run before declaring done)
+bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id>
+
+# Individual gates (run as needed)
 bash agent-flow/scripts/design-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/alignment-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/task-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/plan-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/emergency-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/ac-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/ac-traceability-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/coverage-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/code-drift-check.sh --change-dir agent-flow/changes/<change-id>
+bash agent-flow/scripts/closure-check.sh --change-dir agent-flow/changes/<change-id>
 bash agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>
-bash agent-flow/scripts/check-change.sh --change-dir agent-flow/changes/<change-id> --output agent-flow/changes/<change-id>/CHECK_RESULT.json
-bash agent-flow/scripts/run-verify.sh --all
-~~~
+bash agent-flow/scripts/task-boundary-check.sh --change-dir agent-flow/changes/<change-id>
+```
 
-## Evidence Requirement
+## Cross-Platform Consistency
 
-VERIFY.md must record commands, results, failure summaries, skipped checks, AC evidence, and Machine Gate Summary rows with Result, Command, Exit Code, When, and Evidence.
+```bash
+# Check ps1/sh pair line-count divergence
+bash agent-flow/scripts/pair-consistency-check.sh
+# With custom threshold (default 30%)
+bash agent-flow/scripts/pair-consistency-check.sh --threshold 20
+
+# Check script registry sync
+bash agent-flow/scripts/registry-sync.sh
+```
+
+## CI Simulation
+
+```bash
+# Run the full CI pipeline locally
+bash scripts/test-starter.sh
+bash scripts/test-gate-fixtures.sh
+
+# Run gate smoke tests
+bash agent-flow/test/test-scripts/test-gate-smoke.sh
+bash agent-flow/test/test-scripts/test-next-step.sh
+```
+
+## Common Verification Patterns
+
+| When | Run |
+|------|-----|
+| After editing any script | `scaffold-health.sh + manifest-check.sh` |
+| After adding a new script | `manifest-check.sh + registry-sync.sh` |
+| After a change milestone | `check-change.sh --change-dir <path>` |
+| Before claiming change complete | `closure-check.sh + task-boundary-check.sh` |
+| After install/upgrade | `scaffold-health.sh + init-project.sh` |
+| Monthly health check | `pair-consistency-check.sh + evolution-stats.sh --update-index` |

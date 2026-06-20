@@ -4,59 +4,140 @@
 set -euo pipefail
 change_dir=""
 project_root="."
+
 while [ "$#" -gt 0 ]; do
-  case "$1" in --change-dir|-ChangeDir) change_dir="$2"; shift 2 ;; --project-root|-ProjectRoot) project_root="$2"; shift 2 ;; *) echo "Unknown: $1"; exit 2 ;; esac
+  case "$1" in
+    --change-dir|-ChangeDir) change_dir="$2"; shift 2 ;;
+    --project-root|-ProjectRoot) project_root="$2"; shift 2 ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: generate-verify.sh --change-dir <change-dir> [--project-root <path>]
+
+Auto-generates VERIFY.md by collecting ACs from TASKS.md and running
+common verification commands (TypeScript check, lint, tests, security audit,
+secrets scan).
+EOF
+      exit 0 ;;
+    *) echo "Unknown: $1" >&2; exit 2 ;;
+  esac
 done
-[ -z "$change_dir" ] && { echo "Error: --change-dir required"; exit 1; }
+
+[ -z "$change_dir" ] && { echo "Error: --change-dir required" >&2; exit 1; }
 verify_out="$change_dir/VERIFY.md"
-[ -f "$verify_out" ] && { echo "VERIFY.md already exists"; exit 0; }
+[ -f "$verify_out" ] && { echo "VERIFY.md already exists. Edit manually or delete to regenerate."; exit 0; }
 
-# Collect ACs from TASKS.md
-acs="AC-01 AC-02 AC-03"
-[ -f "$change_dir/TASKS.md" ] && acs=$(grep -o 'AC-[0-9][0-9]*' "$change_dir/TASKS.md" 2>/dev/null | sort -u | tr '\n' ' ')
-[ -z "$acs" ] && acs="AC-01 AC-02 AC-03"
+# --- Collect ACs from TASKS.md ---
+declare -A ac_map=()
+acs=""
+if [ -f "$change_dir/TASKS.md" ]; then
+  acs="$(grep -oE 'AC-[0-9][0-9]' "$change_dir/TASKS.md" 2>/dev/null | sort -u | tr '\n' ' ')"
+  while IFS= read -r ac_id; do
+    [ -n "$ac_id" ] || continue
+    desc="$(grep "| $ac_id " "$change_dir/TASKS.md" 2>/dev/null | head -1 | awk -F'|' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$3); print $3}' || true)"
+    [ -z "$desc" ] && desc="$ac_id"
+    ac_map["$ac_id"]="$desc"
+  done <<< "$(echo "$acs" | tr ' ' '\n')"
+fi
+[ -z "$acs" ] && { acs="AC-01 AC-02 AC-03"; echo "Warning: No ACs found in TASKS.md. Using defaults." >&2; }
 
-# Run checks
-ts_result="SKIP (no tsconfig.json)"
-[ -f "$project_root/tsconfig.json" ] && { npx tsc --noEmit 2>/dev/null && ts_result="PASS" || ts_result="FAIL"; }
-test_result="SKIP"
-[ -f "$project_root/package.json" ] && { npm test 2>/dev/null && test_result="PASS" || test_result="FAIL or no tests"; }
-sec_result="SKIP"
-[ -f "$project_root/package.json" ] && { npm audit --audit-level=high 2>/dev/null && sec_result="PASS" || sec_result="WARN (vulnerabilities)"; }
+# --- Run common verification commands ---
+echo "Running verification commands..." >&2
+declare -A results=()
 
-cat > "$verify_out" << VERIFYEOF
-# VERIFY
+has_node=false
+[ -f "$project_root/package.json" ] && has_node=true
+has_tsc=false
+[ -f "$project_root/tsconfig.json" ] && has_tsc=true
 
-## AC Evidence
+# TypeScript check
+if [ "$has_tsc" = true ]; then
+  echo "  Running TypeScript check..." >&2
+  if npx tsc --noEmit >/dev/null 2>&1; then
+    results["TypeScript Check"]="PASS"
+  else
+    results["TypeScript Check"]="FAIL"
+  fi
+fi
 
-| AC | Requirement | Evidence Type | Evidence Location | Result | Residual Risk |
-|----|-------------|---------------|-------------------|--------|---------------|
-$(for ac in $acs; do
-  echo "| $ac | (from TASKS.md) | (manual) | (file:line) | (PASS/FAIL) | (none) |"
-done)
+# Lint check
+if [ "$has_node" = true ]; then
+  lint_result="SKIP (no linter configured)"
+  if npx eslint . >/dev/null 2>&1; then
+    lint_result="PASS"
+  elif command -v eslint >/dev/null 2>&1; then
+    lint_result="WARN (lint issues found)"
+  elif npx biome check . >/dev/null 2>&1; then
+    lint_result="PASS"
+  fi
+  results["Lint Check"]="$lint_result"
+fi
 
-## Verification Results
+# Test check
+if [ "$has_node" = true ]; then
+  if npm test >/dev/null 2>&1; then
+    results["Tests"]="PASS"
+  else
+    results["Tests"]="FAIL or no tests configured"
+  fi
+fi
 
-| Check | Status |
-|-------|--------|
-| TypeScript Check | $ts_result |
-| Tests | $test_result |
-| Security Audit | $sec_result |
-| Code Review | (pending — run /ecc-review) |
-| Security Scan | (pending — run /ecc-security) |
+# Security audit
+if [ "$has_node" = true ]; then
+  if npm audit --audit-level=high >/dev/null 2>&1; then
+    results["Security Audit"]="PASS"
+  else
+    results["Security Audit"]="WARN (vulnerabilities found)"
+  fi
+fi
 
-## Manual Verification
+# Secrets scan
+secret_result="PASS (no secrets found)"
+if command -v grep >/dev/null 2>&1; then
+  secrets_found="$(grep -rE 'sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36,}' "$project_root" --include="*.{ts,js,py,go,rs}" 2>/dev/null || true)"
+  [ -n "$secrets_found" ] && secret_result="FAIL (secrets detected!)"
+fi
+results["Secrets Check"]="$secret_result"
 
-- [ ] Code review completed (/ecc-review)
-- [ ] Security review completed (/ecc-security)
-- [ ] All ACs pass with evidence
-- [ ] No undeclared files modified
-- [ ] Edge cases tested
-- [ ] Error handling verified
+# --- Generate VERIFY.md ---
+{
+  echo "# VERIFY"
+  echo ""
+  echo "## AC Evidence"
+  echo ""
+  echo "| AC | Requirement | Evidence Type | Evidence Location | Result | Residual Risk |"
+  echo "|----|-------------|---------------|-------------------|--------|---------------|"
+  for ac in $acs; do
+    desc="${ac_map[$ac]:-$ac}"
+    echo "| $ac | $desc | (manual) | (file:line) | (PASS/FAIL) | (none) |"
+  done
+  echo ""
+  echo "## Verification Results"
+  echo ""
+  echo "| Check | Status |"
+  echo "|-------|--------|"
+  for k in "${!results[@]}"; do
+    echo "| $k | ${results[$k]} |"
+  done
+  echo ""
+  echo "## Manual Verification"
+  echo ""
+  echo "- [ ] Code review completed"
+  echo "- [ ] Security review completed"
+  echo "- [ ] All ACs pass with evidence"
+  echo "- [ ] No undeclared files modified"
+  echo "- [ ] Edge cases tested"
+  echo "- [ ] Error handling verified"
+  echo ""
+  echo "## Definition of Done"
+  echo ""
+  echo "All ACs have evidence of passing. No CRITICAL or HIGH issues open."
+  echo ""
+  echo "---"
+  echo "*Generated by generate-verify.sh on $(date '+%Y-%m-%d %H:%M')*"
+  echo "*Edit to add manual verification results.*"
+} > "$verify_out"
 
----
-*Generated by generate-verify.sh on $(date '+%Y-%m-%d %H:%M')*
-*Edit to add manual verification results.*
-VERIFYEOF
 echo "VERIFY.md generated: $verify_out"
-echo "Next: run /ecc-review and /ecc-security, then edit evidence cells"
+echo "  ACs: $(echo "$acs" | wc -w)"
+echo "  Auto-checks: ${#results[@]}"
+echo "  Next: run manual verifications and edit evidence cells"

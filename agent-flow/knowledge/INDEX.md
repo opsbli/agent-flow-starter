@@ -39,6 +39,11 @@ bash agent-flow/scripts/knowledge-search.sh --query "<your-query>"
 | 2026-06-15 | Glossary expansion | `glossary.md` | Added full agent-flow core term definitions, verification terms, and change lifecycle terms |
 | 2026-06-15 | Baseline establishment | `known-good-baselines.md` | Added scaffold health baseline table, conventions, and update triggers |
 | 2026-06-15 | Index restructure | `INDEX.md` | Added Latest Discoveries table, process-stats section placeholder |
+| 2026-06-20 | Standard Change validation | `pitfalls.md` | Added 6 pitfalls discovered during add-shell-lint-ci: alignment table columns, task status values, untracked files, grep -c arithmetic, Recommendation column offset |
+| 2026-06-20 | Module & reuse map population | `module-map.md`, `reuse-map.md` | Replaced TODO placeholders with actual module structure (10 modules) and 13 reusable capabilities |
+| 2026-06-20 | Verification command suite | `verification.md` | Replaced TODO commands with actual scaffold checks, gate commands, CI simulation, and verification patterns |
+| 2026-06-20 | Glossary expansion | `glossary.md` | Added 6 new terms: Dev-Toolkit, Continue-on-Error, Pair Consistency, Progressive Introduction, Task Boundary |
+| 2026-06-20 | Pair consistency tool | `reuse-map.md` | Registered pair-consistency-check as reusable capability |
 | _(Add new entries here)_ | | | |
 
 
@@ -48,11 +53,11 @@ bash agent-flow/scripts/knowledge-search.sh --query "<your-query>"
 
 | Metric | Value | As Of |
 |--------|-------|-------|
-| Total changes completed | 1 | 2026-06-15 |
-| Heavy changes | 0 | 2026-06-15 |
-| Standard changes | 0 | 2026-06-15 |
-| Light changes | 0 | 2026-06-15 |
-| Emergency changes | 1 | 2026-06-15 |
+| Total changes completed | 3 | 2026-06-20 |
+| Heavy changes | 0 | 2026-06-20 |
+| Standard changes | 1 | 2026-06-20 |
+| Light changes | 1 | 2026-06-20 |
+| Emergency changes | 1 | 2026-06-20 |
 | Active / blocked changes | 0 / 0 | 2026-06-15 |
 | AC pass rate | 100% | 2026-06-15 |
 | Knowledge files | 9 | 2026-06-15 |
@@ -65,7 +70,7 @@ bash agent-flow/scripts/knowledge-search.sh --query "<your-query>"
 
 | Quarter | Changes | Heavy | Standard | Light | AC Pass Rate |
 |---------|---------|-------|----------|-------|--------------|
-| 2026-Qq | 1 | 0 | 0 | 0 | 100% |## Maintenance Rules
+| 2026-Q2 | 2 | 0 | 1 | 0 | 100% |## Maintenance Rules
 
 - Add reusable facts to the narrowest file first, then update this index only when a new knowledge file is added or its purpose changes.
 - Do not store one-off change history here; put change-specific evidence in `agent-flow/changes/<change-id>/`.

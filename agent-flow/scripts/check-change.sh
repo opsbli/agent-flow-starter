@@ -168,6 +168,8 @@ write_summary() {
 
 run_gate sync-state bash "$script_dir/sync-state.sh" --change-dir "$change_dir"
 run_gate state-check bash "$script_dir/state-check.sh" --change-dir "$change_dir"
+run_gate actionlint-check bash "$script_dir/actionlint-check.sh" --project-root "$project_root"
+run_gate frontend-verify-check bash "$script_dir/frontend-verify-check.sh" "$change_dir"
 run_closure_required_artifacts
 
 if has_file CODE_SCAN.md; then

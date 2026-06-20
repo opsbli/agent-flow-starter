@@ -116,6 +116,15 @@ if [ "$verdict" = "aligned" ]; then
     issues+=("Open Questions must be 'none' before Alignment Verdict is aligned.")
   fi
 
+  # Detect extra columns in the alignment table (common pitfall)
+  header="$(printf '%s\n' "$section" | grep -E '^\|.*#.*\|.*Question.*\|' | head -n 1 || true)"
+  if [ -n "$header" ]; then
+    col_count=$(printf '%s\n' "$header" | awk -F'|' '{print NF-2}')
+    if [ "$col_count" -gt 4 ] 2>/dev/null; then
+      issues+=("Design Alignment table has $col_count data columns (expected exactly 4: | # | Question | Confirmation | Evidence |). Extra column causes field-offset errors — remove any additional column like 'Recommendation'.")
+    fi
+  fi
+
   user_confirmed_count=0
   while IFS= read -r question; do
     question="$(printf '%s' "$question" | xargs)"

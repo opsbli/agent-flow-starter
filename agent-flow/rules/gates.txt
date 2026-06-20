@@ -2,6 +2,8 @@
 # Internal shared libraries such as _common.ps1/.sh are checked by scaffold-health, not listed here.
 # NOTE: verify-backend.* and verify-module.* are deprecated wrappers around run-verify.*.
 # They remain in agent-flow/scripts/ for backward compatibility but are not listed here.
+agent-flow/scripts/actionlint-check.ps1
+agent-flow/scripts/actionlint-check.sh
 agent-flow/scripts/ac-check.ps1
 agent-flow/scripts/ac-check.sh
 agent-flow/scripts/ac-traceability-check.ps1
@@ -90,6 +92,8 @@ agent-flow/scripts/new-change.ps1
 agent-flow/scripts/new-change.sh
 agent-flow/scripts/next-step.ps1
 agent-flow/scripts/next-step.sh
+agent-flow/scripts/pair-consistency-check.ps1
+agent-flow/scripts/pair-consistency-check.sh
 agent-flow/scripts/pattern-discovery.ps1
 agent-flow/scripts/pattern-discovery.sh
 agent-flow/scripts/plan-check.ps1
@@ -116,6 +120,8 @@ agent-flow/scripts/template-check.ps1
 agent-flow/scripts/template-check.sh
 agent-flow/scripts/flow-detect.ps1
 agent-flow/scripts/flow-detect.sh
+agent-flow/scripts/frontend-verify-check.ps1
+agent-flow/scripts/frontend-verify-check.sh
 agent-flow/scripts/knowledge-suggest.ps1
 agent-flow/scripts/knowledge-suggest.sh
 agent-flow/scripts/manifest-drift-check.ps1

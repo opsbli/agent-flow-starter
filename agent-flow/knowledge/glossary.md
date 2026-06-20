@@ -22,6 +22,11 @@
 | **Drift** | Difference between DESIGN.md declarations and actual live code. Detected by code-drift-check. | source-of-truth.md |
 | **ADR (Architecture Decision Record)** | Document recording a significant, irreversible architecture decision with alternatives considered. | memory.md |
 | **EVOLUTION.md** | Post-change reflection document answering what the scaffold itself should learn from the change. | evolution.md |
+| **Dev-Toolkit** | Project kind in manifest.yaml for non-application projects (frameworks, starters, CLIs). Unlike "initialized" which signals incomplete setup. | manifest.yaml |
+| **Continue-on-Error** | GitHub Actions CI directive allowing a job to fail without blocking the pipeline. Used for progressive introduction of strict checks. | scaffold-ci.yml |
+| **Pair Consistency** | Measure of how well .ps1 and .sh script pairs match in structure and functionality. High divergence indicates maintenance debt. | pair-consistency-check |
+| **Progressive Introduction** | Strategy of adding a new quality gate in non-blocking mode first, gathering baseline data, then gradually tightening. | add-shell-lint-ci |
+| **Task Boundary** | Principle that every write operation must be declared in TASKS.md write_files before implementation. Enforced by task-boundary-check. | TASKS.md |
 
 ## Verification Terms
 

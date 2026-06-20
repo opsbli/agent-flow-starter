@@ -33,6 +33,16 @@ proposed | accepted | implemented | rejected | deferred
 | IMP-0019 | capability-score-report-2026-06-16 | Fix GO.md vs Light flow EVOLUTION.md conflict | docs | implemented | Added Light exception note to GO.md | 2026-06-16 |
 | IMP-0020 | capability-score-report-2026-06-16 | Add Machine Gate Summary recommendation for Standard | docs | implemented | Added note to standard.md completion line | 2026-06-16 |
 
+| IMP-0021 | fix-design-alignment-table | Fix DESIGN.md Alignment table column headers to match alignment-check expectation | templates | implemented | This change: fix-design-alignment-table | 2026-06-20 |
+
+| IMP-0022 | context-aware-design-decisions | Design-decision context awareness: fix project-root detection, add non-backend guidance, skip State Machine Impact for non-backend | scripts/templates | implemented | This change: context-aware-design-decisions | 2026-06-20 |
+
+| IMP-0023 | add-actionlint-gate | Add actionlint gate for CI YAML workflow validation | scripts | implemented | This change: add-actionlint-gate | 2026-06-20 |
+
+| IMP-0024 | fix-gate-fatigue-check | Fix gate-fatigue-check.sh crash from unbound associative array variable | scripts | implemented | This change: fix-gate-fatigue-check | 2026-06-20 |
+
+| IMP-0025 | cleanup-reasonix-and-evolution | Clean up .reasonix auto-generated files, fill missing EVOLUTION.md, integrate frontend-verify-check into check-change | cleanup/scripts | implemented | This change: cleanup-reasonix-and-evolution | 2026-06-20 |
+
 ## Rules
 
 - Add an item when `EVOLUTION.md` recommends changing `agent-flow/` templates, scripts, gates, knowledge, decisions, or flow rules.

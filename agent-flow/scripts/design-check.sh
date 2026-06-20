@@ -68,6 +68,33 @@ while IFS= read -r key; do
   key="$(printf '%s' "$key" | xargs)"
   [ -n "$key" ] || continue
 
+  # Context-aware: skip backend-specific keys for non-backend projects
+  # Try multiple levels to find project root (handles agent-flow-starter self-check)
+  project_root=""
+  for levels in "../.." "../../.."; do
+    candidate="$(cd "$change_dir/$levels" 2>/dev/null && pwd)" || continue
+    if [ -f "$candidate/agent-flow/manifest.yaml" ]; then
+      project_root="$candidate"
+      break
+    fi
+  done
+  manifest=""
+  is_non_backend=false
+  if [ -n "$project_root" ]; then
+    manifest="$project_root/agent-flow/manifest.yaml"
+    if [ -f "$manifest" ]; then
+      project_kind=$(grep -E '^\s+kind:\s*' "$manifest" 2>/dev/null | head -1 | sed 's/.*kind:\s*//' | xargs || true)
+      backend_fw=$(grep -E '^\s+framework:\s*' "$manifest" 2>/dev/null | head -1 | sed 's/.*framework:\s*//' | xargs || true)
+      if [ "$project_kind" = "dev-toolkit" ] || { [ "$backend_fw" = "none" ] || [ "$backend_fw" = "n/a" ]; }; then
+        is_non_backend=true
+      fi
+    fi
+  fi
+  backend_keys="REST Path|HTTP Method|Permission Code|SaCheckPermission|Anonymous Interface|Login/Token|Tenant/Data Permission|State Machine Impact"
+  if $is_non_backend && printf '%s' "$key" | grep -Eq "^($backend_keys)$"; then
+    continue
+  fi
+
   line="$(grep -F "| $key |" "$design" | head -n 1 || true)"
   if [ -z "$line" ]; then
     issues+=("Missing design decision row: $key")
@@ -93,7 +120,9 @@ impact="$(awk '
   }
 ' "$design")"
 
-if [ -z "$impact" ]; then
+if $is_non_backend; then
+  : # Skip State Machine Impact check for non-backend projects
+elif [ -z "$impact" ]; then
   issues+=("State Machine Impact must be explicit: yes, no, or not-applicable.")
 elif [ "$impact" = "yes" ]; then
   for section in "Status Vocabulary" "Status Mapping" "Legacy Compatibility"; do

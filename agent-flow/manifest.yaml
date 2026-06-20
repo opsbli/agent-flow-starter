@@ -1,11 +1,16 @@
 project:
   name: agent-flow-starter
-  kind: initialized
+  kind: dev-toolkit
+  description: >
+    A reusable AI-development workflow framework (starter).
+    Ships as a scaffold that installs into target application projects.
+    Not a traditional backend/frontend app — it is a process + script
+    toolkit that enforces code-first, evidence-driven development.
   backend:
-    framework: unknown
-    language: unknown
-    build: unknown
-    root_module: agent-flow-starter
+    framework: n/a (shell/powershell scripts)
+    language: shell, powershell
+    build: none (CI-only, see .github/workflows/scaffold-ci.yml)
+    root_module: agent-flow
   frontend:
     framework: none
     language: none
@@ -13,8 +18,6 @@ project:
     verify_required: false
   database:
     engine: none
-    # sql_paths: (none for this project)
-      # sql_paths: none
   cache:
     engine: none
   auth:
@@ -26,9 +29,13 @@ code_map:
   common:
     - agent-flow/scripts
   business_modules:
-    - agent-flow
+    - agent-flow          # core workflow engine (flows/, core/, rules/, templates/)
+  quality_modules:
+    - agent-flow/scripts  # 64 ps1 + 64 sh validation gates, tools, generators
+    - agent-flow/test     # scaffold tests (bats, ps1, fixtures)
+    - .github/workflows   # CI: scaffold-health, manifest-check, template-check, smoke tests
   build_files:
-    - scripts
+    - scripts             # installer / setup-new-pc wrappers
   tests:
     - agent-flow/test
     - tests
@@ -65,7 +72,7 @@ risk_rules:
     - payment_bypass
 
 verification:
-  # Starter repository has no application runtime to compile or test.
+  # This is a dev-toolkit repository. "Tests" here = scaffold self-tests.
   backend_compile: none
   backend_test: none
   module_compile: none
@@ -75,10 +82,22 @@ verification:
   frontend_lint: none
   integration_test: none
   api_test: none
+  toolkit_selfcheck:
+    scaffold_health: agent-flow/scripts/scaffold-health.sh
+    manifest_check: agent-flow/scripts/manifest-check.sh
+    template_check: agent-flow/scripts/template-check.sh
+    gate_smoke_test: agent-flow/test/test-scripts/test-gate-smoke.sh
+    next_step_test: agent-flow/test/test-scripts/test-next-step.sh
+    new_change_test: agent-flow/test/test-scripts/test-new-change.sh
+    check_change_test: agent-flow/test/test-scripts/test-check-change.sh
 
 script_registry:
   gates:
+    - agent-flow/scripts/actionlint-check.ps1
+    - agent-flow/scripts/actionlint-check.sh
     - agent-flow/scripts/ac-check.ps1
+    - agent-flow/scripts/frontend-verify-check.ps1
+    - agent-flow/scripts/frontend-verify-check.sh
     - agent-flow/scripts/ac-check.sh
     - agent-flow/scripts/ac-traceability-check.ps1
     - agent-flow/scripts/ac-traceability-check.sh
@@ -128,6 +147,8 @@ script_registry:
     - agent-flow/scripts/manifest-check.sh
     - agent-flow/scripts/manifest-drift-check.ps1
     - agent-flow/scripts/manifest-drift-check.sh
+    - agent-flow/scripts/pair-consistency-check.ps1
+    - agent-flow/scripts/pair-consistency-check.sh
     - agent-flow/scripts/plan-check.ps1
     - agent-flow/scripts/plan-check.sh
     - agent-flow/scripts/run-verify.ps1
@@ -201,8 +222,12 @@ script_registry:
   deprecated: []
 
 gates:
+  - agent-flow/scripts/actionlint-check.ps1
+  - agent-flow/scripts/actionlint-check.sh
   - agent-flow/scripts/ac-check.ps1
   - agent-flow/scripts/ac-check.sh
+  - agent-flow/scripts/frontend-verify-check.ps1
+  - agent-flow/scripts/frontend-verify-check.sh
   - agent-flow/scripts/ac-traceability-check.ps1
   - agent-flow/scripts/ac-traceability-check.sh
   - agent-flow/scripts/alignment-check.ps1
@@ -251,6 +276,8 @@ gates:
   - agent-flow/scripts/manifest-check.sh
   - agent-flow/scripts/manifest-drift-check.ps1
   - agent-flow/scripts/manifest-drift-check.sh
+  - agent-flow/scripts/pair-consistency-check.ps1
+  - agent-flow/scripts/pair-consistency-check.sh
   - agent-flow/scripts/plan-check.ps1
   - agent-flow/scripts/plan-check.sh
   - agent-flow/scripts/run-verify.ps1

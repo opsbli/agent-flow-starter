@@ -98,6 +98,18 @@ if ($verdict -eq "aligned") {
         $issues += "Open Questions must be 'none' before Alignment Verdict is aligned."
     }
     $userConfirmedCount = 0
+
+    # Detect extra columns in the alignment table (common pitfall)
+    $headerLine = ($section -split "\r?\n") |
+        Where-Object { $_ -match '^\|' -and $_ -match '#.*Question.*Confirmation' } |
+        Select-Object -First 1
+    if ($headerLine) {
+        $headerCells = @($headerLine.Trim().Trim("|").Split("|") | ForEach-Object { $_.Trim() })
+        if ($headerCells.Count -gt 4) {
+            $issues += "Design Alignment table has $($headerCells.Count) data columns (expected exactly 4: | # | Question | Confirmation | Evidence |). Extra column causes field-offset errors — remove any additional column like 'Recommendation'."
+        }
+    }
+
     foreach ($question in Get-RuleList -Name "design-alignment.questions") {
         $line = ($section -split "\r?\n") |
             Where-Object { $_ -match "^\s*\|" -and $_ -match "\|\s*$([regex]::Escape($question))\s*\|" } |

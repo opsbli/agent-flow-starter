@@ -114,4 +114,29 @@ if ($missing.Count -gt 0) {
 
 Write-Host "agent-flow scaffold health check passed."
 
+# --- Manifest Completeness Advisory (non-blocking) ---
+$manifest = Join-Path $projectRoot "agent-flow/manifest.yaml"
+if (Test-Path -LiteralPath $manifest) {
+  $content = Get-Content -Raw -LiteralPath $manifest
+  $unknownCount = ([regex]::Matches($content, ':\s*(unknown|TODO|TBD)\s*$')).Count
+  $noneCount = ([regex]::Matches($content, ':\s*none\s*$')).Count
+  $initializedCount = ([regex]::Matches($content, 'kind:\s*initialized')).Count
+  $totalFields = ([regex]::Matches($content, '(?m)^\s+[a-z_]+:')).Count
+
+  if ($initializedCount -gt 0) {
+    Write-Host "!  Manifest completeness: project.kind is still 'initialized'."
+    Write-Host "   Run 'agent-flow/scripts/init-project.ps1' to auto-detect your project type."
+  }
+
+  if ($unknownCount -gt 0 -or $noneCount -gt 5) {
+    $pct = 0
+    if ($totalFields -gt 0) {
+      $pct = [Math]::Round(($unknownCount + $noneCount) * 100.0 / $totalFields, 0)
+    }
+    Write-Host "!  Manifest completeness: $unknownCount unknown/TODO + $noneCount none fields ($pct% of $totalFields fields)"
+    Write-Host "   Fill in backend/frontend/database sections for accurate risk routing."
+    Write-Host "   Unknown fields cause design-check and code-drift-check to skip context-aware validation."
+  }
+}
+
 

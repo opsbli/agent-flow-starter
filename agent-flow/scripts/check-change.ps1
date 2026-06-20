@@ -185,6 +185,8 @@ function Write-Summary {
 
 Invoke-Gate -GateName "sync-state" -GatePath (Join-Path $scriptDir "sync-state.ps1") -GateArgs @($ChangeDir)
 Invoke-Gate -GateName "state-check" -GatePath (Join-Path $scriptDir "state-check.ps1") -GateArgs @($ChangeDir)
+Invoke-Gate -GateName "actionlint-check" -GatePath (Join-Path $scriptDir "actionlint-check.ps1") -GateArgs @($ProjectRoot)
+Invoke-Gate -GateName "frontend-verify-check" -GatePath (Join-Path $scriptDir "frontend-verify-check.ps1") -GateArgs @($ChangeDir)
 Invoke-ClosureRequiredArtifacts
 
 if (Test-File "CODE_SCAN.md") {

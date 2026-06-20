@@ -119,13 +119,13 @@ Alignment Source: mixed
 
 Open Questions: none
 
-| Question | AI Recommended Answer | Confirmation | Final Decision |
+| # | Question | Confirmation | Evidence |
 |---|---|---|---|
-| Intent Risk | test | user-confirmed | test |
-| Existing Code Fit | test | user-confirmed | test |
-| Unnecessary Abstraction | test | user-confirmed | test |
-| Protected Areas | test | user-confirmed | test |
-| Boundary And Failure Modes | test | user-confirmed | test |
+| 1 | Intent Risk | test | user-confirmed | test |
+| 2 | Existing Code Fit | test | user-confirmed | test |
+| 3 | Unnecessary Abstraction | test | user-confirmed | test |
+| 4 | Protected Areas | test | user-confirmed | test |
+| 5 | Boundary And Failure Modes | test | user-confirmed | test |
 
 Alignment Verdict: aligned
 "@ | Set-Content -Path "$changeDir/DESIGN.md" -Encoding utf8

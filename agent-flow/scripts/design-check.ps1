@@ -71,7 +71,36 @@ if (-not $statusMatch.Success) {
 }
 
 $lines = @($text -split "\r?\n")
+
+# Context-aware: skip backend-specific keys for non-backend projects
+# Try multiple levels to find project root (handles agent-flow-starter self-check)
+$projectRoot = $null
+$manifestPath = $null
+foreach ($levels in @("..\..", "..\..\..")) {
+    $candidate = try { (Resolve-Path (Join-Path $ChangeDir $levels) -ErrorAction Stop).Path } catch { $null }
+    if ($candidate -and (Test-Path (Join-Path $candidate "agent-flow/manifest.yaml"))) {
+        $projectRoot = $candidate
+        $manifestPath = Join-Path $projectRoot "agent-flow/manifest.yaml"
+        break
+    }
+}
+$backendKeys = @("REST Path", "HTTP Method", "Permission Code", "SaCheckPermission", "Anonymous Interface", "Login/Token", "Tenant/Data Permission", "State Machine Impact")
+$skipBackendKeys = $false
+if (Test-Path -LiteralPath $manifestPath) {
+    try {
+        $manifestText = Get-Content -Raw -Encoding utf8 -LiteralPath $manifestPath
+        $kindMatch = [regex]::Match($manifestText, '(?m)^\s+kind:\s*(.+)$')
+        $fwMatch = [regex]::Match($manifestText, '(?m)^\s+framework:\s*(.+)$')
+        $kind = if ($kindMatch.Success) { $kindMatch.Groups[1].Value.Trim() } else { "" }
+        $backendFw = if ($fwMatch.Success) { $fwMatch.Groups[1].Value.Trim() } else { "" }
+        if ($kind -eq "dev-toolkit" -or $backendFw -in @("none", "n/a")) {
+            $skipBackendKeys = $true
+        }
+    } catch { }
+}
+
 foreach ($key in Get-RuleList -Name "design-decision.keys") {
+    if ($skipBackendKeys -and $key -in $backendKeys) { continue }
     $row = Get-MarkdownRow -Lines $lines -Key $key
     if ([string]::IsNullOrWhiteSpace($row)) {
         $issues += "Missing design decision row: $key"
@@ -94,13 +123,15 @@ foreach ($key in Get-RuleList -Name "design-decision.keys") {
     }
 }
 
-$impact = [regex]::Match($text, "(?im)^\s*State Machine Impact:\s*(yes|no|not-applicable)\s*$")
-if (-not $impact.Success) {
-    $issues += "State Machine Impact must be explicit: yes, no, or not-applicable."
-} elseif ($impact.Groups[1].Value.ToLowerInvariant() -eq "yes") {
-    foreach ($section in @("Status Vocabulary", "Status Mapping", "Legacy Compatibility")) {
-        if ($text -notmatch "(?im)^\s*#+\s*$([regex]::Escape($section))\s*$") {
-            $issues += "State Machine Impact is yes, but section is missing: $section"
+if (-not $skipBackendKeys) {
+    $impact = [regex]::Match($text, "(?im)^\s*State Machine Impact:\s*(yes|no|not-applicable)\s*$")
+    if (-not $impact.Success) {
+        $issues += "State Machine Impact must be explicit: yes, no, or not-applicable."
+    } elseif ($impact.Groups[1].Value.ToLowerInvariant() -eq "yes") {
+        foreach ($section in @("Status Vocabulary", "Status Mapping", "Legacy Compatibility")) {
+            if ($text -notmatch "(?im)^\s*#+\s*$([regex]::Escape($section))\s*$") {
+                $issues += "State Machine Impact is yes, but section is missing: $section"
+            }
         }
     }
 }

@@ -102,3 +102,29 @@ if [ "${#missing[@]}" -gt 0 ]; then
 fi
 
 echo "agent-flow scaffold health check passed."
+
+# --- Manifest Completeness Advisory (non-blocking) ---
+manifest="$project_root/agent-flow/manifest.yaml"
+if [ -f "$manifest" ]; then
+  unknown_count=$(grep -E ':\s*(unknown|TODO|TBD)\s*$' "$manifest" 2>/dev/null | wc -l | tr -d ' ' || true)
+  none_count=$(grep -E ':\s*none\s*$' "$manifest" 2>/dev/null | wc -l | tr -d ' ' || true)
+  initialized=$(grep -c 'kind:\s*initialized' "$manifest" 2>/dev/null | tr -d ' \n' || echo 0)
+  total_fields=$(grep -c '^\s\+[a-z_]*:' "$manifest" 2>/dev/null | tr -d ' \n' || echo 0)
+
+  if [ -n "$initialized" ] && [ "$initialized" -gt 0 ] 2>/dev/null; then
+    echo "⚠  Manifest completeness: project.kind is still 'initialized'."
+    echo "   Run 'agent-flow/scripts/init-project.sh' to auto-detect your project type."
+  fi
+
+  if [ -n "$unknown_count" ] && [ "$unknown_count" -gt 0 ] 2>/dev/null; then
+    pct=0
+    if [ -n "$total_fields" ] && [ "$total_fields" -gt 0 ] 2>/dev/null; then
+      pct=$(( (unknown_count + none_count) * 100 / total_fields ))
+    fi
+    echo "⚠  Manifest completeness: $unknown_count unknown/TODO fields found ($pct% of $total_fields fields)"
+    echo "   Fill in backend/frontend/database sections for accurate risk routing."
+  elif [ -n "$none_count" ] && [ "$none_count" -gt 10 ] 2>/dev/null; then
+    echo "ℹ  Manifest note: $none_count fields set to 'none' (expected for non-application projects)"
+    echo "   Run 'agent-flow/scripts/init-project.sh' if this is an application project."
+  fi
+fi

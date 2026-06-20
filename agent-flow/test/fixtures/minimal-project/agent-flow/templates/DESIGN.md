@@ -32,6 +32,8 @@
 
 必须明确记录，即使结论是 `unchanged` 或 `not-applicable`。
 
+> **非后端项目简化**：如果 `manifest.yaml` 中 `backend.framework` 为 `none`/`n/a` 或 `project.kind` 为 `dev-toolkit`，可仅保留一行 `| All API/Permission/Auth items | not-applicable | 理由: project type is {kind} |` 并跳过下方 8 行。`design-check` 会自动跳过这些后端键的检查。
+
 Decision Status: pending
 
 Allowed Decision Values: unchanged / new / modified / deleted / not-applicable
@@ -112,13 +114,13 @@ Alignment Source: pending
 
 Open Questions: pending
 
-| Question | AI Recommended Answer | Confirmation | Final Decision |
+| # | Question | Confirmation | Evidence |
 |---|---|---|---|
-| Intent Risk | | pending | |
-| Existing Code Fit | | pending | |
-| Unnecessary Abstraction | | pending | |
-| Protected Areas | | pending | |
-| Boundary And Failure Modes | | pending | |
+| 1 | Intent Risk | | pending | |
+| 2 | Existing Code Fit | | pending | |
+| 3 | Unnecessary Abstraction | | pending | |
+| 4 | Protected Areas | | pending | |
+| 5 | Boundary And Failure Modes | | pending | |
 
 Alignment Verdict: pending
 

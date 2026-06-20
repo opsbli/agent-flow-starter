@@ -27,7 +27,11 @@ if [ ! -d "$CHANGES_DIR" ]; then
 fi
 
 # ── Collect gate data ──
-declare -A GATE_TOTAL GATE_PASS GATE_FAIL GATE_CONSEC GATE_LAST
+declare -A GATE_TOTAL=()
+declare -A GATE_PASS=()
+declare -A GATE_FAIL=()
+declare -A GATE_CONSEC=()
+declare -A GATE_LAST=()
 CHANGE_COUNT=0
 
 for change_dir in "$CHANGES_DIR"/*/; do

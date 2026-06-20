@@ -202,6 +202,128 @@ jobs:
           fi
           echo "All script pairs have both .ps1 and .sh"
 
+  pair-consistency:
+    name: Pair Consistency Check (advisory)
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check ps1/sh script pair consistency
+        run: |
+          bash agent-flow/scripts/pair-consistency-check.sh --threshold 30 || true
+          echo "pair-consistency-check is advisory — CI continues regardless of result."
+
+  static-analysis:
+    name: Static Analysis (shellcheck)
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run shellcheck on agent-flow scripts
+        run: |
+          echo "## ShellCheck Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          warning_count=0
+          for script in agent-flow/scripts/*.sh agent-flow/test/test-scripts/*.sh; do
+            if [ ! -f "$script" ]; then continue; fi
+            result="$(shellcheck --severity=warning --format=gcc "$script" 2>&1)" || true
+            if [ -n "$result" ]; then
+              issue_count=$(echo "$result" | wc -l)
+              warning_count=$((warning_count + issue_count))
+              echo "**$script**: $issue_count warning(s)" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$result" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "| Gate | Warnings | Threshold | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|----------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| shellcheck | $warning_count | — (non-blocking) | INFO |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_shellcheck ran in non-blocking mode (continue-on-error: true). Review warnings above._" >> $GITHUB_STEP_SUMMARY
+
+  static-analysis-actionlint:
+    name: Static Analysis (actionlint)
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install actionlint
+        run: |
+          bash <(curl -sS https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Run actionlint on GitHub workflow files
+        run: |
+          echo "## actionlint Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if ! command -v actionlint &>/dev/null; then
+            echo "actionlint could not be installed." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          issue_count=0
+          for wf in .github/workflows/*.yml; do
+            [ -f "$wf" ] || continue
+            result="$(actionlint --format='{{range $}}{{println .}}' "$wf" 2>&1)" || true
+            if [ -n "$result" ]; then
+              issues=$(echo "$result" | wc -l)
+              issue_count=$((issue_count + issues))
+              echo "**$wf**: $issues issue(s)" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$result" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "| Gate | Issues | Threshold | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| actionlint | $issue_count | — (non-blocking) | INFO |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_actionlint ran in non-blocking mode (continue-on-error: true). Review issues above._" >> $GITHUB_STEP_SUMMARY
+
+  static-analysis-ps1:
+    name: Static Analysis (PSScriptAnalyzer)
+    runs-on: windows-latest
+    needs: scaffold-health
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -AllowClobber
+
+      - name: Run PSScriptAnalyzer on agent-flow scripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Continue"
+          $warningCount = 0
+          $results = Invoke-ScriptAnalyzer -Path agent-flow/scripts,agent-flow/test/test-scripts -Recurse -Severity Warning -ErrorAction SilentlyContinue
+          if ($results) {
+            $warningCount = @($results).Count
+            "## PSScriptAnalyzer Results" >> $env:GITHUB_STEP_SUMMARY
+            "" >> $env:GITHUB_STEP_SUMMARY
+            $results | Group-Object ScriptName | ForEach-Object {
+              $scriptName = $_.Name
+              $count = $_.Count
+              "**$scriptName**: $count warning(s)" >> $env:GITHUB_STEP_SUMMARY
+            }
+            "" >> $env:GITHUB_STEP_SUMMARY
+          }
+          "| Gate | Warnings | Threshold | Status |" >> $env:GITHUB_STEP_SUMMARY
+          "|------|----------|-----------|--------|" >> $env:GITHUB_STEP_SUMMARY
+          "| PSScriptAnalyzer | $warningCount | — (non-blocking) | INFO |" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "_PSScriptAnalyzer ran in non-blocking mode (continue-on-error: true). Review warnings above._" >> $env:GITHUB_STEP_SUMMARY
+
   starter-self-test-linux:
     name: Starter Self-Test (Linux)
     runs-on: ubuntu-latest
@@ -229,3 +351,127 @@ jobs:
       - name: Run gate fixture tests
         shell: pwsh
         run: .\scripts\test-gate-fixtures.ps1
+
+  unit-tests-ps1:
+    name: Unit Tests (Pester)
+    runs-on: windows-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Pester unit tests for _common.ps1
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Invoke-Pester agent-flow/test/unit/test-common.ps1
+
+      - name: Run Pester unit tests for alignment-check
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Invoke-Pester agent-flow/test/unit/test-alignment-check.ps1
+
+      - name: Run Pester unit tests for task-check
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Invoke-Pester agent-flow/test/unit/test-task-check.ps1
+
+  unit-tests-bats:
+    name: Unit Tests (Bats)
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        run: sudo apt-get update && sudo apt-get install -y bats
+
+      - name: Run bats unit tests for _common.sh
+        run: bats agent-flow/test/unit/test-common.bats
+
+      - name: Run bats unit tests for alignment-check
+        run: bats agent-flow/test/unit/test-alignment-check.bats
+
+      - name: Run bats unit tests for task-check
+        run: bats agent-flow/test/unit/test-task-check.bats
+
+  gate-negative-tests:
+    name: Gate Negative Tests
+    runs-on: ubuntu-latest
+    needs: scaffold-health
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify alignment-check fails without alignment section
+        run: |
+          mkdir -p /tmp/neg-test/change
+          cat > /tmp/neg-test/change/CHANGE.md <<'EOF'
+## Flow Level
+
+- [ ] Emergency
+- [ ] Light
+- [x] Standard
+- [ ] Heavy
+EOF
+          cat > /tmp/neg-test/change/DESIGN.md <<'EOF'
+# Design
+
+No alignment section here.
+## Plan
+EOF
+          if bash agent-flow/scripts/alignment-check.sh --change-dir /tmp/neg-test/change 2>/dev/null; then
+            echo "FAIL: alignment-check should have failed without alignment section"
+            exit 1
+          fi
+          echo "PASS: alignment-check correctly rejected missing alignment section"
+
+      - name: Verify task-check fails without AC ids
+        run: |
+          mkdir -p /tmp/neg-task/change
+          cat > /tmp/neg-task/change/CHANGE.md <<'EOF'
+## Flow Level
+
+- [x] Light
+- [ ] Standard
+- [ ] Heavy
+- [ ] Emergency
+EOF
+          cat > /tmp/neg-task/change/TASKS.md <<'EOF'
+| Task ID | Status | AC | Read Files | Write Files | Verify | Parallel |
+|---------|--------|----|-----------|-------------|--------|----------|
+| T-01 | pending | | README.md | src/file.ts | echo ok | no |
+EOF
+          if bash agent-flow/scripts/task-check.sh --change-dir /tmp/neg-task/change 2>/dev/null; then
+            echo "FAIL: task-check should have failed without AC ids"
+            exit 1
+          fi
+          echo "PASS: task-check correctly rejected missing AC ids"
+
+      - name: Verify blocked-check catches dangerous patterns
+        run: |
+          mkdir -p /tmp/neg-blocked/change
+          cat > /tmp/neg-blocked/change/CHANGE.md <<'EOF'
+## Flow Level
+
+- [x] Heavy
+- [ ] Light
+- [ ] Standard
+- [ ] Emergency
+EOF
+          cat > /tmp/neg-blocked/change/TASKS.md <<'EOF'
+| Task ID | Status | AC | Read Files | Write Files | Verify | Parallel |
+|---------|--------|----|-----------|-------------|--------|----------|
+| T-01 | pending | AC-01 | config.yml | src/main.rs | cargo test | no |
+EOF
+          cat > /tmp/neg-blocked/change/VERIFY.md <<'EOF'
+## Blocked Items
+
+- description: bypass_auth_for_production
+  reason: Need temporary bypass
+EOF
+          if bash agent-flow/scripts/blocked-check.sh --change-dir /tmp/neg-blocked/change --project-root /tmp/neg-blocked 2>/dev/null; then
+            echo "FAIL: blocked-check should have caught bypass_auth_for_production"
+            exit 1
+          fi
+          echo "PASS: blocked-check correctly rejected dangerous pattern"

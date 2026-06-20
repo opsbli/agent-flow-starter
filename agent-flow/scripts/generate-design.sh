@@ -121,13 +121,13 @@ Alignment Source: pending
 
 Open Questions: pending
 
-| Question | AI Recommended Answer | Confirmation (`user-confirmed` / `code-confirmed` / `pending`) | Final Decision |
-|----------|------------------|-------------------|------------|
-| Intent Risk | | pending | |
-| Existing Code Fit | | pending | |
-| Unnecessary Abstraction | | pending | |
-| Protected Areas | | pending | |
-| Boundary And Failure Modes | | pending | |
+| # | Question | Confirmation (`user-confirmed` / `code-confirmed` / `pending`) | Evidence |
+|------|---------|---------|------|
+| 1 | Intent Risk | | pending | |
+| 2 | Existing Code Fit | | pending | |
+| 3 | Unnecessary Abstraction | | pending | |
+| 4 | Protected Areas | | pending | |
+| 5 | Boundary And Failure Modes | | pending | |
 
 Alignment Verdict: pending
 
