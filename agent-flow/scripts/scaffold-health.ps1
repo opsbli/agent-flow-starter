@@ -28,6 +28,7 @@ $required = @(
     "agent-flow/rules/code-scan-standard-heavy.keys",
     "agent-flow/rules/design-decision.keys",
     "agent-flow/rules/design-alignment.questions",
+    "agent-flow/rules/gate-tiers.md",
     "agent-flow/rules/plan-required.keys",
     "agent-flow/rules/plan-audit.keys",
     "agent-flow/rules/evolution.keys",

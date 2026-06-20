@@ -43,6 +43,8 @@ proposed | accepted | implemented | rejected | deferred
 
 | IMP-0025 | cleanup-reasonix-and-evolution | Clean up .reasonix auto-generated files, fill missing EVOLUTION.md, integrate frontend-verify-check into check-change | cleanup/scripts | implemented | This change: cleanup-reasonix-and-evolution | 2026-06-20 |
 
+| IMP-0026 | gate-tiering-matrix | Create gate tiering matrix document defining Required/Warning/Advisory for all 62 gates across Light/Standard/Heavy/Emergency | rules | implemented | This change: gate-tiering-matrix | 2026-06-20 |
+
 ## Rules
 
 - Add an item when `EVOLUTION.md` recommends changing `agent-flow/` templates, scripts, gates, knowledge, decisions, or flow rules.
