@@ -1,51 +1,27 @@
----
-description: agent-flow 自动演进 — 数据驱动的 EVOLUTION.md 生成和改进建议
-argument-hint: "[change-id]"
----
-# agent-flow Auto Evolution
+# /af-evolve — Data-Driven Evolution
 
-> 基于数据驱动的流程改进分析
+Analyzes historical change data and suggests improvements to templates, gates, and knowledge base.
 
-## 1. 查看项目统计
-```bash
-# Windows
-agent-flow/scripts/evolution-stats.ps1
+## Usage
 
-# Linux/macOS
-bash agent-flow/scripts/evolution-stats.sh
+```
+/af-evolve [change-id]
 ```
 
-## 2. 获取改进建议
-```bash
-# Windows
-agent-flow/scripts/evolution-suggest.ps1
+## Steps (without change-id — project-level)
 
-# Linux/macOS
-bash agent-flow/scripts/evolution-suggest.sh
-```
+1. Run `agent-flow/scripts/evolution-stats.sh --project-root .`
+2. Run `agent-flow/scripts/evolution-suggest.sh --project-root .`
+3. Run `agent-flow/scripts/gate-fatigue-check.sh --project-root .`
+4. Review output and update `agent-flow/knowledge/improvement-tracker.md`
 
-## 3. 撰写 EVOLUTION.md
+## Steps (with change-id — change-level)
 
-如果提供了 change-id，写 `agent-flow/changes/$1/EVOLUTION.md`，覆盖四个推演维度：
+1. Read `agent-flow/changes/<change-id>/EVOLUTION.md`
+2. Run `agent-flow/scripts/evolution-check.sh --change-dir agent-flow/changes/<change-id>`
+3. If recommendations exist, update `agent-flow/knowledge/improvement-tracker.md`
 
-### 架构推演
-- 是否出现新的公共能力候选？
-- 是否出现循环依赖或隐性耦合？
+## Exit Codes
 
-### 流程推演
-- 本次哪些步骤有价值？哪些只是形式主义？
-- 是否应该降级或升级某类任务？
-
-### 验证推演
-- 哪个错误差点漏掉？
-- 是否能写成 gate 脚本？
-
-### 模板推演
-- 哪个模板字段多余或缺失？
-
-## 4. 更新改进跟踪
-`agent-flow/knowledge/improvement-tracker.md`
-
-## 输出
-- EVOLUTION.md — 演进记录
-- 改进跟踪已更新
+- 0: Evolution analysis complete
+- 1: Project root or change directory not found
