@@ -109,6 +109,23 @@ public_script_entries() {
   fi
 }
 
+registry_gate_entries() {
+  awk '
+    /^script_registry:/ { in_registry=1; next }
+    in_registry && /^  gates:/ { in_gates=1; next }
+    in_gates && /^    - / { sub(/^[[:space:]]*-[[:space:]]+/, ""); print; next }
+    in_gates && /^  [A-Za-z_]+:/ { exit }
+  ' "$manifest_check_path" | sort -u
+}
+
+legacy_gate_entries() {
+  awk '
+    /^gates:/ { in_gates=1; next }
+    in_gates && /^  - / { sub(/^[[:space:]]*-[[:space:]]+/, ""); print; next }
+    in_gates && /^[^[:space:]]/ { exit }
+  ' "$manifest_check_path" | sort -u
+}
+
 require_text() {
   local label="$1" pattern="$2"
   if ! grep -Eq "$pattern" "$manifest_check_path"; then
@@ -170,6 +187,34 @@ mapfile -t manifest_scripts < <(
     sed -E 's/^[[:space:]]*-[[:space:]]+//;s/[[:space:]]*$//' |
     sort -u
 )
+
+mapfile -t registry_gate_entries_list < <(registry_gate_entries)
+mapfile -t legacy_gate_entries_list < <(legacy_gate_entries)
+for entry in "${registry_gate_entries_list[@]}"; do
+  found=false
+  for legacy in "${legacy_gate_entries_list[@]}"; do
+    if [ "$legacy" = "$entry" ]; then
+      found=true
+      break
+    fi
+  done
+  if [ "$found" = false ]; then
+    issues+=("Legacy gates section is not generated from script_registry.gates; missing: $entry")
+  fi
+done
+for entry in "${legacy_gate_entries_list[@]}"; do
+  found=false
+  for registry in "${registry_gate_entries_list[@]}"; do
+    if [ "$registry" = "$entry" ]; then
+      found=true
+      break
+    fi
+  done
+  if [ "$found" = false ]; then
+    issues+=("Legacy gates section has entry outside script_registry.gates: $entry")
+  fi
+done
+
 for entry in "${manifest_scripts[@]}"; do
   if [ ! -f "$project_root/$entry" ]; then
     issues+=("Manifest script entry does not exist: $entry")

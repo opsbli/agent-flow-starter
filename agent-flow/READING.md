@@ -80,8 +80,42 @@ script_registry:
 ```
 
 Keep `gates:` in `manifest.yaml` for backward compatibility with older tooling,
-but do not use it as the only registry. Run `manifest-check` after adding,
-renaming, or deleting scripts.
+but treat it as generated from `script_registry.gates`. Run `manifest-check`
+after adding, renaming, or deleting scripts.
+
+## Capability Map
+
+Core path:
+
+```text
+af-quickstart -> new-change -> next-step -> check-change -> report/evolution
+```
+
+Script groups:
+
+```text
+gates:
+  scaffold-health, manifest-check, scan-check, design-check, alignment-check
+  task-check, plan-check, ac-check, coverage-check, code-drift-check
+  blocked-check, task-boundary-check, emergency-check, evolution-check
+  closure-check, content-check, api-compatibility-check, db-migration-check
+
+tools:
+  af-quickstart, dashboard, next-step, new-change, recover, flow-detect
+  sync-state, knowledge-search, knowledge-suggest, pattern-discovery
+  evolution-stats, evolution-suggest, fatigue-action, install-git-hooks
+
+generators:
+  generate-scan, generate-design, generate-tasks, generate-verify
+  generate-audit, generate-report, generate-emergency
+
+recovery and governance:
+  recover, emergency-time-lock, emergency-abuse-check, emergency-backfill-check
+  gate-fatigue-check, manifest-drift-check, knowledge-expiry-check
+```
+
+Use `af-quickstart` for onboarding. Use `next-step` when the current state is
+unclear. Use `check-change` before claiming a change is complete.
 
 ## Minimum Safe Loop
 

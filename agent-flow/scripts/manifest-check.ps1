@@ -107,6 +107,36 @@ function Get-PublicScriptEntries {
     )
 }
 
+function Get-ListEntriesFromBlock {
+    param(
+        [string]$Block,
+        [int]$Indent
+    )
+
+    $prefix = [regex]::Escape(" " * $Indent)
+    return @(
+        $Block -split "\r?\n" |
+            Where-Object { $_ -match "^$prefix-\s+(agent-flow/scripts/[^\s#]+)\s*$" } |
+            ForEach-Object { ([regex]::Match($_, "^\s*-\s+(agent-flow/scripts/[^\s#]+)\s*$")).Groups[1].Value }
+    )
+}
+
+function Get-LegacyGateEntries {
+    param([string]$Text)
+
+    $match = [regex]::Match($Text, "(?ms)^gates:\s*\r?\n((?:  - [^\r\n]+\r?\n?)*)")
+    if (-not $match.Success) { return @() }
+    return @(Get-ListEntriesFromBlock -Block $match.Groups[1].Value -Indent 2)
+}
+
+function Get-RegistryGateEntries {
+    param([string]$Text)
+
+    $match = [regex]::Match($Text, "(?ms)^script_registry:\s*\r?\n  gates:\s*\r?\n((?:    - [^\r\n]+\r?\n?)*)")
+    if (-not $match.Success) { return @() }
+    return @(Get-ListEntriesFromBlock -Block $match.Groups[1].Value -Indent 4)
+}
+
 foreach ($section in @("project:", "code_map:", "change_storage:", "risk_rules:", "verification:", "script_registry:", "gates:")) {
     if ($text -notmatch "(?m)^$([regex]::Escape($section))") {
         $issues += "Missing required section: $section"
@@ -169,6 +199,24 @@ $manifestScriptEntries = @(
         ForEach-Object { $_.Groups[1].Value } |
         Sort-Object -Unique
 )
+
+$registryGateEntries = @(Get-RegistryGateEntries -Text $text)
+$legacyGateEntries = @(Get-LegacyGateEntries -Text $text)
+$registryGateSet = @{}
+$legacyGateSet = @{}
+foreach ($entry in $registryGateEntries) { $registryGateSet[$entry] = $true }
+foreach ($entry in $legacyGateEntries) { $legacyGateSet[$entry] = $true }
+foreach ($entry in $registryGateEntries) {
+    if (-not $legacyGateSet.ContainsKey($entry)) {
+        $issues += "Legacy gates section is not generated from script_registry.gates; missing: $entry"
+    }
+}
+foreach ($entry in $legacyGateEntries) {
+    if (-not $registryGateSet.ContainsKey($entry)) {
+        $issues += "Legacy gates section has entry outside script_registry.gates: $entry"
+    }
+}
+
 foreach ($entry in $manifestScriptEntries) {
     if (-not (Test-Path -LiteralPath (Join-Path $projectRootPath $entry))) {
         $issues += "Manifest script entry does not exist: $entry"

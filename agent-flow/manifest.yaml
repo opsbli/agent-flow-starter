@@ -65,16 +65,16 @@ risk_rules:
     - payment_bypass
 
 verification:
-  # Template placeholders - replace after init-project
-  backend_compile: TODO_BACKEND_COMPILE_COMMAND
-  backend_test: TODO_BACKEND_TEST_COMMAND
-  module_compile: TODO_MODULE_COMPILE_COMMAND
-  module_test: TODO_MODULE_TEST_COMMAND
-  frontend_typecheck: TODO_FRONTEND_TYPECHECK_COMMAND
-  frontend_test: TODO_FRONTEND_TEST_COMMAND
-  frontend_lint: TODO_FRONTEND_LINT_COMMAND
-  integration_test: TODO_INTEGRATION_TEST_COMMAND
-  api_test: TODO_API_TEST_COMMAND
+  # Starter repository has no application runtime to compile or test.
+  backend_compile: none
+  backend_test: none
+  module_compile: none
+  module_test: none
+  frontend_typecheck: none
+  frontend_test: none
+  frontend_lint: none
+  integration_test: none
+  api_test: none
 
 script_registry:
   gates:
@@ -213,56 +213,38 @@ gates:
   - agent-flow/scripts/closure-check.sh
   - agent-flow/scripts/code-drift-check.ps1
   - agent-flow/scripts/code-drift-check.sh
+  - agent-flow/scripts/content-check.ps1
+  - agent-flow/scripts/content-check.sh
   - agent-flow/scripts/coverage-check.ps1
   - agent-flow/scripts/coverage-check.sh
   - agent-flow/scripts/db-migration-check.ps1
   - agent-flow/scripts/db-migration-check.sh
   - agent-flow/scripts/design-check.ps1
+  - agent-flow/scripts/design-check.sh
   - agent-flow/scripts/design-quality-check.ps1
   - agent-flow/scripts/design-quality-check.sh
-  - agent-flow/scripts/design-check.sh
-  - agent-flow/scripts/detect-unused.ps1
-  - agent-flow/scripts/detect-unused.sh
   - agent-flow/scripts/drift-check.ps1
   - agent-flow/scripts/drift-check.sh
+  - agent-flow/scripts/emergency-abuse-check.ps1
+  - agent-flow/scripts/emergency-abuse-check.sh
+  - agent-flow/scripts/emergency-backfill-check.ps1
+  - agent-flow/scripts/emergency-backfill-check.sh
   - agent-flow/scripts/emergency-check.ps1
   - agent-flow/scripts/emergency-check.sh
+  - agent-flow/scripts/emergency-time-lock.ps1
+  - agent-flow/scripts/emergency-time-lock.sh
   - agent-flow/scripts/evolution-check.ps1
   - agent-flow/scripts/evolution-check.sh
-  - agent-flow/scripts/evolution-stats.ps1
-  - agent-flow/scripts/evolution-stats.sh
-  - agent-flow/scripts/evolution-suggest.ps1
-  - agent-flow/scripts/evolution-suggest.sh
-  - agent-flow/scripts/generate-audit.ps1
-  - agent-flow/scripts/generate-audit.sh
-  - agent-flow/scripts/generate-design.ps1
-  - agent-flow/scripts/generate-design.sh
-  - agent-flow/scripts/generate-emergency.ps1
-  - agent-flow/scripts/generate-emergency.sh
-  - agent-flow/scripts/generate-report.ps1
-  - agent-flow/scripts/generate-report.sh
-  - agent-flow/scripts/generate-scan.ps1
-  - agent-flow/scripts/generate-scan.sh
-  - agent-flow/scripts/generate-tasks.ps1
-  - agent-flow/scripts/generate-tasks.sh
-  - agent-flow/scripts/generate-verify.ps1
-  - agent-flow/scripts/generate-verify.sh
+  - agent-flow/scripts/gate-fatigue-check.ps1
+  - agent-flow/scripts/gate-fatigue-check.sh
   - agent-flow/scripts/incremental-verify.ps1
   - agent-flow/scripts/incremental-verify.sh
-  - agent-flow/scripts/init-project.ps1
-  - agent-flow/scripts/init-project.sh
-  - agent-flow/scripts/install-agent-flow.ps1
-  - agent-flow/scripts/install-agent-flow.sh
-  - agent-flow/scripts/install-git-hooks.ps1
-  - agent-flow/scripts/install-git-hooks.sh
-  - agent-flow/scripts/knowledge-search.ps1
-  - agent-flow/scripts/knowledge-search.sh
+  - agent-flow/scripts/knowledge-expiry-check.ps1
+  - agent-flow/scripts/knowledge-expiry-check.sh
   - agent-flow/scripts/manifest-check.ps1
   - agent-flow/scripts/manifest-check.sh
-  - agent-flow/scripts/new-change.ps1
-  - agent-flow/scripts/new-change.sh
-  - agent-flow/scripts/next-step.ps1
-  - agent-flow/scripts/next-step.sh
+  - agent-flow/scripts/manifest-drift-check.ps1
+  - agent-flow/scripts/manifest-drift-check.sh
   - agent-flow/scripts/plan-check.ps1
   - agent-flow/scripts/plan-check.sh
   - agent-flow/scripts/run-verify.ps1
@@ -273,8 +255,6 @@ gates:
   - agent-flow/scripts/scan-check.sh
   - agent-flow/scripts/state-check.ps1
   - agent-flow/scripts/state-check.sh
-  - agent-flow/scripts/sync-state.ps1
-  - agent-flow/scripts/sync-state.sh
   - agent-flow/scripts/task-boundary-check.ps1
   - agent-flow/scripts/task-boundary-check.sh
   - agent-flow/scripts/task-check.ps1
